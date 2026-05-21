@@ -1,0 +1,545 @@
+Enum rol_nombre {
+  ADMIN
+  COACH
+  CLIENTE
+}
+
+Enum user_estado {
+  ACTIVO
+  INACTIVO
+  SUSPENDIDO
+}
+
+Enum origen_registro_enum {
+  SELF_SERVICE
+  ADMINISTRATIVO
+}
+
+Enum tipo_cliente_enum {
+  INDIVIDUAL
+  INSTITUCIONAL
+}
+
+Enum estado_plan_general {
+  ACTIVO
+  INACTIVO
+}
+
+Enum estado_plan_cliente {
+  ACTIVO
+  PAUSADO
+  FINALIZADO
+  CANCELADO
+  VENCIDO
+}
+
+Enum estado_plan_especifico {
+  ACTIVO
+  INACTIVO
+  FINALIZADO
+}
+
+Enum material_tipo {
+  VIDEO
+  PDF
+  IMAGEN
+  AUDIO
+}
+
+Enum sesion_tipo {
+  INDIVIDUAL
+  GRUPAL
+}
+
+Enum sesion_modalidad {
+  PRESENCIAL
+  VIRTUAL
+}
+
+Enum sesion_estado {
+  PROGRAMADA
+  EN_CURSO
+  COMPLETADA
+  CANCELADA
+}
+
+Enum estado_asistencia_sesion {
+  INSCRITO
+  ASISTIO
+  AUSENTE
+  CANCELADO
+}
+
+Enum metodo_pago_enum {
+  EFECTIVO
+  TRANSFERENCIA
+  TARJETA
+  PSE
+}
+
+Enum estado_pago_enum {
+  PENDIENTE
+  PAGADO
+  FALLIDO
+  REEMBOLSADO
+}
+
+Enum evento_tipo {
+  WEBINAR
+  CLASE
+  TALLER
+  COMPETENCIA
+}
+
+Enum evento_modalidad {
+  PRESENCIAL
+  VIRTUAL
+  HIBRIDO
+}
+
+Enum evento_estado {
+  PROGRAMADO
+  EN_CURSO
+  FINALIZADO
+  CANCELADO
+}
+
+Enum estado_participacion_evento {
+  INSCRITO
+  ASISTIO
+  AUSENTE
+  CANCELADO
+}
+
+Enum tipo_mensaje_enum {
+  TEXTO
+  ARCHIVO
+  IMAGEN
+  AUDIO
+  VIDEO
+}
+
+Enum tipo_notificacion_enum {
+  SISTEMA
+  MENSAJE
+  PAGO
+  SESION
+  PLAN
+  EVENTO
+}
+
+Enum estado_registro_rutina_enum {
+  PENDIENTE
+  EN_PROGRESO
+  COMPLETADA
+  OMITIDA
+}
+
+Enum tipo_reporte_temporal {
+  PROGRESO
+  NUTRICIONAL
+  FINANCIERO
+  GENERAL
+}
+
+Enum modulo_servicio_nombre {
+  ENTRENAMIENTO
+  NUTRICION
+}
+
+Table rol {
+  id_rol bigint [pk, increment]
+  nombre rol_nombre [not null, unique]
+  descripcion varchar(255)
+  permisos text
+  activo boolean [default: true]
+}
+
+Table users {
+  id_usuario bigint [pk, increment]
+  nombre varchar(100) [not null]
+  apellido varchar(100) [not null]
+  correo varchar(150) [not null, unique]
+  hash_contrasena varchar(255) [not null]
+  estado user_estado [default: 'ACTIVO']
+  origen_registro origen_registro_enum [default: 'SELF_SERVICE']
+  fecha_registro timestamp [default: `now()`]
+  foto_perfil varchar(300)
+  telefono varchar(30)
+}
+
+Table users_roles {
+  id_usuario bigint [not null]
+  id_rol bigint [not null]
+
+  indexes {
+    (id_usuario, id_rol) [pk]
+  }
+}
+
+Table coach {
+  id_coach bigint [pk]
+  especialidad varchar(150)
+  credencial varchar(255)
+  biografia text
+}
+
+Table cliente {
+  id_cliente bigint [pk]
+  tipo_cliente tipo_cliente_enum [not null, default: 'INDIVIDUAL']
+  fecha_nacimiento date
+  estatura_m decimal(4,2)
+  peso_inicial decimal(5,2)
+  objetivos text
+  restricciones_medicas text
+}
+
+Table institucion {
+  id_institucion bigint [pk, increment]
+  nombre varchar(200) [not null]
+  tipo_institucion varchar(100)
+  nit varchar(50) [unique]
+  direccion varchar(255)
+  telefono varchar(30)
+  correo_contacto varchar(150)
+  num_participantes int
+  activo boolean [default: true]
+}
+
+Table cliente_institucional {
+  id_cliente bigint [pk]
+  id_institucion bigint [not null]
+  cargo varchar(100)
+  es_contacto_principal boolean [default: false]
+  fecha_vinculacion timestamp [default: `now()`]
+}
+
+Table modulo_servicio {
+  id_modulo_servicio bigint [pk, increment]
+  nombre modulo_servicio_nombre [not null, unique]
+  descripcion varchar(255)
+  activo boolean [default: true]
+}
+
+Table plan {
+  id_plan bigint [pk, increment]
+  nombre varchar(150) [not null]
+  descripcion text
+  precio decimal(10,2) [not null]
+  duracion_dias int
+  dias_previos_recordatorio_default int [default: 5]
+  estado_plan estado_plan_general [default: 'ACTIVO']
+}
+
+Table plan_modulo {
+  id_plan bigint [not null]
+  id_modulo_servicio bigint [not null]
+
+  indexes {
+    (id_plan, id_modulo_servicio) [pk]
+  }
+}
+
+Table plan_cliente {
+  id_plan_cliente bigint [pk, increment]
+  id_plan bigint [not null]
+  id_cliente bigint [not null]
+  id_coach bigint [not null]
+  fecha_inicio date [not null]
+  fecha_fin date [not null]
+  dias_previos_recordatorio int [default: 5]
+  estado estado_plan_cliente [default: 'ACTIVO']
+  observaciones text
+}
+
+Table acceso_cliente_modulo {
+  id_acceso_cliente_modulo bigint [pk, increment]
+  id_plan_cliente bigint [not null]
+  id_modulo_servicio bigint [not null]
+  habilitado boolean [default: false]
+  fecha_habilitacion timestamp
+  fecha_expiracion timestamp
+}
+
+Table plan_entrenamiento {
+  id_plan_entrenamiento bigint [pk, increment]
+  id_plan_cliente bigint [not null]
+  nombre varchar(150) [not null]
+  objetivo text
+  nivel_dificultad varchar(50)
+  duracion_total_dias int
+  estado_plan estado_plan_especifico [default: 'ACTIVO']
+}
+
+Table rutina {
+  id_rutina bigint [pk, increment]
+  id_plan_entrenamiento bigint [not null]
+  nombre varchar(150) [not null]
+  dias_semana varchar(100)
+  duracion_minutos int
+  version int [default: 1]
+  observaciones text
+}
+
+Table ejercicio {
+  id_ejercicio bigint [pk, increment]
+  id_rutina bigint [not null]
+  nombre varchar(150) [not null]
+  descripcion text
+  series int
+  repeticiones int
+  tiempo_segundos int
+  descanso_segundos int
+  instrucciones text
+}
+
+Table material {
+  id_material bigint [pk, increment]
+  id_ejercicio bigint [not null]
+  tipo material_tipo [not null]
+  nombre varchar(150)
+  url_archivo varchar(300)
+}
+
+Table plan_nutricional {
+  id_plan_nutricional bigint [pk, increment]
+  id_plan_cliente bigint [not null]
+  nombre varchar(150) [not null]
+  objetivo text
+  estado_plan estado_plan_especifico [default: 'ACTIVO']
+  recomendaciones_adicionales text
+}
+
+Table comida {
+  id_comida bigint [pk, increment]
+  id_plan_nutricional bigint [not null]
+  tiempo_comida varchar(50)
+  grupos_alimenticios text
+  porciones varchar(255)
+  calorias_aprox decimal(7,2)
+  observaciones text
+}
+
+Table registro_progreso {
+  id_registro_progreso bigint [pk, increment]
+  id_plan_cliente bigint [not null]
+  fecha date [not null]
+  peso decimal(5,2)
+  cintura decimal(5,2)
+  cadera decimal(5,2)
+  brazos decimal(5,2)
+  piernas decimal(5,2)
+  fotos_evolucion text
+  observacion_cliente text
+  observacion_coach text
+}
+
+Table registro_rutina {
+  id_registro_rutina bigint [pk, increment]
+  id_rutina bigint [not null]
+  fecha date [not null]
+  estado estado_registro_rutina_enum [default: 'PENDIENTE']
+  porcentaje_avance int
+  observaciones text
+}
+
+Table agenda {
+  id_agenda bigint [pk, increment]
+  id_coach bigint [not null]
+  fecha_hora_inicio timestamp [not null]
+  fecha_hora_fin timestamp [not null]
+  disponible boolean [default: true]
+  descripcion text
+}
+
+Table sesion {
+  id_sesion bigint [pk, increment]
+  id_coach bigint [not null]
+  titulo varchar(150)
+  descripcion text
+  fecha_hora_inicio timestamp [not null]
+  fecha_hora_fin timestamp [not null]
+  duracion_minutos int
+  tipo sesion_tipo [default: 'INDIVIDUAL']
+  modalidad sesion_modalidad [default: 'VIRTUAL']
+  estado sesion_estado [default: 'PROGRAMADA']
+  cupo_maximo int
+  enlace_virtual varchar(300)
+  ubicacion varchar(255)
+}
+
+Table sesion_participante {
+  id_sesion bigint [not null]
+  id_plan_cliente bigint [not null]
+  estado_asistencia estado_asistencia_sesion [default: 'INSCRITO']
+  observaciones text
+
+  indexes {
+    (id_sesion, id_plan_cliente) [pk]
+  }
+}
+
+Table pago {
+  id_pago bigint [pk, increment]
+  id_plan_cliente bigint [not null]
+  monto decimal(10,2) [not null]
+  moneda varchar(10) [default: 'COP']
+  fecha_pago timestamp
+  metodo_pago metodo_pago_enum
+  estado_pago estado_pago_enum [default: 'PENDIENTE']
+  proveedor_pago varchar(100)
+  referencia_transaccion varchar(150)
+  codigo_aprobacion varchar(100)
+  url_comprobante varchar(300)
+  fecha_vencimiento date
+  observacion text
+}
+
+Table evento {
+  id_evento bigint [pk, increment]
+  id_coach bigint
+  titulo varchar(200) [not null]
+  descripcion text
+  fecha_hora_inicio timestamp [not null]
+  fecha_hora_fin timestamp [not null]
+  tipo evento_tipo
+  modalidad evento_modalidad [default: 'VIRTUAL']
+  estado evento_estado [default: 'PROGRAMADO']
+  cupo_maximo int
+  ubicacion varchar(255)
+  enlace_virtual varchar(300)
+}
+
+Table evento_participante {
+  id_evento bigint [not null]
+  id_cliente bigint [not null]
+  estado estado_participacion_evento [default: 'INSCRITO']
+  fecha_inscripcion timestamp [default: `now()`]
+
+  indexes {
+    (id_evento, id_cliente) [pk]
+  }
+}
+
+Table chat {
+  id_chat bigint [pk, increment]
+  id_cliente bigint [not null]
+  id_coach bigint [not null]
+  fecha_creacion timestamp [default: `now()`]
+  es_temporal boolean [default: false]
+  fecha_expiracion timestamp
+
+  indexes {
+    (id_cliente, id_coach) [unique]
+  }
+}
+
+Table mensaje {
+  id_mensaje bigint [pk, increment]
+  id_chat bigint [not null]
+  id_usuario_remitente bigint [not null]
+  contenido text [not null]
+  tipo_mensaje tipo_mensaje_enum [default: 'TEXTO']
+  url_adjunto varchar(300)
+  fecha_envio timestamp [default: `now()`]
+  leido boolean [default: false]
+  fecha_lectura timestamp
+}
+
+Table notificacion {
+  id_notificacion bigint [pk, increment]
+  id_usuario bigint [not null]
+  titulo varchar(150) [not null]
+  contenido text [not null]
+  tipo tipo_notificacion_enum [default: 'SISTEMA']
+  leida boolean [default: false]
+  fecha_envio timestamp [default: `now()`]
+  fecha_lectura timestamp
+}
+
+Table token_recuperacion {
+  id_token_recuperacion bigint [pk, increment]
+  id_usuario bigint [not null]
+  token varchar(255) [not null, unique]
+  fecha_creacion timestamp [default: `now()`]
+  fecha_expiracion timestamp [not null]
+  usado boolean [default: false]
+}
+
+Table reporte_temporal {
+  id_reporte_temporal bigint [pk, increment]
+  id_usuario_generador bigint [not null]
+  id_plan_cliente bigint
+  tipo tipo_reporte_temporal [not null]
+  fecha_generacion timestamp [default: `now()`]
+  periodo varchar(50)
+  contenido text
+  fecha_expiracion timestamp
+}
+
+Table bitacora_busqueda {
+  id_bitacora_busqueda bigint [pk, increment]
+  id_usuario bigint [not null]
+  accion varchar(255)
+  modulo varchar(100)
+  criterio_busqueda text
+  fecha_hora timestamp [default: `now()`]
+  fecha_expiracion timestamp
+  descripcion text
+}
+
+Ref: users_roles.id_usuario > users.id_usuario
+Ref: users_roles.id_rol > rol.id_rol
+
+Ref: coach.id_coach > users.id_usuario
+Ref: cliente.id_cliente > users.id_usuario
+
+Ref: cliente_institucional.id_cliente > cliente.id_cliente
+Ref: cliente_institucional.id_institucion > institucion.id_institucion
+
+Ref: plan_modulo.id_plan > plan.id_plan
+Ref: plan_modulo.id_modulo_servicio > modulo_servicio.id_modulo_servicio
+
+Ref: plan_cliente.id_plan > plan.id_plan
+Ref: plan_cliente.id_cliente > cliente.id_cliente
+Ref: plan_cliente.id_coach > coach.id_coach
+
+Ref: acceso_cliente_modulo.id_plan_cliente > plan_cliente.id_plan_cliente
+Ref: acceso_cliente_modulo.id_modulo_servicio > modulo_servicio.id_modulo_servicio
+
+Ref: plan_entrenamiento.id_plan_cliente > plan_cliente.id_plan_cliente
+Ref: rutina.id_plan_entrenamiento > plan_entrenamiento.id_plan_entrenamiento
+Ref: ejercicio.id_rutina > rutina.id_rutina
+Ref: material.id_ejercicio > ejercicio.id_ejercicio
+
+Ref: plan_nutricional.id_plan_cliente > plan_cliente.id_plan_cliente
+Ref: comida.id_plan_nutricional > plan_nutricional.id_plan_nutricional
+
+Ref: registro_progreso.id_plan_cliente > plan_cliente.id_plan_cliente
+Ref: registro_rutina.id_rutina > rutina.id_rutina
+
+Ref: agenda.id_coach > coach.id_coach
+
+Ref: sesion.id_coach > coach.id_coach
+Ref: sesion_participante.id_sesion > sesion.id_sesion
+Ref: sesion_participante.id_plan_cliente > plan_cliente.id_plan_cliente
+
+Ref: pago.id_plan_cliente > plan_cliente.id_plan_cliente
+
+Ref: evento.id_coach > coach.id_coach
+Ref: evento_participante.id_evento > evento.id_evento
+Ref: evento_participante.id_cliente > cliente.id_cliente
+
+Ref: chat.id_cliente > cliente.id_cliente
+Ref: chat.id_coach > coach.id_coach
+
+Ref: mensaje.id_chat > chat.id_chat
+Ref: mensaje.id_usuario_remitente > users.id_usuario
+
+Ref: notificacion.id_usuario > users.id_usuario
+Ref: token_recuperacion.id_usuario > users.id_usuario
+
+Ref: reporte_temporal.id_usuario_generador > users.id_usuario
+Ref: reporte_temporal.id_plan_cliente > plan_cliente.id_plan_cliente
+
+Ref: bitacora_busqueda.id_usuario > users.id_usuario

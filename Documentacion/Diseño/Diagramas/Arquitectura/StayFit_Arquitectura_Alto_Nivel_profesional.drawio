@@ -1,0 +1,245 @@
+<?xml version="1.0" ?>
+<mxfile host="app.diagrams.net" modified="2026-04-16 14:00:00" agent="ChatGPT" version="29.0.0">
+  <diagram id="StayFit_Arquitectura_Pro" name="StayFit - Arquitectura de Alto Nivel">
+    <mxGraphModel dx="1800" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2400" pageHeight="1500" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#0F172A;fontSize=28;fontStyle=1;" value="StayFit - Arquitectura de Alto Nivel" vertex="1">
+          <mxGeometry x="620" y="25" width="1160" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="subtitle" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#475569;fontSize=13;" value="Vista lógica del ecosistema digital: canales, control de acceso, servicios de negocio, persistencia e integraciones externas" vertex="1">
+          <mxGeometry x="350" y="68" width="1700" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="sec_canales" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.5;arcSize=10;shadow=0;" value="" vertex="1">
+          <mxGeometry x="60" y="150" width="320" height="1080" as="geometry"/>
+        </mxCell>
+        <mxCell id="sec_canales_h" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2563EB;strokeColor=#2563EB;fontColor=#FFFFFF;fontSize=16;fontStyle=1;align=center;verticalAlign=middle;arcSize=10;" value="Canales de acceso" vertex="1">
+          <mxGeometry x="75" y="165" width="290" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="sec_acceso" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0F9FF;strokeColor=#0284C7;strokeWidth=1.5;arcSize=10;shadow=0;" value="" vertex="1">
+          <mxGeometry x="430" y="150" width="330" height="1080" as="geometry"/>
+        </mxCell>
+        <mxCell id="sec_acceso_h" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0284C7;strokeColor=#0284C7;fontColor=#FFFFFF;fontSize=16;fontStyle=1;align=center;verticalAlign=middle;arcSize=10;" value="Capa de acceso y control" vertex="1">
+          <mxGeometry x="445" y="165" width="300" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="sec_servicios" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#16A34A;strokeWidth=1.5;arcSize=10;shadow=0;" value="" vertex="1">
+          <mxGeometry x="820" y="150" width="760" height="1080" as="geometry"/>
+        </mxCell>
+        <mxCell id="sec_servicios_h" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#16A34A;strokeColor=#16A34A;fontColor=#FFFFFF;fontSize=16;fontStyle=1;align=center;verticalAlign=middle;arcSize=10;" value="Servicios de negocio StayFit" vertex="1">
+          <mxGeometry x="835" y="165" width="730" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="sec_datos" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#D97706;strokeWidth=1.5;arcSize=10;shadow=0;" value="" vertex="1">
+          <mxGeometry x="1635" y="150" width="320" height="1080" as="geometry"/>
+        </mxCell>
+        <mxCell id="sec_datos_h" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D97706;strokeColor=#D97706;fontColor=#FFFFFF;fontSize=16;fontStyle=1;align=center;verticalAlign=middle;arcSize=10;" value="Persistencia y soporte" vertex="1">
+          <mxGeometry x="1650" y="165" width="290" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="sec_integr" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAF5FF;strokeColor=#7C3AED;strokeWidth=1.5;arcSize=10;shadow=0;" value="" vertex="1">
+          <mxGeometry x="2005" y="150" width="330" height="1080" as="geometry"/>
+        </mxCell>
+        <mxCell id="sec_integr_h" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#7C3AED;strokeColor=#7C3AED;fontColor=#FFFFFF;fontSize=16;fontStyle=1;align=center;verticalAlign=middle;arcSize=10;" value="Integraciones externas" vertex="1">
+          <mxGeometry x="2020" y="165" width="300" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="app_cliente" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#2563EB;strokeWidth=1.6;fontColor=#0F172A;fontSize=13;align=center;verticalAlign=middle;spacingTop=8;spacingLeft=10;spacingRight=10;arcSize=10;shadow=0;" value="App Cliente&amp;#xa;Registro, pagos, chat,&amp;#xa;entrenamiento, nutrición y progreso" vertex="1">
+          <mxGeometry x="90" y="240" width="260" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="app_coach" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#2563EB;strokeWidth=1.6;fontColor=#0F172A;fontSize=13;align=center;verticalAlign=middle;spacingTop=8;spacingLeft=10;spacingRight=10;arcSize=10;shadow=0;" value="App Coach&amp;#xa;Seguimiento, planes,&amp;#xa;sesiones, talleres y mensajería" vertex="1">
+          <mxGeometry x="90" y="430" width="260" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="web_admin" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#2563EB;strokeWidth=1.6;fontColor=#0F172A;fontSize=13;align=center;verticalAlign=middle;spacingTop=8;spacingLeft=10;spacingRight=10;arcSize=10;shadow=0;" value="Web Administrativa&amp;#xa;Usuarios, instituciones,&amp;#xa;planes, reportes y control" vertex="1">
+          <mxGeometry x="90" y="620" width="260" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="api" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0284C7;strokeWidth=1.6;fontColor=#0F172A;fontSize=13;align=center;verticalAlign=middle;spacingTop=8;spacingLeft=10;spacingRight=10;arcSize=10;shadow=0;" value="API REST / Backend Central&amp;#xa;Orquestación de casos de uso,&amp;#xa;validaciones y reglas del negocio" vertex="1">
+          <mxGeometry x="465" y="230" width="260" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="auth" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0284C7;strokeWidth=1.6;fontColor=#0F172A;fontSize=13;align=center;verticalAlign=middle;spacingTop=8;spacingLeft=10;spacingRight=10;arcSize=10;shadow=0;" value="Autenticación y Roles&amp;#xa;JWT / sesiones seguras,&amp;#xa;perfiles: cliente, coach y admin" vertex="1">
+          <mxGeometry x="465" y="430" width="260" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="access" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0284C7;strokeWidth=1.6;fontColor=#0F172A;fontSize=13;align=center;verticalAlign=middle;spacingTop=8;spacingLeft=10;spacingRight=10;arcSize=10;shadow=0;" value="Control de acceso por pago&amp;#xa;Habilita módulos pagados&amp;#xa;inmediatamente al validar pago" vertex="1">
+          <mxGeometry x="465" y="610" width="260" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="audit" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0284C7;strokeWidth=1.6;fontColor=#0F172A;fontSize=13;align=center;verticalAlign=middle;spacingTop=8;spacingLeft=10;spacingRight=10;arcSize=10;shadow=0;" value="Auditoría y bitácora&amp;#xa;Trazabilidad de eventos,&amp;#xa;mensajes, pagos y accesos" vertex="1">
+          <mxGeometry x="465" y="800" width="260" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="usuarios" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#16A34A;strokeWidth=1.6;fontColor=#0F172A;fontSize=13;align=center;verticalAlign=middle;spacingTop=8;spacingLeft=10;spacingRight=10;arcSize=10;shadow=0;" value="Gestión de usuarios y perfiles&amp;#xa;Autoregistro de clientes,&amp;#xa;registro administrativo y actualización" vertex="1">
+          <mxGeometry x="855" y="220" width="320" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="instituciones" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#16A34A;strokeWidth=1.6;fontColor=#0F172A;fontSize=13;align=center;verticalAlign=middle;spacingTop=8;spacingLeft=10;spacingRight=10;arcSize=10;shadow=0;" value="Instituciones y clientes&amp;#xa;Vinculación institucional,&amp;#xa;gestión de grupos y relaciones" vertex="1">
+          <mxGeometry x="1220" y="220" width="320" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="planes" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#16A34A;strokeWidth=1.6;fontColor=#0F172A;fontSize=13;align=center;verticalAlign=middle;spacingTop=8;spacingLeft=10;spacingRight=10;arcSize=10;shadow=0;" value="Planes comerciales y suscripciones&amp;#xa;Catálogo, vigencia, módulos incluidos&amp;#xa;y asignación a cliente" vertex="1">
+          <mxGeometry x="855" y="390" width="320" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="pagos" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#16A34A;strokeWidth=1.6;fontColor=#0F172A;fontSize=13;align=center;verticalAlign=middle;spacingTop=8;spacingLeft=10;spacingRight=10;arcSize=10;shadow=0;" value="Pagos y habilitación inmediata&amp;#xa;Validación, estado del pago,&amp;#xa;activación automática del módulo" vertex="1">
+          <mxGeometry x="1220" y="390" width="320" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="entrenamiento" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#16A34A;strokeWidth=1.6;fontColor=#0F172A;fontSize=13;align=center;verticalAlign=middle;spacingTop=8;spacingLeft=10;spacingRight=10;arcSize=10;shadow=0;" value="Entrenamiento y rutinas&amp;#xa;Planes, ejercicios, materiales&amp;#xa;y seguimiento de ejecución" vertex="1">
+          <mxGeometry x="855" y="560" width="320" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="nutricion" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#16A34A;strokeWidth=1.6;fontColor=#0F172A;fontSize=13;align=center;verticalAlign=middle;spacingTop=8;spacingLeft=10;spacingRight=10;arcSize=10;shadow=0;" value="Nutrición y alimentación&amp;#xa;Planes nutricionales, comidas,&amp;#xa;porciones y recomendaciones" vertex="1">
+          <mxGeometry x="1220" y="560" width="320" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="progreso" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#16A34A;strokeWidth=1.6;fontColor=#0F172A;fontSize=13;align=center;verticalAlign=middle;spacingTop=8;spacingLeft=10;spacingRight=10;arcSize=10;shadow=0;" value="Progreso y evidencias&amp;#xa;Mediciones, fotos, observaciones&amp;#xa;y evolución del cliente" vertex="1">
+          <mxGeometry x="855" y="730" width="320" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="agenda" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#16A34A;strokeWidth=1.6;fontColor=#0F172A;fontSize=13;align=center;verticalAlign=middle;spacingTop=8;spacingLeft=10;spacingRight=10;arcSize=10;shadow=0;" value="Agenda, sesiones y talleres&amp;#xa;Disponibilidad, reservas,&amp;#xa;sesiones individuales y grupales" vertex="1">
+          <mxGeometry x="1220" y="730" width="320" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="chat" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#16A34A;strokeWidth=1.6;fontColor=#0F172A;fontSize=13;align=center;verticalAlign=middle;spacingTop=8;spacingLeft=10;spacingRight=10;arcSize=10;shadow=0;" value="Chat cliente - coach&amp;#xa;Mensajería 1 a 1,&amp;#xa;historial y lectura" vertex="1">
+          <mxGeometry x="855" y="900" width="320" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="notif_report" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#16A34A;strokeWidth=1.6;fontColor=#0F172A;fontSize=13;align=center;verticalAlign=middle;spacingTop=8;spacingLeft=10;spacingRight=10;arcSize=10;shadow=0;" value="Notificaciones y reportes&amp;#xa;Alertas, recordatorios,&amp;#xa;dashboard y documentos PDF" vertex="1">
+          <mxGeometry x="1220" y="900" width="320" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="db" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D97706;strokeWidth=1.6;fontColor=#0F172A;fontSize=13;align=center;verticalAlign=middle;spacingTop=8;spacingLeft=10;spacingRight=10;arcSize=10;shadow=0;" value="Base de datos relacional&amp;#xa;MySQL / MariaDB&amp;#xa;Usuarios, planes, pagos, chat,&amp;#xa;agenda, progreso y reportes" vertex="1">
+          <mxGeometry x="1665" y="250" width="260" height="160" as="geometry"/>
+        </mxCell>
+        <mxCell id="files" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D97706;strokeWidth=1.6;fontColor=#0F172A;fontSize=13;align=center;verticalAlign=middle;spacingTop=8;spacingLeft=10;spacingRight=10;arcSize=10;shadow=0;" value="Almacenamiento de archivos&amp;#xa;Fotos de evolución,&amp;#xa;comprobantes y adjuntos" vertex="1">
+          <mxGeometry x="1665" y="500" width="260" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="cache_logs" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D97706;strokeWidth=1.6;fontColor=#0F172A;fontSize=13;align=center;verticalAlign=middle;spacingTop=8;spacingLeft=10;spacingRight=10;arcSize=10;shadow=0;" value="Bitácora y soporte operativo&amp;#xa;Logs, búsquedas, tokens&amp;#xa;y datos temporales" vertex="1">
+          <mxGeometry x="1665" y="720" width="260" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="pay_gateway" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7C3AED;strokeWidth=1.6;fontColor=#0F172A;fontSize=13;align=center;verticalAlign=middle;spacingTop=8;spacingLeft=10;spacingRight=10;arcSize=10;shadow=0;" value="Pasarela de pagos&amp;#xa;PSE / tarjeta / transferencia&amp;#xa;confirmación y referencia" vertex="1">
+          <mxGeometry x="2040" y="250" width="260" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="notify_ext" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7C3AED;strokeWidth=1.6;fontColor=#0F172A;fontSize=13;align=center;verticalAlign=middle;spacingTop=8;spacingLeft=10;spacingRight=10;arcSize=10;shadow=0;" value="Correo y notificaciones push&amp;#xa;Avisos de pago, sesiones,&amp;#xa;mensajes y vencimientos" vertex="1">
+          <mxGeometry x="2040" y="470" width="260" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="storage_ext" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7C3AED;strokeWidth=1.6;fontColor=#0F172A;fontSize=13;align=center;verticalAlign=middle;spacingTop=8;spacingLeft=10;spacingRight=10;arcSize=10;shadow=0;" value="Servicios externos de soporte&amp;#xa;Almacenamiento, reuniones virtuales&amp;#xa;y servicios auxiliares" vertex="1">
+          <mxGeometry x="2040" y="690" width="260" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="rules" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#EA580C;strokeWidth=1.4;fontColor=#0F172A;fontSize=14;align=left;verticalAlign=middle;spacingLeft=18;spacingRight=18;spacingTop=14;arcSize=10;" value="&lt;b&gt;Reglas de negocio clave incorporadas&lt;/b&gt;&lt;br/&gt;• El administrador puede crear cuentas de cliente y los clientes también pueden autorregistrarse.&lt;br/&gt;• El acceso a los módulos de entrenamiento y nutrición depende del pago validado del plan o módulo correspondiente.&lt;br/&gt;• Una vez confirmado el pago, el sistema habilita de forma inmediata el acceso funcional adquirido.&lt;br/&gt;• La plataforma contempla clientes individuales e institucionales, interacción cliente-coach, agenda, sesiones, talleres, reportes y notificaciones." vertex="1">
+          <mxGeometry x="60" y="1260" width="2275" height="170" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" parent="1" source="app_cliente" target="api" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#94A3B8;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" parent="1" source="app_coach" target="api" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#94A3B8;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" parent="1" source="web_admin" target="api" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#94A3B8;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" parent="1" source="api" target="auth" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284C7;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" parent="1" source="api" target="access" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284C7;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" parent="1" source="api" target="audit" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284C7;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e7" parent="1" source="api" target="usuarios" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284C7;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e8" parent="1" source="api" target="instituciones" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284C7;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e9" parent="1" source="api" target="planes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284C7;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e10" parent="1" source="api" target="pagos" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284C7;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e11" parent="1" source="api" target="entrenamiento" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284C7;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e12" parent="1" source="api" target="nutricion" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284C7;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e13" parent="1" source="api" target="progreso" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284C7;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e14" parent="1" source="api" target="agenda" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284C7;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e15" parent="1" source="api" target="chat" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284C7;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e16" parent="1" source="api" target="notif_report" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284C7;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e17" parent="1" source="access" target="planes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#94A3B8;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e18" parent="1" source="access" target="pagos" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#94A3B8;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e19" parent="1" source="access" target="entrenamiento" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#94A3B8;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e20" parent="1" source="access" target="nutricion" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#94A3B8;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e21" parent="1" source="access" target="agenda" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#94A3B8;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e22" parent="1" source="access" target="chat" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#94A3B8;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e23" parent="1" source="usuarios" target="db" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#D97706;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e24" parent="1" source="usuarios" target="cache_logs" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#D97706;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e25" parent="1" source="instituciones" target="db" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#D97706;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e26" parent="1" source="planes" target="db" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#D97706;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e27" parent="1" source="pagos" target="db" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#D97706;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e28" parent="1" source="pagos" target="files" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#D97706;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e29" parent="1" source="pagos" target="cache_logs" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#D97706;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e30" parent="1" source="entrenamiento" target="db" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#D97706;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e31" parent="1" source="nutricion" target="db" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#D97706;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e32" parent="1" source="progreso" target="db" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#D97706;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e33" parent="1" source="progreso" target="files" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#D97706;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e34" parent="1" source="agenda" target="db" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#D97706;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e35" parent="1" source="chat" target="db" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#D97706;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e36" parent="1" source="chat" target="files" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#D97706;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e37" parent="1" source="notif_report" target="cache_logs" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#D97706;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e38" parent="1" source="audit" target="cache_logs" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#D97706;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e39" parent="1" source="pagos" target="pay_gateway" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7C3AED;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e40" parent="1" source="notif_report" target="notify_ext" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7C3AED;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e41" parent="1" source="agenda" target="storage_ext" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7C3AED;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e42" parent="1" source="progreso" target="storage_ext" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7C3AED;strokeWidth=1.4;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" value="">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
