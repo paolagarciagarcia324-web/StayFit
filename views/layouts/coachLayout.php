@@ -138,6 +138,7 @@ $nombreUsuario = $_SESSION['nombre'] ?? 'Coach'; // Nombre en sesión
         <a class="<?= $vistaActiva === 'comunicacion' ? 'active' : '' ?>" href="../../controller/coach/comunicacionController.php">Comunicación</a>
         <a class="<?= $vistaActiva === 'notificaciones' ? 'active' : '' ?>" href="../../controller/coach/notificacionController.php">Notificaciones</a>
         <a class="<?= $vistaActiva === 'reportes' ? 'active' : '' ?>" href="../../controller/coach/reporteController.php">Reportes</a>
+        <?php require_once __DIR__ . '/../partials/cerrarSesion.php'; ?>
     </aside>
 
     <section class="main-area">

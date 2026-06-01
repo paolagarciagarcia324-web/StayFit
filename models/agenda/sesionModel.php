@@ -12,18 +12,15 @@ class SesionModel
         $this->db = $database->conectar(); // Abre conexión
     }
 
-    public function obtenerTodos()
-    {
-        $sql = "SELECT * FROM sesiones ORDER BY fecha DESC, hora DESC"; // Consulta sesiones
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->execute(); // Ejecuta consulta
-
-        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna sesiones
-    }
-
     public function obtenerPorCliente($clienteId)
     {
-        $sql = "SELECT * FROM sesiones WHERE cliente_id = :cliente_id ORDER BY fecha ASC, hora ASC"; // Sesiones cliente
+        $sql = "SELECT s.*
+                FROM sesion s
+                INNER JOIN sesion_participante sp ON sp.id_sesion = s.id_sesion
+                INNER JOIN plan_cliente pc ON pc.id_plan_cliente = sp.id_plan_cliente
+                WHERE pc.id_cliente = :cliente_id
+                ORDER BY s.fecha_hora_inicio ASC"; // Sesiones del cliente
+
         $stmt = $this->db->prepare($sql); // Prepara consulta
         $stmt->bindParam(':cliente_id', $clienteId); // Asigna cliente
         $stmt->execute(); // Ejecuta consulta
@@ -31,9 +28,18 @@ class SesionModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna sesiones
     }
 
+    public function obtenerTodos()
+    {
+        $sql = "SELECT * FROM sesion ORDER BY fecha_hora_inicio DESC"; // Consulta sesiones
+        $stmt = $this->db->prepare($sql); // Prepara consulta
+        $stmt->execute(); // Ejecuta consulta
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna sesiones
+    }
+
     public function obtenerPorCoach($coachId)
     {
-        $sql = "SELECT * FROM sesiones WHERE coach_id = :coach_id ORDER BY fecha ASC, hora ASC"; // Sesiones coach
+        $sql = "SELECT * FROM sesion WHERE id_coach = :coach_id ORDER BY fecha_hora_inicio ASC"; // Sesiones coach
         $stmt = $this->db->prepare($sql); // Prepara consulta
         $stmt->bindParam(':coach_id', $coachId); // Asigna coach
         $stmt->execute(); // Ejecuta consulta
@@ -43,9 +49,9 @@ class SesionModel
 
     public function obtenerProximasPorCoach($coachId)
     {
-        $sql = "SELECT * FROM sesiones 
-                WHERE coach_id = :coach_id AND fecha >= CURDATE()
-                ORDER BY fecha ASC, hora ASC"; // Próximas sesiones
+        $sql = "SELECT * FROM sesion 
+                WHERE id_coach = :coach_id AND fecha_hora_inicio >= NOW()
+                ORDER BY fecha_hora_inicio ASC"; // Próximas sesiones
 
         $stmt = $this->db->prepare($sql); // Prepara consulta
         $stmt->bindParam(':coach_id', $coachId); // Asigna coach
@@ -54,41 +60,31 @@ class SesionModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna sesiones
     }
 
-    public function obtenerEventosPorCliente($clienteId)
+    public function obtenerPorPlanCliente($planClienteId)
     {
-        $sql = "SELECT * FROM sesiones 
-                WHERE cliente_id = :cliente_id AND tipo = 'evento'
-                ORDER BY fecha ASC, hora ASC"; // Eventos cliente
+        $sql = "SELECT s.*
+                FROM sesion s
+                INNER JOIN sesion_participante sp ON sp.id_sesion = s.id_sesion
+                WHERE sp.id_plan_cliente = :plan_cliente_id
+                ORDER BY s.fecha_hora_inicio ASC"; // Sesiones del plan cliente
 
         $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':cliente_id', $clienteId); // Asigna cliente
+        $stmt->bindParam(':plan_cliente_id', $planClienteId); // Plan cliente
         $stmt->execute(); // Ejecuta consulta
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna eventos
+        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna sesiones
     }
 
-    public function obtenerEventosPorCoach($coachId)
+    public function obtenerGrupalesPorPlanCliente($planClienteId)
     {
-        $sql = "SELECT * FROM sesiones 
-                WHERE coach_id = :coach_id AND tipo = 'evento'
-                ORDER BY fecha ASC, hora ASC"; // Eventos coach
+        $sql = "SELECT s.*
+                FROM sesion s
+                INNER JOIN sesion_participante sp ON sp.id_sesion = s.id_sesion
+                WHERE sp.id_plan_cliente = :plan_cliente_id AND s.tipo = 'GRUPAL'
+                ORDER BY s.fecha_hora_inicio ASC"; // Sesiones grupales
 
         $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':coach_id', $coachId); // Asigna coach
-        $stmt->execute(); // Ejecuta consulta
-
-        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna eventos
-    }
-
-    public function obtenerGrupalesPorCliente($clienteId)
-    {
-        $sql = "SELECT s.* FROM sesiones s
-                INNER JOIN sesion_participantes sp ON sp.sesion_id = s.id
-                WHERE sp.cliente_id = :cliente_id AND s.tipo = 'grupal'
-                ORDER BY s.fecha ASC, s.hora ASC"; // Sesiones grupales
-
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':cliente_id', $clienteId); // Asigna cliente
+        $stmt->bindParam(':plan_cliente_id', $planClienteId); // Plan cliente
         $stmt->execute(); // Ejecuta consulta
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna sesiones
@@ -96,37 +92,62 @@ class SesionModel
 
     public function crear($datos)
     {
-        $sql = "INSERT INTO sesiones 
-                (coach_id, cliente_id, titulo, descripcion, fecha, hora, modalidad, tipo, estado)
+        $sql = "INSERT INTO sesion 
+                (id_coach, titulo, descripcion, fecha_hora_inicio, fecha_hora_fin,
+                 duracion_minutos, tipo, modalidad, estado, cupo_maximo, enlace_virtual, ubicacion)
                 VALUES
-                (:coach_id, :cliente_id, :titulo, :descripcion, :fecha, :hora, :modalidad, :tipo, :estado)"; // Inserta sesión
+                (:id_coach, :titulo, :descripcion, :fecha_hora_inicio, :fecha_hora_fin,
+                 :duracion_minutos, :tipo, :modalidad, :estado, :cupo_maximo, :enlace_virtual, :ubicacion)"; // Inserta sesión
 
         $stmt = $this->db->prepare($sql); // Prepara consulta
-
-        $stmt->bindParam(':coach_id', $datos['coach_id']); // Coach
-        $stmt->bindParam(':cliente_id', $datos['cliente_id']); // Cliente
-        $stmt->bindParam(':titulo', $datos['titulo']); // Título
-        $stmt->bindParam(':descripcion', $datos['descripcion']); // Descripción
-        $stmt->bindParam(':fecha', $datos['fecha']); // Fecha
-        $stmt->bindParam(':hora', $datos['hora']); // Hora
-        $stmt->bindParam(':modalidad', $datos['modalidad']); // Modalidad
-        $stmt->bindParam(':tipo', $datos['tipo']); // Tipo
-        $stmt->bindParam(':estado', $datos['estado']); // Estado
+        $stmt->bindParam(':id_coach', $datos['id_coach']); // Coach
+        $stmt->bindValue(':titulo', $datos['titulo'] ?? null); // Título
+        $stmt->bindValue(':descripcion', $datos['descripcion'] ?? null); // Descripción
+        $stmt->bindParam(':fecha_hora_inicio', $datos['fecha_hora_inicio']); // Inicio
+        $stmt->bindParam(':fecha_hora_fin', $datos['fecha_hora_fin']); // Fin
+        $stmt->bindValue(':duracion_minutos', $datos['duracion_minutos'] ?? null); // Duración
+        $stmt->bindValue(':tipo', $datos['tipo'] ?? 'INDIVIDUAL'); // Tipo
+        $stmt->bindValue(':modalidad', $datos['modalidad'] ?? 'VIRTUAL'); // Modalidad
+        $stmt->bindValue(':estado', $datos['estado'] ?? 'PROGRAMADA'); // Estado
+        $stmt->bindValue(':cupo_maximo', $datos['cupo_maximo'] ?? null); // Cupo
+        $stmt->bindValue(':enlace_virtual', $datos['enlace_virtual'] ?? null); // Enlace
+        $stmt->bindValue(':ubicacion', $datos['ubicacion'] ?? null); // Ubicación
 
         return $stmt->execute(); // Ejecuta registro
     }
 
-    public function crearEvento($datos)
+    public function inscribirParticipante($datos)
     {
-        $datos['tipo'] = 'evento'; // Define tipo evento
-        $datos['cliente_id'] = $datos['cliente_id'] ?? null; // Cliente opcional
+        $sql = "INSERT INTO sesion_participante (id_sesion, id_plan_cliente, estado_asistencia, observaciones)
+                VALUES (:id_sesion, :id_plan_cliente, :estado_asistencia, :observaciones)"; // Inscribe participante
 
-        return $this->crear($datos); // Reutiliza crear
+        $stmt = $this->db->prepare($sql); // Prepara consulta
+        $stmt->bindParam(':id_sesion', $datos['id_sesion']); // ID sesión
+        $stmt->bindParam(':id_plan_cliente', $datos['id_plan_cliente']); // Plan cliente
+        $stmt->bindValue(':estado_asistencia', $datos['estado_asistencia'] ?? 'INSCRITO'); // Estado
+        $stmt->bindValue(':observaciones', $datos['observaciones'] ?? null); // Observaciones
+
+        return $stmt->execute(); // Ejecuta registro
+    }
+
+    public function marcarAsistencia($datos)
+    {
+        $sql = "UPDATE sesion_participante 
+                SET estado_asistencia = :estado_asistencia, observaciones = :observaciones
+                WHERE id_sesion = :id_sesion AND id_plan_cliente = :id_plan_cliente"; // Marca asistencia
+
+        $stmt = $this->db->prepare($sql); // Prepara consulta
+        $stmt->bindParam(':estado_asistencia', $datos['estado_asistencia']); // Estado asistencia
+        $stmt->bindValue(':observaciones', $datos['observaciones'] ?? null); // Observación
+        $stmt->bindParam(':id_sesion', $datos['id_sesion']); // ID sesión
+        $stmt->bindParam(':id_plan_cliente', $datos['id_plan_cliente']); // Plan cliente
+
+        return $stmt->execute(); // Ejecuta actualización
     }
 
     public function cambiarEstado($id, $estado)
     {
-        $sql = "UPDATE sesiones SET estado = :estado WHERE id = :id"; // Cambia estado
+        $sql = "UPDATE sesion SET estado = :estado WHERE id_sesion = :id"; // Cambia estado
         $stmt = $this->db->prepare($sql); // Prepara consulta
         $stmt->bindParam(':estado', $estado); // Nuevo estado
         $stmt->bindParam(':id', $id); // ID sesión
@@ -134,67 +155,11 @@ class SesionModel
         return $stmt->execute(); // Ejecuta actualización
     }
 
-    public function actualizarEstado($datos)
-    {
-        $sql = "UPDATE sesiones 
-                SET estado = :estado, observacion = :observacion
-                WHERE id = :id"; // Actualiza sesión
-
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':estado', $datos['estado']); // Estado
-        $stmt->bindParam(':observacion', $datos['observacion']); // Observación
-        $stmt->bindParam(':id', $datos['id']); // ID sesión
-
-        return $stmt->execute(); // Ejecuta actualización
-    }
-
-    public function inscribirClienteEvento($datos)
-    {
-        $sql = "INSERT INTO sesion_participantes (sesion_id, cliente_id, estado)
-                VALUES (:sesion_id, :cliente_id, :estado)"; // Inscribe cliente
-
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':sesion_id', $datos['evento_id']); // ID evento
-        $stmt->bindParam(':cliente_id', $datos['cliente_id']); // ID cliente
-        $stmt->bindParam(':estado', $datos['estado']); // Estado
-
-        return $stmt->execute(); // Ejecuta registro
-    }
-
-    public function confirmarAsistencia($datos)
-    {
-        $sql = "UPDATE sesion_participantes 
-                SET estado = :estado
-                WHERE sesion_id = :sesion_id AND cliente_id = :cliente_id"; // Confirma asistencia
-
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':estado', $datos['estado']); // Estado
-        $stmt->bindParam(':sesion_id', $datos['sesion_id']); // ID sesión
-        $stmt->bindParam(':cliente_id', $datos['cliente_id']); // ID cliente
-
-        return $stmt->execute(); // Ejecuta actualización
-    }
-
-    public function marcarAsistencia($datos)
-    {
-        $sql = "UPDATE sesion_participantes 
-                SET estado = :estado, observacion = :observacion
-                WHERE sesion_id = :sesion_id AND cliente_id = :cliente_id"; // Marca asistencia
-
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':estado', $datos['estado']); // Estado asistencia
-        $stmt->bindParam(':observacion', $datos['observacion']); // Observación
-        $stmt->bindParam(':sesion_id', $datos['sesion_id']); // ID sesión
-        $stmt->bindParam(':cliente_id', $datos['cliente_id']); // ID cliente
-
-        return $stmt->execute(); // Ejecuta actualización
-    }
-
     public function reportePorCoach($coachId)
     {
         $sql = "SELECT estado, COUNT(*) AS total
-                FROM sesiones
-                WHERE coach_id = :coach_id
+                FROM sesion
+                WHERE id_coach = :coach_id
                 GROUP BY estado"; // Reporte sesiones
 
         $stmt = $this->db->prepare($sql); // Prepara consulta
@@ -206,7 +171,7 @@ class SesionModel
 
     public function registrarTrazabilidad($usuarioId, $accion)
     {
-        $sql = "INSERT INTO trazabilidad (usuario_id, modulo, accion, fecha)
+        $sql = "INSERT INTO bitacora_busqueda (id_usuario, modulo, accion, fecha_hora)
                 VALUES (:usuario_id, 'Sesiones', :accion, NOW())"; // Inserta historial
 
         $stmt = $this->db->prepare($sql); // Prepara consulta

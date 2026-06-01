@@ -14,7 +14,7 @@ class ChatModel
 
     public function obtenerPorCliente($clienteId)
     {
-        $sql = "SELECT * FROM chats WHERE cliente_id = :cliente_id LIMIT 1"; // Busca chat del cliente
+        $sql = "SELECT * FROM chat WHERE id_cliente = :cliente_id LIMIT 1"; // Busca chat del cliente
         $stmt = $this->db->prepare($sql); // Prepara consulta
         $stmt->bindParam(':cliente_id', $clienteId); // Asigna cliente
         $stmt->execute(); // Ejecuta consulta
@@ -24,7 +24,11 @@ class ChatModel
 
     public function obtenerPorCoach($coachId)
     {
-        $sql = "SELECT * FROM chats WHERE coach_id = :coach_id ORDER BY fecha_actualizacion DESC"; // Chats del coach
+        $sql = "SELECT c.*, CONCAT(u.nombre, ' ', IFNULL(u.apellido, '')) AS cliente, u.correo AS cliente_correo
+                FROM chat c
+                INNER JOIN users u ON u.id_usuario = c.id_cliente
+                WHERE c.id_coach = :coach_id
+                ORDER BY c.fecha_creacion DESC";
         $stmt = $this->db->prepare($sql); // Prepara consulta
         $stmt->bindParam(':coach_id', $coachId); // Asigna coach
         $stmt->execute(); // Ejecuta consulta
@@ -34,15 +38,16 @@ class ChatModel
 
     public function crear($datos)
     {
-        $sql = "INSERT INTO chats 
-                (cliente_id, coach_id, estado, fecha_creacion, fecha_actualizacion)
+        $sql = "INSERT INTO chat 
+                (id_cliente, id_coach, fecha_creacion, es_temporal, fecha_expiracion)
                 VALUES 
-                (:cliente_id, :coach_id, :estado, NOW(), NOW())"; // Crea chat
+                (:id_cliente, :id_coach, NOW(), :es_temporal, :fecha_expiracion)"; // Crea chat
 
         $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':cliente_id', $datos['cliente_id']); // Cliente
-        $stmt->bindParam(':coach_id', $datos['coach_id']); // Coach
-        $stmt->bindValue(':estado', $datos['estado'] ?? 'activo'); // Estado
+        $stmt->bindValue(':id_cliente', $datos['id_cliente'], PDO::PARAM_INT);
+        $stmt->bindValue(':id_coach', $datos['id_coach'], PDO::PARAM_INT);
+        $stmt->bindValue(':es_temporal', $datos['es_temporal'] ?? 0); // Temporal
+        $stmt->bindValue(':fecha_expiracion', $datos['fecha_expiracion'] ?? null); // Expiración
 
         $stmt->execute(); // Ejecuta registro
 
@@ -58,9 +63,8 @@ class ChatModel
         }
 
         $chatId = $this->crear([
-            'cliente_id' => $clienteId, // Cliente
-            'coach_id' => $coachId, // Coach
-            'estado' => 'activo' // Estado inicial
+            'id_cliente' => $clienteId, // Cliente
+            'id_coach'   => $coachId,   // Coach
         ]);
 
         return $this->obtenerPorId($chatId); // Retorna chat creado
@@ -68,7 +72,7 @@ class ChatModel
 
     public function obtenerPorId($id)
     {
-        $sql = "SELECT * FROM chats WHERE id = :id LIMIT 1"; // Busca por ID
+        $sql = "SELECT * FROM chat WHERE id_chat = :id LIMIT 1"; // Busca por ID
         $stmt = $this->db->prepare($sql); // Prepara consulta
         $stmt->bindParam(':id', $id); // Asigna ID
         $stmt->execute(); // Ejecuta consulta
@@ -76,28 +80,9 @@ class ChatModel
         return $stmt->fetch(PDO::FETCH_ASSOC); // Retorna chat
     }
 
-    public function actualizarFecha($id)
-    {
-        $sql = "UPDATE chats SET fecha_actualizacion = NOW() WHERE id = :id"; // Actualiza fecha
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':id', $id); // Chat
-
-        return $stmt->execute(); // Ejecuta actualización
-    }
-
-    public function cambiarEstado($id, $estado)
-    {
-        $sql = "UPDATE chats SET estado = :estado WHERE id = :id"; // Cambia estado
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':estado', $estado); // Nuevo estado
-        $stmt->bindParam(':id', $id); // Chat
-
-        return $stmt->execute(); // Ejecuta cambio
-    }
-
     public function registrarTrazabilidad($usuarioId, $accion)
     {
-        $sql = "INSERT INTO trazabilidad (usuario_id, modulo, accion, fecha)
+        $sql = "INSERT INTO bitacora_busqueda (id_usuario, modulo, accion, fecha_hora)
                 VALUES (:usuario_id, 'Chat', :accion, NOW())"; // Guarda historial
 
         $stmt = $this->db->prepare($sql); // Prepara consulta

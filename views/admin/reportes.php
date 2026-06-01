@@ -156,6 +156,8 @@ $estadisticas = $estadisticas ?? []; // Estadísticas generales
         <a href="../../controller/admin/pagoController.php">Pagos</a>
         <a href="../../controller/admin/planController.php">Planes</a>
         <a class="active" href="../../controller/admin/reporteController.php">Reportes</a>
+        <?php require_once __DIR__ . '/../partials/cerrarSesion.php'; ?>
+
     </aside>
 
     <main class="content">

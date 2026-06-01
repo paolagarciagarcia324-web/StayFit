@@ -6,9 +6,10 @@ if (!function_exists('e')) { // Evita duplicar función
     }
 }
 
-$chats = $chats ?? []; // Chats del coach
-$mensajes = $mensajes ?? []; // Mensajes recibidos
-$clientes = $clientes ?? []; // Clientes para enviar mensaje
+$chats = $chats ?? [];
+$mensajes = $mensajes ?? [];
+$clientes = $clientes ?? [];
+$flash = $flash ?? null;
 
 ?>
 
@@ -159,6 +160,24 @@ $clientes = $clientes ?? []; // Clientes para enviar mensaje
             border-radius: 16px;
         }
 
+        .alert-success {
+            background: #e8f8f1;
+            color: #1d6b4f;
+            border: 1px solid #3EB489;
+            padding: 14px 18px;
+            border-radius: 14px;
+            margin-bottom: 22px;
+        }
+
+        .alert-error {
+            background: #fde8f0;
+            color: #8b2252;
+            border: 1px solid #D63384;
+            padding: 14px 18px;
+            border-radius: 14px;
+            margin-bottom: 22px;
+        }
+
         @media (max-width: 1000px) {
             .coach-wrapper {
                 flex-direction: column;
@@ -202,6 +221,12 @@ $clientes = $clientes ?? []; // Clientes para enviar mensaje
             <h1>Comunicación</h1>
             <p>Responde mensajes, acompaña el proceso y mantén comunicación clara con tus clientas.</p>
         </section>
+
+        <?php if (!empty($flash['mensaje'])): ?>
+            <div class="<?= ($flash['tipo'] ?? '') === 'success' ? 'alert-success' : 'alert-error' ?>">
+                <?= e($flash['mensaje']) ?>
+            </div>
+        <?php endif; ?>
 
         <section class="grid">
 

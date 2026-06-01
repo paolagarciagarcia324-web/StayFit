@@ -206,7 +206,7 @@ $programas = $programas ?? []; // Programas disponibles
 
                 <br>
 
-                <a class="btn-primary" href="solicitud.php?plan_id=<?= e($plan['id'] ?? '') ?>">
+                <a class="btn-primary" href="solicitud.php?plan_id=<?= e($plan['id_plan'] ?? $plan['id'] ?? '') ?>">
                     Solicitar este plan
                 </a>
             </article>

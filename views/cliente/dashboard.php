@@ -8,6 +8,7 @@ if (!function_exists('e')) { // Evita duplicar función
 
 $cliente = $cliente ?? []; // Datos cliente
 $plan = $plan ?? []; // Plan activo
+$coach = $coach ?? null; // Coach asignado
 $accesos = $accesos ?? []; // Accesos
 $progreso = $progreso ?? []; // Último progreso
 $avanceVirtual = $avanceVirtual ?? 0; // Avance virtual
@@ -218,6 +219,26 @@ $notificaciones = $notificaciones ?? []; // Notificaciones
                     <div class="progress-bar"></div>
                 </div>
                 <a class="btn btn-green" href="../../controller/cliente/contenidoVirtualController.php">Ver videos</a>
+            </div>
+
+            <div class="card">
+                <h3>Tu coach</h3>
+                <?php if ($coach): ?>
+                    <p class="number" style="font-size: 22px;"><?= e($coach['nombre_completo'] ?? trim(($coach['nombre'] ?? '') . ' ' . ($coach['apellido'] ?? ''))) ?></p>
+                    <p><?= e($coach['especialidad'] ?? 'Especialidad no registrada') ?></p>
+                    <p><?= e($coach['correo'] ?? '') ?></p>
+                    <a class="btn" href="../../controller/cliente/comunicacionController.php">Contactar coach</a>
+                <?php else: ?>
+                    <?php
+                    $modalidadPlan = strtoupper($plan['modalidad'] ?? '');
+                    $requiereCoach = !empty($plan['requiere_coach']) || in_array($modalidadPlan, ['PRESENCIAL', 'MIXTA'], true);
+                    ?>
+                    <?php if ($requiereCoach): ?>
+                        <p>Pendiente de asignación por el administrador.</p>
+                    <?php else: ?>
+                        <p>Tu plan no incluye coach asignado.</p>
+                    <?php endif; ?>
+                <?php endif; ?>
             </div>
         </section>
 

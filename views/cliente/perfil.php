@@ -6,8 +6,10 @@ if (!function_exists('e')) { // Evita duplicar función
     }
 }
 
-$pagos = $pagos ?? []; // Historial de pagos
-$planes = $planes ?? []; // Planes disponibles si llegan desde controlador
+$cliente = $cliente ?? []; // Datos del cliente
+$usuario = $usuario ?? []; // Datos del usuario
+$datosFisicos = $datosFisicos ?? []; // Datos físicos
+$cuenta = $cuenta ?? []; // Datos de cuenta (cuentaController)
 
 ?>
 
@@ -16,7 +18,7 @@ $planes = $planes ?? []; // Planes disponibles si llegan desde controlador
 <head>
     <meta charset="UTF-8"> <!-- Codificación -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
-    <title>Pagos | StayFit</title> <!-- Título -->
+    <title>Perfil | StayFit</title> <!-- Título -->
 
     <style>
         body {
@@ -72,7 +74,7 @@ $planes = $planes ?? []; // Planes disponibles si llegan desde controlador
 
         .grid {
             display: grid;
-            grid-template-columns: 360px 1fr;
+            grid-template-columns: 1fr 1fr;
             gap: 22px;
         }
 
@@ -94,64 +96,45 @@ $planes = $planes ?? []; // Planes disponibles si llegan desde controlador
         }
 
         input,
-        select {
+        textarea {
             width: 100%;
             padding: 12px;
             margin: 8px 0 15px;
             border: 1px solid #ddd;
             border-radius: 14px;
             box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        textarea {
+            min-height: 90px;
+            resize: vertical;
         }
 
         button {
-            width: 100%;
             background: #D63384;
             color: #FFFFFF;
             border: none;
-            padding: 13px;
+            padding: 13px 18px;
             border-radius: 14px;
             font-weight: 800;
             cursor: pointer;
         }
 
-        button:hover {
-            background: #b92b70;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            text-align: left;
-            padding: 14px;
-            border-bottom: 2px solid #eee;
-        }
-
-        td {
-            padding: 14px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .badge {
-            display: inline-block;
+        .btn-green {
             background: #3EB489;
-            color: #FFFFFF;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 13px;
         }
 
-        .badge.pendiente {
-            background: #D63384;
-        }
-
-        .empty {
-            color: #777;
-            background: #f4f4f4;
-            padding: 18px;
+        .info-box {
+            background: #fff7fb;
+            border-left: 5px solid #D63384;
+            padding: 16px;
             border-radius: 16px;
+            margin-bottom: 14px;
+        }
+
+        .info-box strong {
+            color: #D63384;
         }
 
         @media (max-width: 900px) {
@@ -176,98 +159,103 @@ $planes = $planes ?? []; // Planes disponibles si llegan desde controlador
     <aside class="sidebar">
         <h2>StayFit</h2>
         <a href="../../controller/cliente/dashboardController.php">Dashboard</a>
-        <a href="../../controller/cliente/perfilController.php">Perfil</a>
+        <a class="active" href="../../controller/cliente/perfilController.php">Perfil</a>
         <a href="../../controller/cliente/planController.php">Mi plan</a>
         <a href="../../controller/cliente/entrenamientoController.php">Entrenamiento</a>
         <a href="../../controller/cliente/nutricionController.php">Nutrición</a>
         <a href="../../controller/cliente/progresoController.php">Progreso</a>
         <a href="../../controller/cliente/calendarioController.php">Calendario</a>
-        <a class="active" href="../../controller/cliente/pagoController.php">Pagos</a>
+        <a href="../../controller/cliente/pagoController.php">Pagos</a>
         <a href="../../controller/auth/logouthController.php">Cerrar sesión</a>
     </aside>
 
     <main class="content">
 
         <section class="page-header">
-            <h1>Pagos</h1>
-            <p>Consulta tu historial, envía comprobantes y mantén activo tu acceso a StayFit.</p>
+            <h1>Mi perfil</h1>
+            <p>Actualiza tus datos personales, físicos y de acceso para mantener tu información al día.</p>
         </section>
 
         <section class="grid">
 
             <div class="card">
-                <h3>Enviar nuevo pago</h3>
+                <h3>Datos personales</h3>
 
-                <form action="../../controller/cliente/pagoController.php?accion=registrar" method="POST" enctype="multipart/form-data">
-                    <label>Plan</label>
+                <form action="../../controller/cliente/perfilController.php?accion=actualizar" method="POST">
+                    <label>Nombre completo</label>
+                    <input type="text" name="nombre" value="<?= e($usuario['nombre'] ?? $cliente['nombre'] ?? '') ?>" required>
 
-                    <?php if (!empty($planes)): ?>
-                        <select name="plan_id" required>
-                            <option value="">Seleccione un plan</option>
-                            <?php foreach ($planes as $plan): ?>
-                                <option value="<?= e($plan['id'] ?? '') ?>">
-                                    <?= e($plan['nombre'] ?? 'Plan') ?> - $<?= e($plan['precio'] ?? '0') ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    <?php else: ?>
-                        <input type="number" name="plan_id" placeholder="ID del plan" required>
-                    <?php endif; ?>
+                    <label>Correo</label>
+                    <input type="email" name="correo" value="<?= e($usuario['correo'] ?? '') ?>" required>
 
-                    <label>Monto pagado</label>
-                    <input type="number" name="monto" min="0" required>
+                    <label>Identificación</label>
+                    <input type="text" name="identificacion" value="<?= e($cliente['identificacion'] ?? '') ?>" required>
 
-                    <label>Tipo de cuenta</label>
-                    <select name="tipo_cuenta" required>
-                        <option value="">Seleccione una opción</option>
-                        <option value="ahorros">Ahorros</option>
-                        <option value="corriente">Corriente</option>
-                        <option value="nequi">Nequi</option>
-                        <option value="daviplata">Daviplata</option>
-                    </select>
+                    <label>Edad</label>
+                    <input type="number" name="edad" value="<?= e($cliente['edad'] ?? '') ?>" required>
 
-                    <label>Número de cuenta</label>
-                    <input type="text" name="numero_cuenta" required>
+                    <label>Celular</label>
+                    <input type="text" name="celular" value="<?= e($cliente['celular'] ?? '') ?>" required>
 
-                    <label>Comprobante</label>
-                    <input type="file" name="comprobante" accept="image/*,.pdf" required>
-
-                    <button type="submit">Enviar comprobante</button>
+                    <button type="submit">Actualizar perfil</button>
                 </form>
             </div>
 
             <div class="card">
-                <h3>Historial de pagos</h3>
+                <h3>Datos físicos</h3>
 
-                <?php if (empty($pagos)): ?>
-                    <div class="empty">No tienes pagos registrados todavía.</div>
-                <?php else: ?>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Plan</th>
-                                <th>Monto</th>
-                                <th>Estado</th>
-                                <th>Fecha</th>
-                            </tr>
-                        </thead>
+                <form action="../../controller/cliente/datosFisicosController.php?accion=actualizar" method="POST">
+                    <label>Peso (kg)</label>
+                    <input type="number" step="0.1" name="peso" value="<?= e($datosFisicos['peso'] ?? '') ?>" required>
 
-                        <tbody>
-                            <?php foreach ($pagos as $pago): ?>
-                                <tr>
-                                    <td><?= e($pago['plan'] ?? $pago['plan_id'] ?? 'Plan') ?></td>
-                                    <td>$<?= e($pago['monto'] ?? '0') ?></td>
-                                    <td>
-                                        <span class="badge <?= (($pago['estado'] ?? '') === 'pendiente') ? 'pendiente' : '' ?>">
-                                            <?= e($pago['estado'] ?? 'pendiente') ?>
-                                        </span>
-                                    </td>
-                                    <td><?= e($pago['fecha'] ?? '') ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                <?php endif; ?>
+                    <label>Estatura (cm)</label>
+                    <input type="number" step="0.1" name="estatura" value="<?= e($datosFisicos['estatura'] ?? '') ?>" required>
+
+                    <label>Objetivo</label>
+                    <textarea name="objetivo" placeholder="Ej: tonificar, bajar grasa, ganar resistencia" required><?= e($datosFisicos['objetivo'] ?? '') ?></textarea>
+
+                    <label>Restricciones</label>
+                    <textarea name="restricciones" placeholder="Lesiones, alergias o limitaciones"><?= e($datosFisicos['restricciones'] ?? '') ?></textarea>
+
+                    <label>Observaciones</label>
+                    <textarea name="observaciones" placeholder="Comentarios adicionales para tu coach"><?= e($datosFisicos['observaciones'] ?? '') ?></textarea>
+
+                    <button class="btn-green" type="submit">Guardar datos físicos</button>
+                </form>
+            </div>
+
+        </section>
+
+        <section class="grid" style="margin-top: 24px;">
+
+            <div class="card">
+                <h3>Cambiar contraseña</h3>
+
+                <form action="../../controller/cliente/cuentaController.php?accion=cambiarPassword" method="POST">
+                    <label>Nueva contraseña</label>
+                    <input type="password" name="password" minlength="6" required>
+
+                    <button type="submit">Actualizar contraseña</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3>Resumen de cuenta</h3>
+
+                <div class="info-box">
+                    <strong>Correo:</strong>
+                    <?= e($usuario['correo'] ?? $cuenta['correo'] ?? '') ?>
+                </div>
+
+                <div class="info-box">
+                    <strong>Estado:</strong>
+                    <?= e($cliente['estado'] ?? $usuario['estado'] ?? 'activo') ?>
+                </div>
+
+                <div class="info-box">
+                    <strong>Objetivo actual:</strong>
+                    <?= e($datosFisicos['objetivo'] ?? 'Aún no registrado') ?>
+                </div>
             </div>
 
         </section>

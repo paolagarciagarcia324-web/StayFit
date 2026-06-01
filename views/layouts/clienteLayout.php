@@ -138,6 +138,7 @@ $nombreUsuario = $_SESSION['nombre'] ?? 'Cliente'; // Nombre del cliente
         <a class="<?= $vistaActiva === 'pagos' ? 'active' : '' ?>" href="../../controller/cliente/pagoController.php">Pagos</a>
         <a class="<?= $vistaActiva === 'comunicacion' ? 'active' : '' ?>" href="../../controller/cliente/comunicacionController.php">Comunicación</a>
         <a class="<?= $vistaActiva === 'notificaciones' ? 'active' : '' ?>" href="../../controller/cliente/notificacionController.php">Notificaciones</a>
+        <?php require_once __DIR__ . '/../partials/cerrarSesion.php'; ?>
     </aside>
 
     <section class="main-area">

@@ -6,10 +6,11 @@ if (!function_exists('e')) { // Evita duplicar función
     }
 }
 
-$planes = $planes ?? []; // Planes disponibles
-$planSeleccionado = $_GET['plan_id'] ?? ''; // Plan recibido por URL
-$alert = $_SESSION['alert'] ?? null; // Alerta de sesión
-unset($_SESSION['alert']); // Limpia alerta
+$planes = $planes ?? [];
+$planSeleccionado = (string) ($_GET['plan_id'] ?? '');
+$alert = $_SESSION['alert'] ?? null;
+$alertTipo = $_SESSION['alert_tipo'] ?? 'error';
+unset($_SESSION['alert'], $_SESSION['alert_tipo']);
 
 ?>
 
@@ -130,12 +131,22 @@ unset($_SESSION['alert']); // Limpia alerta
             background: #b92b70;
         }
 
-        .alert {
+        .alert-error {
             background: #fff1f7;
             border-left: 5px solid #D63384;
             padding: 14px;
             border-radius: 14px;
             margin-bottom: 18px;
+            color: #8b2252;
+        }
+
+        .alert-success {
+            background: #e8f8f1;
+            border-left: 5px solid #3EB489;
+            padding: 14px;
+            border-radius: 14px;
+            margin-bottom: 18px;
+            color: #1d6b4f;
         }
 
         .note {
@@ -144,6 +155,7 @@ unset($_SESSION['alert']); // Limpia alerta
             padding: 16px;
             border-radius: 16px;
             margin-bottom: 20px;
+            color: #2D2D2D;
         }
 
         @media (max-width: 900px) {
@@ -200,7 +212,7 @@ unset($_SESSION['alert']); // Limpia alerta
             </div>
 
             <?php if ($alert): ?>
-                <div class="alert">
+                <div class="<?= ($alertTipo ?? '') === 'success' ? 'alert-success' : 'alert-error' ?>">
                     <?= e($alert) ?>
                 </div>
             <?php endif; ?>
@@ -224,7 +236,10 @@ unset($_SESSION['alert']); // Limpia alerta
                     <option value="">Seleccione un plan</option>
 
                     <?php foreach ($planes as $plan): ?>
-                        <option value="<?= e($plan['id'] ?? '') ?>" <?= ($planSeleccionado == ($plan['id'] ?? '')) ? 'selected' : '' ?>>
+                        <?php $planId = $plan['id_plan'] ?? $plan['id'] ?? ''; ?>
+                        <option value="<?= e($planId) ?>"
+                                data-modalidad="<?= e(strtolower($plan['modalidad'] ?? 'virtual')) ?>"
+                                <?= ($planSeleccionado !== '' && $planSeleccionado == (string) $planId) ? 'selected' : '' ?>>
                             <?= e($plan['nombre'] ?? 'Plan') ?> - $<?= e($plan['precio'] ?? '0') ?>
                         </option>
                     <?php endforeach; ?>
@@ -259,6 +274,29 @@ unset($_SESSION['alert']); // Limpia alerta
     </section>
 
 </main>
+
+<script>
+(function () {
+    var planSelect = document.querySelector('select[name="plan_id"]');
+    var modalidadSelect = document.querySelector('select[name="modalidad"]');
+    if (!planSelect || !modalidadSelect) return;
+
+    function sincronizarModalidad() {
+        var opt = planSelect.options[planSelect.selectedIndex];
+        var mod = opt && opt.getAttribute('data-modalidad');
+        if (!mod) return;
+        for (var i = 0; i < modalidadSelect.options.length; i++) {
+            if (modalidadSelect.options[i].value === mod) {
+                modalidadSelect.selectedIndex = i;
+                break;
+            }
+        }
+    }
+
+    planSelect.addEventListener('change', sincronizarModalidad);
+    sincronizarModalidad();
+})();
+</script>
 
 </body>
 </html>

@@ -1,13 +1,16 @@
 <?php
 
+require_once __DIR__ . '/../../config/helpers.php';
+
 if (!function_exists('e')) { // Evita duplicar función
     function e($valor) { // Limpia salida HTML
         return htmlspecialchars((string)$valor, ENT_QUOTES, 'UTF-8'); // Retorna texto seguro
     }
 }
 
-$solicitudes = $solicitudes ?? []; // Lista de solicitudes
-$solicitud = $solicitud ?? null; // Detalle de solicitud
+$solicitudes = $solicitudes ?? [];
+$solicitud = $solicitud ?? null;
+$flash = $flash ?? null;
 
 ?>
 
@@ -83,6 +86,24 @@ $solicitud = $solicitud ?? null; // Detalle de solicitud
             margin-top: 0;
         }
 
+        .alert-success {
+            background: #e8f8f1;
+            color: #1d6b4f;
+            border: 1px solid #3EB489;
+            padding: 14px 18px;
+            border-radius: 14px;
+            margin-bottom: 22px;
+        }
+
+        .alert-error {
+            background: #fde8f0;
+            color: #8b2252;
+            border: 1px solid #D63384;
+            padding: 14px 18px;
+            border-radius: 14px;
+            margin-bottom: 22px;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -124,6 +145,40 @@ $solicitud = $solicitud ?? null; // Detalle de solicitud
             background: #3EB489;
         }
 
+        .comprobante-preview {
+            margin-top: 16px;
+            padding: 16px;
+            background: #f9f9f9;
+            border-radius: 14px;
+            border: 1px solid #eee;
+        }
+
+        .comprobante-img {
+            max-width: 100%;
+            max-height: 420px;
+            border-radius: 12px;
+            border: 1px solid #ddd;
+            display: block;
+        }
+
+        .comprobante-pdf {
+            width: 100%;
+            min-height: 420px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+        }
+
+        .sin-comprobante {
+            color: #777;
+            font-style: italic;
+        }
+
+        .btn-mini {
+            display: inline-block;
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
         textarea {
             width: 100%;
             min-height: 80px;
@@ -156,6 +211,8 @@ $solicitud = $solicitud ?? null; // Detalle de solicitud
         <a href="../../controller/admin/pagoController.php">Pagos</a>
         <a href="../../controller/admin/clienteController.php">Clientes</a>
         <a href="../../controller/admin/asignacionController.php">Asignaciones</a>
+        <?php require_once __DIR__ . '/../partials/cerrarSesion.php'; ?>
+
     </aside>
 
     <main class="content">
@@ -165,6 +222,12 @@ $solicitud = $solicitud ?? null; // Detalle de solicitud
             <p>Personas interesadas que enviaron sus datos y comprobante. Aún no son clientes activos.</p>
         </section>
 
+        <?php if (!empty($flash['mensaje'])): ?>
+            <div class="<?= ($flash['tipo'] ?? '') === 'success' ? 'alert-success' : 'alert-error' ?>">
+                <?= e($flash['mensaje']) ?>
+            </div>
+        <?php endif; ?>
+
         <section class="card">
             <h3>Listado de solicitudes</h3>
 
@@ -173,7 +236,9 @@ $solicitud = $solicitud ?? null; // Detalle de solicitud
                     <tr>
                         <th>Solicitante</th>
                         <th>Contacto</th>
+                        <th>Plan</th>
                         <th>Modalidad</th>
+                        <th>Comprobante</th>
                         <th>Estado</th>
                         <th>Acción</th>
                     </tr>
@@ -182,7 +247,7 @@ $solicitud = $solicitud ?? null; // Detalle de solicitud
                 <tbody>
                     <?php if (empty($solicitudes)): ?>
                         <tr>
-                            <td colspan="5">No hay solicitudes registradas.</td>
+                            <td colspan="7">No hay solicitudes registradas.</td>
                         </tr>
                     <?php endif; ?>
 
@@ -194,7 +259,22 @@ $solicitud = $solicitud ?? null; // Detalle de solicitud
                             </td>
 
                             <td><?= e($item['celular'] ?? '') ?></td>
+                            <td><?= e($item['plan_interes'] ?? '—') ?></td>
                             <td><?= e($item['modalidad'] ?? 'No definida') ?></td>
+
+                            <td>
+                                <?php if (!empty($item['url_comprobante'])): ?>
+                                    <a class="btn btn-mini" target="_blank" rel="noopener"
+                                       href="<?= e(urlPublicaComprobante($item['url_comprobante'], (int) ($item['id'] ?? 0))) ?>">
+                                        Ver archivo
+                                    </a>
+                                    <a class="btn btn-mini" href="../../controller/admin/solicitudController.php?accion=detalle&id=<?= e($item['id'] ?? '') ?>#detalle-comprobante">
+                                        En detalle
+                                    </a>
+                                <?php else: ?>
+                                    <span class="sin-comprobante">—</span>
+                                <?php endif; ?>
+                            </td>
 
                             <td>
                                 <span class="badge <?= (($item['estado'] ?? '') === 'aprobada') ? 'ok' : '' ?>">
@@ -225,8 +305,19 @@ $solicitud = $solicitud ?? null; // Detalle de solicitud
                 <p><strong>Edad:</strong> <?= e($solicitud['edad'] ?? '') ?></p>
                 <p><strong>Identificación:</strong> <?= e($solicitud['identificacion'] ?? '') ?></p>
                 <p><strong>Celular:</strong> <?= e($solicitud['celular'] ?? '') ?></p>
+                <p><strong>Plan:</strong> <?= e($solicitud['plan_interes'] ?? '') ?></p>
                 <p><strong>Modalidad:</strong> <?= e($solicitud['modalidad'] ?? '') ?></p>
+                <p><strong>Tipo cuenta:</strong> <?= e($solicitud['tipo_cuenta'] ?? '') ?></p>
+                <p><strong>Número cuenta:</strong> <?= e($solicitud['numero_cuenta'] ?? '') ?></p>
+                <p><strong>Monto:</strong> $<?= e($solicitud['monto_pago'] ?? '0') ?></p>
                 <p><strong>Estado:</strong> <?= e($solicitud['estado'] ?? '') ?></p>
+
+                <h4>Comprobante de pago</h4>
+                <?php
+                $urlComprobante = $solicitud['url_comprobante'] ?? null;
+                $solicitudIdComprobante = (int) ($solicitud['id'] ?? 0);
+                require __DIR__ . '/partials/comprobanteVista.php';
+                ?>
 
                 <form action="../../controller/admin/solicitudController.php?accion=rechazar" method="POST">
                     <input type="hidden" name="id" value="<?= e($solicitud['id'] ?? '') ?>">

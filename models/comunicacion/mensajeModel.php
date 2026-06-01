@@ -1,53 +1,136 @@
 <?php
 
-require_once __DIR__ . '/../../config/database.php'; // Importa conexión
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../config/helpers.php';
+require_once __DIR__ . '/chatModel.php';
+require_once __DIR__ . '/../cliente/clienteModel.php';
 
 class MensajeModel
 {
-    private $db; // Conexión BD
+    private $db;
 
     public function __construct()
     {
-        $database = new Database(); // Instancia conexión
-        $this->db = $database->conectar(); // Abre conexión
+        $database = new Database();
+        $this->db = $database->conectar();
+    }
+
+    private function normalizarMensaje(array $fila, $clienteId = null, $coachId = null)
+    {
+        $fila['mensaje'] = $fila['contenido'] ?? $fila['mensaje'] ?? '';
+        $fila['fecha'] = $fila['fecha_envio'] ?? $fila['fecha'] ?? '';
+
+        if ($clienteId !== null && $coachId === null) {
+            $fila['emisor'] = ((int) ($fila['id_usuario_remitente'] ?? 0) === (int) $clienteId) ? 'cliente' : 'coach';
+        } elseif ($coachId !== null && $clienteId === null) {
+            $fila['emisor'] = ((int) ($fila['id_usuario_remitente'] ?? 0) === (int) $coachId) ? 'coach' : 'cliente';
+        } elseif ($clienteId !== null && $coachId !== null) {
+            $remitente = (int) ($fila['id_usuario_remitente'] ?? 0);
+            if ($remitente === (int) $coachId) {
+                $fila['emisor'] = 'coach';
+            } elseif ($remitente === (int) $clienteId) {
+                $fila['emisor'] = 'cliente';
+            } else {
+                $fila['emisor'] = $fila['emisor'] ?? 'usuario';
+            }
+        } else {
+            $fila['emisor'] = $fila['emisor'] ?? 'coach';
+        }
+
+        return $fila;
     }
 
     public function obtenerPorCliente($clienteId)
     {
-        $sql = "SELECT * FROM mensajes 
-                WHERE cliente_id = :cliente_id 
-                ORDER BY fecha ASC"; // Mensajes del cliente
+        $sql = "SELECT m.*
+                FROM mensaje m
+                INNER JOIN chat c ON c.id_chat = m.id_chat
+                WHERE c.id_cliente = :cliente_id
+                ORDER BY m.fecha_envio ASC"; // Mensajes del cliente
 
         $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':cliente_id', $clienteId); // Cliente
-        $stmt->execute(); // Ejecuta consulta
+        $stmt->bindParam(':cliente_id', $clienteId); // Asigna cliente
+        $stmt->execute();
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna mensajes
+        $lista = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $resultado = [];
+
+        foreach ($lista as $fila) {
+            $resultado[] = $this->normalizarMensaje($fila, $clienteId);
+        }
+
+        return $resultado;
     }
 
     public function obtenerPorCoach($coachId)
     {
-        $sql = "SELECT * FROM mensajes 
-                WHERE coach_id = :coach_id 
-                ORDER BY fecha DESC"; // Mensajes del coach
+        $sql = "SELECT m.*, c.id_cliente, c.id_coach
+                FROM mensaje m
+                INNER JOIN chat c ON c.id_chat = m.id_chat
+                WHERE c.id_coach = :coach_id
+                ORDER BY m.fecha_envio DESC
+                LIMIT 200";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':coach_id', $coachId);
+        $stmt->execute();
+
+        $lista = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $resultado = [];
+
+        foreach ($lista as $fila) {
+            $resultado[] = $this->normalizarMensaje(
+                $fila,
+                (int) ($fila['id_cliente'] ?? 0),
+                (int) $coachId
+            );
+        }
+
+        return $resultado;
+    }
+
+    public function obtenerNoLeidosPorCoach($coachId)
+    {
+        $sql = "SELECT m.*
+                FROM mensaje m
+                INNER JOIN chat c ON c.id_chat = m.id_chat
+                WHERE c.id_coach = :coach_id
+                AND m.id_usuario_remitente <> :coach_id2
+                AND m.leido = 0
+                ORDER BY m.fecha_envio DESC"; // Mensajes no leídos del coach
 
         $stmt = $this->db->prepare($sql); // Prepara consulta
         $stmt->bindParam(':coach_id', $coachId); // Coach
+        $stmt->bindParam(':coach_id2', $coachId); // Coach (segundo bind)
+        $stmt->execute(); // Ejecuta consulta
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna mensajes no leídos
+    }
+
+    public function obtenerPorChat($chatId)
+    {
+        $sql = "SELECT * FROM mensaje 
+                WHERE id_chat = :chat_id 
+                ORDER BY fecha_envio ASC"; // Mensajes del chat
+
+        $stmt = $this->db->prepare($sql); // Prepara consulta
+        $stmt->bindParam(':chat_id', $chatId); // Chat
         $stmt->execute(); // Ejecuta consulta
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna mensajes
     }
 
-    public function obtenerNoLeidosPorCoach($coachId)
+    public function obtenerNoLeidosPorChat($chatId, $usuarioId)
     {
-        $sql = "SELECT * FROM mensajes 
-                WHERE coach_id = :coach_id 
-                AND emisor <> 'coach'
-                AND estado = 'no_leido'
-                ORDER BY fecha DESC"; // Mensajes pendientes
+        $sql = "SELECT * FROM mensaje 
+                WHERE id_chat = :chat_id 
+                AND id_usuario_remitente <> :usuario_id
+                AND leido = 0
+                ORDER BY fecha_envio DESC"; // Mensajes no leídos
 
         $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':coach_id', $coachId); // Coach
+        $stmt->bindParam(':chat_id', $chatId); // Chat
+        $stmt->bindParam(':usuario_id', $usuarioId); // Usuario actual
         $stmt->execute(); // Ejecuta consulta
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna no leídos
@@ -55,69 +138,111 @@ class MensajeModel
 
     public function crear($datos)
     {
-        $coachId = $datos['coach_id'] ?? $this->obtenerCoachCliente($datos['cliente_id']); // Obtiene coach
+        if (empty($datos['id_chat']) && !empty($datos['coach_id']) && !empty($datos['cliente_id'])) {
+            return $this->crearDesdeCoach($datos);
+        }
 
-        $sql = "INSERT INTO mensajes 
-                (cliente_id, coach_id, mensaje, emisor, estado, fecha)
+        if (empty($datos['id_chat']) && (!empty($datos['cliente_id']) || !empty($datos['mensaje']))) {
+            return $this->crearDesdeCliente($datos);
+        }
+
+        $sql = "INSERT INTO mensaje 
+                (id_chat, id_usuario_remitente, contenido, tipo_mensaje, url_adjunto, fecha_envio, leido)
                 VALUES 
-                (:cliente_id, :coach_id, :mensaje, :emisor, :estado, NOW())"; // Crea mensaje
+                (:id_chat, :id_usuario_remitente, :contenido, :tipo_mensaje, :url_adjunto, NOW(), 0)";
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':cliente_id', $datos['cliente_id']); // Cliente
-        $stmt->bindParam(':coach_id', $coachId); // Coach
-        $stmt->bindParam(':mensaje', $datos['mensaje']); // Mensaje
-        $stmt->bindParam(':emisor', $datos['emisor']); // Emisor
-        $stmt->bindValue(':estado', $datos['estado'] ?? 'no_leido'); // Estado
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id_chat', $datos['id_chat']);
+        $stmt->bindParam(':id_usuario_remitente', $datos['id_usuario_remitente']);
+        $stmt->bindParam(':contenido', $datos['contenido']);
+        $stmt->bindValue(':tipo_mensaje', $datos['tipo_mensaje'] ?? 'TEXTO');
+        $stmt->bindValue(':url_adjunto', $datos['url_adjunto'] ?? null);
 
-        return $stmt->execute(); // Ejecuta registro
+        return $stmt->execute();
     }
 
-    private function obtenerCoachCliente($clienteId)
+    public function crearDesdeCliente(array $datos)
     {
-        $sql = "SELECT coach_id FROM clientes WHERE id = :cliente_id LIMIT 1"; // Busca coach cliente
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':cliente_id', $clienteId); // Cliente
-        $stmt->execute(); // Ejecuta consulta
+        $clienteId = (int) ($datos['cliente_id'] ?? $datos['id_cliente'] ?? 0);
+        $contenido = trim($datos['contenido'] ?? $datos['mensaje'] ?? '');
+        $remitenteId = (int) ($datos['id_usuario_remitente'] ?? $datos['usuario_id'] ?? $clienteId);
 
-        $cliente = $stmt->fetch(PDO::FETCH_ASSOC); // Obtiene cliente
+        if ($clienteId < 1 || $contenido === '') {
+            return false;
+        }
 
-        return $cliente['coach_id'] ?? null; // Retorna coach
+        $clienteModel = new ClienteModel();
+        $coachId = (int) ($datos['coach_id'] ?? $clienteModel->obtenerIdCoachAsignado($clienteId) ?? 0);
+
+        if ($coachId < 1) {
+            throw new RuntimeException('Aún no tienes un coach asignado. Contacta al administrador.');
+        }
+
+        $chatModel = new ChatModel();
+        $chat = $chatModel->obtenerOCrear($clienteId, $coachId);
+        $chatId = (int) ($chat['id_chat'] ?? 0);
+
+        if ($chatId < 1) {
+            return false;
+        }
+
+        return $this->crear([
+            'id_chat' => $chatId,
+            'id_usuario_remitente' => $remitenteId,
+            'contenido' => $contenido,
+            'tipo_mensaje' => $datos['tipo_mensaje'] ?? 'TEXTO',
+            'url_adjunto' => $datos['url_adjunto'] ?? null,
+        ]);
     }
 
-    public function marcarLeidosCliente($clienteId)
+    public function crearDesdeCoach(array $datos)
     {
-        $sql = "UPDATE mensajes 
-                SET estado = 'leido'
-                WHERE cliente_id = :cliente_id"; // Marca leídos cliente
+        $coachId = (int) ($datos['coach_id'] ?? 0);
+        $clienteId = (int) ($datos['cliente_id'] ?? 0);
+        $contenido = trim($datos['contenido'] ?? $datos['mensaje'] ?? '');
+        $remitenteId = (int) ($datos['id_usuario_remitente'] ?? $datos['usuario_id'] ?? $coachId);
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':cliente_id', $clienteId); // Cliente
+        if ($coachId < 1 || $clienteId < 1 || $contenido === '') {
+            return false;
+        }
 
-        return $stmt->execute(); // Ejecuta actualización
+        $chatModel = new ChatModel();
+        $chat = $chatModel->obtenerOCrear($clienteId, $coachId);
+        $chatId = (int) ($chat['id_chat'] ?? 0);
+
+        if ($chatId < 1) {
+            return false;
+        }
+
+        return $this->crear([
+            'id_chat' => $chatId,
+            'id_usuario_remitente' => $remitenteId,
+            'contenido' => $contenido,
+            'tipo_mensaje' => $datos['tipo_mensaje'] ?? 'TEXTO',
+            'url_adjunto' => $datos['url_adjunto'] ?? null,
+        ]);
     }
 
-    public function marcarLeidosCoach($coachId)
+    public function marcarLeidosPorChat($chatId, $usuarioId)
     {
-        $sql = "UPDATE mensajes 
-                SET estado = 'leido'
-                WHERE coach_id = :coach_id"; // Marca leídos coach
+        $sql = "UPDATE mensaje 
+                SET leido = 1, fecha_lectura = NOW()
+                WHERE id_chat = :chat_id
+                AND id_usuario_remitente <> :usuario_id
+                AND leido = 0"; // Marca leídos
 
         $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':coach_id', $coachId); // Coach
+        $stmt->bindParam(':chat_id', $chatId); // Chat
+        $stmt->bindParam(':usuario_id', $usuarioId); // Usuario actual
 
         return $stmt->execute(); // Ejecuta actualización
     }
 
     public function registrarTrazabilidad($usuarioId, $accion)
     {
-        $sql = "INSERT INTO trazabilidad (usuario_id, modulo, accion, fecha)
-                VALUES (:usuario_id, 'Mensajes', :accion, NOW())"; // Guarda historial
+        $id = $usuarioId ? (int) $usuarioId : null;
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':usuario_id', $usuarioId); // Usuario responsable
-        $stmt->bindParam(':accion', $accion); // Acción realizada
-
-        return $stmt->execute(); // Ejecuta registro
+        return registrarBitacora($this->db, $id, 'Mensajes', $accion);
     }
 }
 

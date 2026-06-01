@@ -132,6 +132,8 @@ $notificaciones = $notificaciones ?? []; // Lista de notificaciones
         <a href="../../controller/admin/pagoController.php">Pagos</a>
         <a href="../../controller/admin/clienteController.php">Clientes</a>
         <a class="active" href="../../controller/admin/notificacionController.php">Notificaciones</a>
+        <?php require_once __DIR__ . '/../partials/cerrarSesion.php'; ?>
+
     </aside>
 
     <main class="content">

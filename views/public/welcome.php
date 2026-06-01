@@ -303,9 +303,9 @@ $programas = $programas ?? []; // Programas activos
                 <h3><?= e($plan['nombre'] ?? 'Plan StayFit') ?></h3>
                 <p><?= e($plan['descripcion'] ?? 'Plan fitness personalizado.') ?></p>
                 <p class="price">$<?= e($plan['precio'] ?? '0') ?></p>
-                <span class="badge"><?= e($plan['modalidad'] ?? 'modalidad') ?></span>
+                <span class="badge"><?= e($plan['duracion_dias'] ? $plan['duracion_dias'] . ' días' : 'Plan') ?></span>
                 <br>
-                <a class="btn-primary" href="solicitud.php?plan_id=<?= e($plan['id'] ?? '') ?>">Solicitar</a>
+                <a class="btn-primary" href="solicitud.php?plan_id=<?= e($plan['id_plan'] ?? '') ?>">Solicitar</a>
             </article>
         <?php endforeach; ?>
     </div>

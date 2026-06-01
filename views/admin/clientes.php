@@ -1,5 +1,12 @@
 <?php
 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+$alert = $_SESSION['alert'] ?? null;
+unset($_SESSION['alert']);
+
 if (!function_exists('e')) { // Evita repetir la función
     function e($valor) { // Limpia texto para imprimir
         return htmlspecialchars((string)$valor, ENT_QUOTES, 'UTF-8'); // Retorna texto seguro
@@ -76,6 +83,14 @@ $coach = $coach ?? null; // Coach asignado
         .page-header h1 {
             margin: 0 0 8px;
             font-size: 32px;
+        }
+
+        .alert-box {
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid #D63384;
+            background: #fff0f6;
         }
 
         .stats {
@@ -208,6 +223,8 @@ $coach = $coach ?? null; // Coach asignado
         <a href="planController.php">Planes</a>
         <a href="pagoController.php">Pagos</a>
         <a href="solicitudController.php">Solicitudes</a>
+        <?php require_once __DIR__ . '/../partials/cerrarSesion.php'; ?>
+
     </aside>
 
     <main class="content">
@@ -216,6 +233,13 @@ $coach = $coach ?? null; // Coach asignado
             <h1>Clientes</h1>
             <p>Gestiona clientas fijas, clientes aprobados, modalidad, estado y trazabilidad del servicio.</p>
         </section>
+
+        <?php if ($alert): ?>
+            <div class="alert-box">
+                <strong><?= e($alert['title'] ?? 'Aviso') ?></strong><br>
+                <?= e($alert['text'] ?? '') ?>
+            </div>
+        <?php endif; ?>
 
         <section class="stats">
             <div class="stat-card">
@@ -244,8 +268,11 @@ $coach = $coach ?? null; // Coach asignado
                 <h3>Registrar clienta fija</h3>
 
                 <form action="../../controller/admin/clienteController.php?accion=guardarClienteFijo" method="POST">
-                    <label>Nombre completo</label>
+                    <label>Nombre</label>
                     <input type="text" name="nombre" required>
+
+                    <label>Apellido</label>
+                    <input type="text" name="apellido" required>
 
                     <label>Correo</label>
                     <input type="email" name="correo" required>
@@ -258,6 +285,10 @@ $coach = $coach ?? null; // Coach asignado
 
                     <label>Celular</label>
                     <input type="text" name="celular" required>
+
+                    <label>Contraseña de acceso</label>
+                    <input type="password" name="contrasena" minlength="6" placeholder="Si se deja vacío, se usa la identificación">
+                    <small style="display:block;margin:-6px 0 14px;color:#666;">La clienta usará esta contraseña para iniciar sesión.</small>
 
                     <label>Tipo de cliente</label>
                     <select name="tipo_cliente" required>
@@ -295,11 +326,14 @@ $coach = $coach ?? null; // Coach asignado
                                 <td>
                                     <strong><?= e($item['nombre'] ?? 'Sin nombre') ?></strong><br>
                                     <small><?= e($item['identificacion'] ?? 'Sin identificación') ?></small>
+                                    <?php if (!empty($item['edad'])): ?>
+                                        <br><small>Edad: <?= e($item['edad']) ?></small>
+                                    <?php endif; ?>
                                 </td>
 
                                 <td>
                                     <?= e($item['correo'] ?? 'Sin correo') ?><br>
-                                    <small><?= e($item['celular'] ?? 'Sin celular') ?></small>
+                                    <small><?= e($item['celular'] ?? $item['telefono'] ?? 'Sin celular') ?></small>
                                 </td>
 
                                 <td><?= e($item['tipo_cliente'] ?? 'individual') ?></td>

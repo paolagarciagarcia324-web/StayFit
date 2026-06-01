@@ -176,6 +176,7 @@ $totalMensajes = count($mensajes); // Total mensajes
         <a href="../../controller/coach/clientesController.php">Clientes</a>
         <a href="../../controller/coach/agendaController.php">Agenda</a>
         <a href="../../controller/coach/entrenamientoController.php">Entrenamientos</a>
+        <a href="../../controller/coach/contenidoVirtualController.php">Contenido virtual</a>
         <a href="../../controller/coach/nutricionController.php">Nutrición</a>
         <a href="../../controller/coach/progresoController.php">Progreso</a>
         <a href="../../controller/coach/comunicacionController.php">Comunicación</a>
@@ -213,6 +214,26 @@ $totalMensajes = count($mensajes); // Total mensajes
                 <p class="number"><?= e($totalMensajes) ?></p>
                 <a class="btn" href="../../controller/coach/comunicacionController.php">Responder</a>
             </div>
+        </section>
+
+        <section class="card" style="margin-bottom: 28px;">
+            <h3>Clientas asignadas</h3>
+
+            <?php if (empty($clientes)): ?>
+                <div class="empty">Aún no tienes clientas asignadas por el administrador.</div>
+            <?php endif; ?>
+
+            <?php foreach ($clientes as $cliente): ?>
+                <?php
+                $nombreCliente = trim(($cliente['nombre'] ?? '') . ' ' . ($cliente['apellido'] ?? ''));
+                ?>
+                <div class="item">
+                    <strong><?= e($nombreCliente !== '' ? $nombreCliente : 'Cliente') ?></strong>
+                    <p><?= e($cliente['objetivos'] ?? 'Sin objetivos registrados') ?></p>
+                    <span class="badge"><?= e($cliente['tipo_cliente'] ?? 'INDIVIDUAL') ?></span>
+                    <a class="btn" href="../../controller/coach/clientesController.php?accion=detalle&id=<?= e($cliente['id'] ?? '') ?>">Ver detalle</a>
+                </div>
+            <?php endforeach; ?>
         </section>
 
         <section class="grid">

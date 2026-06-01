@@ -1,24 +1,25 @@
 <?php
 
-if (!function_exists('e')) { // Evita duplicar función
-    function e($valor) { // Limpia salida HTML
-        return htmlspecialchars((string)$valor, ENT_QUOTES, 'UTF-8'); // Retorna texto seguro
+if (!function_exists('e')) {
+    function e($valor) {
+        return htmlspecialchars((string)$valor, ENT_QUOTES, 'UTF-8');
     }
 }
 
-$agenda = $agenda ?? []; // Agenda del coach
-$sesiones = $sesiones ?? []; // Sesiones asignadas
-$disponibilidades = $disponibilidades ?? []; // Horarios disponibles
-$clientes = $clientes ?? []; // Clientes del coach
+$clientes = $clientes ?? [];
+$cliente = $cliente ?? null;
+$plan = $plan ?? null;
+$progreso = $progreso ?? [];
+$esDetalle = !empty($cliente);
 
 ?>
 
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8"> <!-- Codificación -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
-    <title>Agenda Coach | StayFit</title> <!-- Título -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= $esDetalle ? 'Detalle cliente' : 'Mis clientas' ?> | StayFit Coach</title>
 
     <style>
         body {
@@ -72,17 +73,12 @@ $clientes = $clientes ?? []; // Clientes del coach
             margin-bottom: 28px;
         }
 
-        .grid {
-            display: grid;
-            grid-template-columns: 380px 1fr;
-            gap: 22px;
-        }
-
         .card {
             background: #FFFFFF;
             border-radius: 22px;
             padding: 24px;
             box-shadow: 0 10px 28px rgba(45, 45, 45, 0.08);
+            margin-bottom: 22px;
         }
 
         .card h3 {
@@ -90,49 +86,15 @@ $clientes = $clientes ?? []; // Clientes del coach
             color: #D63384;
         }
 
-        label {
-            font-weight: 700;
-            font-size: 14px;
-        }
-
-        input,
-        select,
-        textarea {
+        table {
             width: 100%;
-            padding: 12px;
-            margin: 8px 0 15px;
-            border: 1px solid #ddd;
-            border-radius: 14px;
-            box-sizing: border-box;
-            font-family: inherit;
+            border-collapse: collapse;
         }
 
-        textarea {
-            min-height: 80px;
-            resize: vertical;
-        }
-
-        button {
-            width: 100%;
-            background: #D63384;
-            color: #FFFFFF;
-            border: none;
-            padding: 13px;
-            border-radius: 14px;
-            font-weight: 800;
-            cursor: pointer;
-        }
-
-        .session-item {
-            background: #fff7fb;
-            border-left: 5px solid #D63384;
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 15px;
-        }
-
-        .session-item strong {
-            color: #D63384;
+        th, td {
+            padding: 14px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
         }
 
         .badge {
@@ -142,27 +104,41 @@ $clientes = $clientes ?? []; // Clientes del coach
             padding: 6px 12px;
             border-radius: 20px;
             font-size: 13px;
-            margin-top: 8px;
+        }
+
+        .btn {
+            display: inline-block;
+            background: #D63384;
+            color: #FFFFFF;
+            text-decoration: none;
+            padding: 10px 15px;
+            border-radius: 14px;
+            font-weight: 700;
+        }
+
+        .btn-secondary {
+            background: #2D2D2D;
         }
 
         .empty {
-            background: #f4f4f4;
             color: #777;
+            background: #f4f4f4;
             padding: 18px;
             border-radius: 16px;
         }
 
-        @media (max-width: 1000px) {
+        .item {
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        @media (max-width: 900px) {
             .coach-wrapper {
                 flex-direction: column;
             }
 
             .sidebar {
                 width: auto;
-            }
-
-            .grid {
-                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -174,8 +150,8 @@ $clientes = $clientes ?? []; // Clientes del coach
     <aside class="sidebar">
         <h2>StayFit</h2>
         <a href="../../controller/coach/dashboardController.php">Dashboard</a>
-        <a href="../../controller/coach/clientesController.php">Clientes</a>
-        <a class="active" href="../../controller/coach/agendaController.php">Agenda</a>
+        <a class="active" href="../../controller/coach/clientesController.php">Clientes</a>
+        <a href="../../controller/coach/agendaController.php">Agenda</a>
         <a href="../../controller/coach/entrenamientoController.php">Entrenamientos</a>
         <a href="../../controller/coach/nutricionController.php">Nutrición</a>
         <a href="../../controller/coach/progresoController.php">Progreso</a>
@@ -185,92 +161,92 @@ $clientes = $clientes ?? []; // Clientes del coach
 
     <main class="content">
 
-        <section class="page-header">
-            <h1>Agenda del coach</h1>
-            <p>Programa sesiones, revisa tus horarios y organiza el acompañamiento de tus clientas.</p>
-        </section>
+        <?php if ($esDetalle): ?>
+            <?php
+            $nombreCliente = trim(($cliente['nombre'] ?? '') . ' ' . ($cliente['apellido'] ?? ''));
+            ?>
+            <section class="page-header">
+                <h1><?= e($nombreCliente !== '' ? $nombreCliente : 'Cliente') ?></h1>
+                <p>Detalle de la clienta asignada a tu acompañamiento.</p>
+            </section>
 
-        <section class="grid">
+            <a class="btn btn-secondary" href="../../controller/coach/clientesController.php">Volver al listado</a>
 
-            <div class="card">
-                <h3>Programar sesión</h3>
+            <section class="card" style="margin-top: 24px;">
+                <h3>Información</h3>
+                <p><strong>Correo:</strong> <?= e($cliente['correo'] ?? 'No registrado') ?></p>
+                <p><strong>Tipo:</strong> <?= e($cliente['tipo_cliente'] ?? 'INDIVIDUAL') ?></p>
+                <p><strong>Objetivos:</strong> <?= e($cliente['objetivos'] ?? 'Sin objetivos') ?></p>
+            </section>
 
-                <form action="../../controller/coach/sesionController.php?accion=crear" method="POST">
-                    <label>Cliente</label>
-                    <select name="cliente_id" required>
-                        <option value="">Seleccione cliente</option>
-
-                        <?php foreach ($clientes as $cliente): ?>
-                            <option value="<?= e($cliente['id'] ?? '') ?>">
-                                <?= e($cliente['nombre'] ?? 'Cliente') ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-
-                    <label>Título</label>
-                    <input type="text" name="titulo" required>
-
-                    <label>Descripción</label>
-                    <textarea name="descripcion"></textarea>
-
-                    <label>Fecha</label>
-                    <input type="date" name="fecha" required>
-
-                    <label>Hora</label>
-                    <input type="time" name="hora" required>
-
-                    <label>Modalidad</label>
-                    <select name="modalidad" required>
-                        <option value="presencial">Presencial</option>
-                        <option value="virtual">Virtual</option>
-                        <option value="mixta">Mixta</option>
-                    </select>
-
-                    <label>Tipo</label>
-                    <select name="tipo" required>
-                        <option value="individual">Individual</option>
-                        <option value="grupal">Grupal</option>
-                    </select>
-
-                    <button type="submit">Guardar sesión</button>
-                </form>
-            </div>
-
-            <div class="card">
-                <h3>Sesiones programadas</h3>
-
-                <?php if (empty($sesiones)): ?>
-                    <div class="empty">No tienes sesiones programadas.</div>
+            <section class="card">
+                <h3>Plan activo</h3>
+                <?php if (!$plan): ?>
+                    <div class="empty">Sin plan activo registrado.</div>
+                <?php else: ?>
+                    <p><strong><?= e($plan['nombre'] ?? 'Plan') ?></strong></p>
+                    <p>Modalidad: <span class="badge"><?= e($plan['modalidad'] ?? 'N/D') ?></span></p>
+                    <p>Estado: <?= e($plan['estado'] ?? 'ACTIVO') ?></p>
+                    <p>Vigencia: <?= e($plan['fecha_inicio'] ?? '') ?> — <?= e($plan['fecha_fin'] ?? '') ?></p>
                 <?php endif; ?>
+            </section>
 
-                <?php foreach ($sesiones as $sesion): ?>
-                    <div class="session-item">
-                        <strong><?= e($sesion['titulo'] ?? 'Sesión StayFit') ?></strong>
-                        <p><?= e($sesion['descripcion'] ?? 'Sin descripción') ?></p>
-                        <p><?= e($sesion['fecha'] ?? '') ?> - <?= e($sesion['hora'] ?? '') ?></p>
-                        <span class="badge"><?= e($sesion['modalidad'] ?? 'modalidad') ?></span>
-                        <span class="badge"><?= e($sesion['estado'] ?? 'programada') ?></span>
-                    </div>
-                <?php endforeach; ?>
-            </div>
+            <section class="card">
+                <h3>Progreso reciente</h3>
+                <?php if (empty($progreso)): ?>
+                    <div class="empty">Sin registros de progreso.</div>
+                <?php else: ?>
+                    <?php foreach ($progreso as $registro): ?>
+                        <div class="item">
+                            <strong><?= e($registro['fecha'] ?? '') ?></strong>
+                            <p>Peso: <?= e($registro['peso'] ?? 'N/D') ?> kg</p>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </section>
 
-        </section>
+        <?php else: ?>
 
-        <section class="card" style="margin-top: 24px;">
-            <h3>Disponibilidad registrada</h3>
+            <section class="page-header">
+                <h1>Mis clientas</h1>
+                <p>Clientas que el administrador te ha asignado según su plan.</p>
+            </section>
 
-            <?php if (empty($disponibilidades)): ?>
-                <div class="empty">No tienes disponibilidad registrada todavía.</div>
-            <?php endif; ?>
+            <section class="card">
+                <?php if (empty($clientes)): ?>
+                    <div class="empty">Aún no tienes clientas asignadas. El administrador debe asignarte clientes desde el panel de Asignaciones.</div>
+                <?php else: ?>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Correo</th>
+                                <th>Tipo</th>
+                                <th>Estado plan</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($clientes as $item): ?>
+                                <?php
+                                $nombre = trim(($item['nombre'] ?? '') . ' ' . ($item['apellido'] ?? ''));
+                                ?>
+                                <tr>
+                                    <td><?= e($nombre !== '' ? $nombre : 'Cliente') ?></td>
+                                    <td><?= e($item['correo'] ?? '') ?></td>
+                                    <td><?= e($item['tipo_cliente'] ?? 'INDIVIDUAL') ?></td>
+                                    <td><span class="badge"><?= e($item['estado_plan'] ?? 'ACTIVO') ?></span></td>
+                                    <td>
+                                        <a class="btn" href="../../controller/coach/clientesController.php?accion=detalle&id=<?= e($item['id'] ?? '') ?>">Ver</a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php endif; ?>
+            </section>
 
-            <?php foreach ($disponibilidades as $item): ?>
-                <div class="session-item">
-                    <strong><?= e($item['dia'] ?? 'Día') ?></strong>
-                    <p><?= e($item['hora_inicio'] ?? '') ?> - <?= e($item['hora_fin'] ?? '') ?></p>
-                    <span class="badge"><?= e($item['modalidad'] ?? 'modalidad') ?></span>
-                </div>
-            <?php endforeach; ?>
-        </section>
+        <?php endif; ?>
 
     </main>
 </div>

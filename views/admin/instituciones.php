@@ -173,6 +173,8 @@ $clientesInstitucionales = $clientesInstitucionales ?? []; // Clientes instituci
         <a class="active" href="../../controller/admin/institucionController.php">Instituciones</a>
         <a href="../../controller/admin/asignacionController.php">Asignaciones</a>
         <a href="../../controller/admin/pagoController.php">Pagos</a>
+        <?php require_once __DIR__ . '/../partials/cerrarSesion.php'; ?>
+
     </aside>
 
     <main class="content">

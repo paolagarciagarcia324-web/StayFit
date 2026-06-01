@@ -10,6 +10,8 @@ $clientes = $clientes ?? []; // Lista de clientes
 $coaches = $coaches ?? []; // Lista de coaches
 $programas = $programas ?? []; // Lista de programas virtuales
 $asignaciones = $asignaciones ?? []; // Lista de asignaciones
+$totalPlanes = $totalPlanes ?? 0;
+$flash = $flash ?? null;
 ?>
 
 <!DOCTYPE html>
@@ -160,6 +162,31 @@ $asignaciones = $asignaciones ?? []; // Lista de asignaciones
             font-size: 13px;
         }
 
+        .alert {
+            border-radius: 14px;
+            padding: 14px 18px;
+            margin-bottom: 22px;
+            font-weight: 600;
+        }
+
+        .alert-success {
+            background: #e8f8f1;
+            color: #1d6b4f;
+            border: 1px solid #3EB489;
+        }
+
+        .alert-error {
+            background: #fde8f0;
+            color: #8b2252;
+            border: 1px solid #D63384;
+        }
+
+        .alert-warning {
+            background: #fff8e6;
+            color: #7a5a00;
+            border: 1px solid #e6b800;
+        }
+
         @media (max-width: 900px) {
             .admin-wrapper {
                 flex-direction: column;
@@ -188,6 +215,8 @@ $asignaciones = $asignaciones ?? []; // Lista de asignaciones
         <a href="planController.php">Planes</a>
         <a href="pagoController.php">Pagos</a>
         <a href="solicitudController.php">Solicitudes</a>
+        <?php require_once __DIR__ . '/../partials/cerrarSesion.php'; ?>
+
     </aside>
 
     <main class="content">
@@ -196,6 +225,18 @@ $asignaciones = $asignaciones ?? []; // Lista de asignaciones
             <h1>Asignaciones</h1>
             <p>Asigna coaches o contenido virtual según la modalidad del plan de cada cliente.</p>
         </section>
+
+        <?php if ($totalPlanes === 0): ?>
+            <div class="alert-warning">
+                No hay planes en el catálogo. Ve a <a href="planController.php" style="color:#7a5a00;font-weight:700;">Planes</a> y crea al menos uno antes de asignar coaches.
+            </div>
+        <?php endif; ?>
+
+        <?php if (!empty($flash['mensaje'])): ?>
+            <div class="<?= ($flash['tipo'] ?? '') === 'success' ? 'alert-success' : 'alert-error' ?>">
+                <?= e($flash['mensaje']) ?>
+            </div>
+        <?php endif; ?>
 
         <section class="grid">
 
@@ -208,7 +249,7 @@ $asignaciones = $asignaciones ?? []; // Lista de asignaciones
                         <option value="">Seleccione cliente</option>
                         <?php foreach ($clientes as $cliente): ?>
                             <option value="<?= e($cliente['id'] ?? '') ?>">
-                                <?= e($cliente['nombre'] ?? 'Cliente sin nombre') ?>
+                                <?= e(trim(($cliente['nombre'] ?? '') . ' ' . ($cliente['apellido'] ?? ''))) ?: 'Cliente sin nombre' ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -236,7 +277,7 @@ $asignaciones = $asignaciones ?? []; // Lista de asignaciones
                         <option value="">Seleccione cliente</option>
                         <?php foreach ($clientes as $cliente): ?>
                             <option value="<?= e($cliente['id'] ?? '') ?>">
-                                <?= e($cliente['nombre'] ?? 'Cliente sin nombre') ?>
+                                <?= e(trim(($cliente['nombre'] ?? '') . ' ' . ($cliente['apellido'] ?? ''))) ?: 'Cliente sin nombre' ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -282,9 +323,9 @@ $asignaciones = $asignaciones ?? []; // Lista de asignaciones
                         <tr>
                             <td><?= e($item['cliente'] ?? 'Sin cliente') ?></td>
                             <td><?= e($item['modalidad'] ?? 'No definida') ?></td>
-                            <td><?= e($item['coach'] ?? 'Sin coach') ?></td>
+                            <td><?= e(trim($item['coach'] ?? '') !== '' && ($item['coach'] ?? '') !== 'Sin coach' ? $item['coach'] : 'Sin coach') ?></td>
                             <td><?= e($item['programa_virtual'] ?? 'No asignado') ?></td>
-                            <td><span class="badge"><?= e($item['estado'] ?? 'Activo') ?></span></td>
+                            <td><span class="badge"><?= e($item['estado'] ?? 'ACTIVO') ?></span></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>

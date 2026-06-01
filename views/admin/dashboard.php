@@ -176,8 +176,11 @@ $accesosVencidos = $datos['accesosVencidos'] ?? 0; // Accesos vencidos
         <a href="../../controller/admin/coachController.php">Coaches</a>
         <a href="../../controller/admin/asignacionController.php">Asignaciones</a>
         <a href="../../controller/admin/planController.php">Planes</a>
+        <a href="../../controller/admin/contenidoVirtualController.php">Contenido virtual</a>
         <a href="../../controller/admin/institucionController.php">Instituciones</a>
         <a href="../../controller/admin/notificacionController.php">Notificaciones</a>
+        <?php require_once __DIR__ . '/../partials/cerrarSesion.php'; ?>
+
     </aside>
 
     <main class="content">

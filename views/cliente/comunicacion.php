@@ -6,8 +6,10 @@ if (!function_exists('e')) { // Evita duplicar función
     }
 }
 
-$chat = $chat ?? null; // Chat activo
-$mensajes = $mensajes ?? []; // Mensajes del cliente
+$chat = $chat ?? null;
+$mensajes = $mensajes ?? [];
+$sinCoach = $sinCoach ?? false;
+$flash = $flash ?? null;
 
 ?>
 
@@ -125,6 +127,33 @@ $mensajes = $mensajes ?? []; // Mensajes del cliente
             font-size: 12px;
         }
 
+        .alert-success {
+            background: #e8f8f1;
+            color: #1d6b4f;
+            border-left: 5px solid #3EB489;
+            padding: 14px;
+            border-radius: 14px;
+            margin-bottom: 18px;
+        }
+
+        .alert-error {
+            background: #fff1f7;
+            color: #8b2252;
+            border-left: 5px solid #D63384;
+            padding: 14px;
+            border-radius: 14px;
+            margin-bottom: 18px;
+        }
+
+        .alert-warning {
+            background: #fff8e6;
+            color: #7a5a00;
+            border-left: 5px solid #e6b800;
+            padding: 14px;
+            border-radius: 14px;
+            margin-bottom: 18px;
+        }
+
         .chat-form {
             padding: 20px 24px;
             display: flex;
@@ -202,11 +231,23 @@ $mensajes = $mensajes ?? []; // Mensajes del cliente
             <p>Habla con tu coach, resuelve dudas y mantén seguimiento de tu proceso.</p>
         </section>
 
+        <?php if (!empty($flash['mensaje'])): ?>
+            <div class="<?= ($flash['tipo'] ?? '') === 'success' ? 'alert-success' : 'alert-error' ?>">
+                <?= e($flash['mensaje']) ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($sinCoach): ?>
+            <div class="alert-warning">
+                Aún no tienes coach asignado. El administrador debe asignarte uno en <strong>Asignaciones</strong> para poder chatear.
+            </div>
+        <?php endif; ?>
+
         <section class="chat-card">
 
             <div class="chat-header">
                 <h3>Chat con tu coach</h3>
-                <span><?= e($chat['estado'] ?? 'Canal activo') ?></span>
+                <span><?= $sinCoach ? 'Sin coach asignado' : 'Canal activo' ?></span>
             </div>
 
             <div class="messages">
@@ -225,8 +266,8 @@ $mensajes = $mensajes ?? []; // Mensajes del cliente
             </div>
 
             <form class="chat-form" action="../../controller/cliente/comunicacionController.php?accion=enviar" method="POST">
-                <textarea name="mensaje" placeholder="Escribe tu mensaje..." required></textarea>
-                <button type="submit">Enviar</button>
+                <textarea name="mensaje" placeholder="Escribe tu mensaje..." <?= $sinCoach ? 'disabled' : '' ?> required></textarea>
+                <button type="submit" <?= $sinCoach ? 'disabled' : '' ?>>Enviar</button>
             </form>
 
         </section>

@@ -6,10 +6,11 @@ if (!function_exists('e')) { // Evita duplicar función
     }
 }
 
-$planEntrenamiento = $planEntrenamiento ?? null; // Plan de entrenamiento
-$rutinas = $rutinas ?? []; // Rutinas asignadas
-$videos = $videos ?? []; // Videos asignados
-$avanceVirtual = $avanceVirtual ?? 0; // Avance virtual
+$planEntrenamiento = $planEntrenamiento ?? null;
+$rutinas = $rutinas ?? [];
+$videos = $videos ?? [];
+$avanceVirtual = $avanceVirtual ?? 0;
+$programaVirtual = $programaVirtual ?? null;
 
 ?>
 
@@ -98,12 +99,90 @@ $avanceVirtual = $avanceVirtual ?? 0; // Avance virtual
             margin-bottom: 15px;
         }
 
-        .video {
+        .video, .leccion-card {
             border: 1px solid #eee;
             border-radius: 16px;
             padding: 16px;
             margin-bottom: 15px;
             background: #FFFFFF;
+        }
+
+        .programa-intro {
+            background: #fff7fb;
+            border-left: 5px solid #D63384;
+            padding: 18px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+        }
+
+        .progress-track {
+            background: #eee;
+            border-radius: 20px;
+            height: 12px;
+            overflow: hidden;
+            margin: 10px 0 20px;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #3EB489, #D63384);
+            height: 100%;
+            border-radius: 20px;
+            transition: width .3s;
+        }
+
+        .leccion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .leccion-orden {
+            font-weight: 700;
+            color: #D63384;
+        }
+
+        .leccion-badge {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            background: #eee;
+            color: #555;
+        }
+
+        .leccion-badge--completado { background: #3EB489; color: #fff; }
+        .leccion-badge--en_progreso { background: #D63384; color: #fff; }
+
+        .leccion-desc { color: #555; line-height: 1.5; }
+
+        .leccion-embed {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 12px;
+            margin: 12px 0;
+        }
+
+        .leccion-embed iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        .leccion-video, .leccion-img {
+            width: 100%;
+            max-height: 360px;
+            border-radius: 12px;
+            margin: 12px 0;
+        }
+
+        .leccion-done {
+            color: #3EB489;
+            font-weight: 700;
         }
 
         .badge {
@@ -256,31 +335,28 @@ $avanceVirtual = $avanceVirtual ?? 0; // Avance virtual
             </div>
 
             <div class="card">
-                <h3>Contenido virtual</h3>
+                <h3>Programa virtual</h3>
 
-                <p>Avance del programa virtual: <strong><?= e($avanceVirtual) ?>%</strong></p>
+                <?php if ($programaVirtual): ?>
+                    <div class="programa-intro">
+                        <strong><?= e($programaVirtual['nombre'] ?? 'Tu programa') ?></strong>
+                        <?php if (!empty($programaVirtual['descripcion'])): ?>
+                            <p><?= nl2br(e($programaVirtual['descripcion'])) ?></p>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
 
-                <div class="progress-box">
-                    <div class="progress-bar"></div>
+                <p>Avance: <strong><?= e($avanceVirtual) ?>%</strong></p>
+                <div class="progress-track">
+                    <div class="progress-fill" style="width: <?= min(100, max(0, (int) $avanceVirtual)) ?>%;"></div>
                 </div>
 
                 <?php if (empty($videos)): ?>
-                    <div class="empty">No tienes videos asignados todavía.</div>
+                    <div class="empty">Tu coach aún no ha publicado material en este plan. Vuelve pronto.</div>
                 <?php endif; ?>
 
                 <?php foreach ($videos as $video): ?>
-                    <div class="video">
-                        <strong><?= e($video['titulo'] ?? 'Video StayFit') ?></strong>
-                        <p><?= e($video['descripcion'] ?? 'Contenido de entrenamiento virtual.') ?></p>
-
-                        <?php if (!empty($video['url_video'])): ?>
-                            <a class="btn" href="<?= e($video['url_video']) ?>" target="_blank">Ver video</a>
-                        <?php endif; ?>
-
-                        <a class="btn btn-green" href="../../controller/cliente/contenidoVirtualController.php?accion=marcarVisto&video_id=<?= e($video['id'] ?? '') ?>">
-                            Marcar como visto
-                        </a>
-                    </div>
+                    <?php require __DIR__ . '/partials/materialVirtual.php'; ?>
                 <?php endforeach; ?>
             </div>
 

@@ -6,8 +6,10 @@ if (!function_exists('e')) { // Evita duplicar función
     }
 }
 
-$usuarios = $usuarios ?? []; // Lista de usuarios
-$roles = $roles ?? []; // Lista de roles
+$usuarios = $usuarios ?? [];
+$roles = $roles ?? [];
+$flash = $flash ?? null;
+$adminSesionId = (int) ($_SESSION['usuario_id'] ?? 0);
 
 ?>
 
@@ -147,6 +149,34 @@ $roles = $roles ?? []; // Lista de roles
             background: #D63384;
         }
 
+        .alert-success {
+            background: #e8f8f1;
+            color: #1d6b4f;
+            border: 1px solid #3EB489;
+            padding: 14px 18px;
+            border-radius: 14px;
+            margin-bottom: 22px;
+        }
+
+        .alert-error {
+            background: #fde8f0;
+            color: #8b2252;
+            border: 1px solid #D63384;
+            padding: 14px 18px;
+            border-radius: 14px;
+            margin-bottom: 22px;
+        }
+
+        .btn-danger {
+            background: #8b2252;
+        }
+
+        .acciones-usuario {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
         @media (max-width: 1000px) {
             .admin-wrapper {
                 flex-direction: column;
@@ -173,6 +203,8 @@ $roles = $roles ?? []; // Lista de roles
         <a href="../../controller/admin/clienteController.php">Clientes</a>
         <a href="../../controller/admin/coachController.php">Coaches</a>
         <a href="../../controller/admin/notificacionController.php">Notificaciones</a>
+        <?php require_once __DIR__ . '/../partials/cerrarSesion.php'; ?>
+
     </aside>
 
     <main class="content">
@@ -181,6 +213,12 @@ $roles = $roles ?? []; // Lista de roles
             <h1>Usuarios</h1>
             <p>Administra credenciales, roles y estados de acceso al sistema StayFit.</p>
         </section>
+
+        <?php if (!empty($flash['mensaje'])): ?>
+            <div class="<?= ($flash['tipo'] ?? '') === 'success' ? 'alert-success' : 'alert-error' ?>">
+                <?= e($flash['mensaje']) ?>
+            </div>
+        <?php endif; ?>
 
         <section class="grid">
 
@@ -246,11 +284,21 @@ $roles = $roles ?? []; // Lista de roles
                                 </td>
 
                                 <td>
-                                    <?php if (($item['estado'] ?? '') === 'activo'): ?>
-                                        <a class="btn" href="../../controller/admin/usuarioController.php?accion=cambiarEstado&id=<?= e($item['id'] ?? '') ?>&estado=inactivo">Inactivar</a>
-                                    <?php else: ?>
-                                        <a class="btn btn-green" href="../../controller/admin/usuarioController.php?accion=cambiarEstado&id=<?= e($item['id'] ?? '') ?>&estado=activo">Activar</a>
-                                    <?php endif; ?>
+                                    <div class="acciones-usuario">
+                                        <?php if (($item['estado'] ?? '') === 'activo'): ?>
+                                            <a class="btn" href="../../controller/admin/usuarioController.php?accion=cambiarEstado&id=<?= e($item['id'] ?? $item['id_usuario'] ?? '') ?>&estado=inactivo">Inactivar</a>
+                                        <?php else: ?>
+                                            <a class="btn btn-green" href="../../controller/admin/usuarioController.php?accion=cambiarEstado&id=<?= e($item['id'] ?? $item['id_usuario'] ?? '') ?>&estado=activo">Activar</a>
+                                        <?php endif; ?>
+
+                                        <?php if ((int) ($item['id'] ?? $item['id_usuario'] ?? 0) !== $adminSesionId): ?>
+                                            <a class="btn btn-danger"
+                                               href="../../controller/admin/usuarioController.php?accion=eliminar&id=<?= e($item['id'] ?? $item['id_usuario'] ?? '') ?>"
+                                               onclick="return confirm('¿Eliminar este usuario de forma permanente?');">
+                                                Eliminar
+                                            </a>
+                                        <?php endif; ?>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

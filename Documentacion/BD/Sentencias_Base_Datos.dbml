@@ -1,545 +1,571 @@
-Enum rol_nombre {
-  ADMIN
-  COACH
-  CLIENTE
+Project stayfit {
+  database_type: "MySQL / MariaDB"
+  Note: "Modelo editable de StayFit con flujo de plan, pago, solicitud de compra, validacion administrativa, cliente activo y acceso por modulos."
 }
 
-Enum user_estado {
-  ACTIVO
-  INACTIVO
-  SUSPENDIDO
+// =========================================================
+// Seguridad, usuarios y roles
+// =========================================================
+Table user {
+  id_user int [pk, increment, note: "Identificador unico del usuario."]
+  nombres varchar(100) [note: "Nombres del usuario."]
+  apellidos varchar(100) [note: "Apellidos del usuario."]
+  documento_identidad varchar(30) [unique, note: "Documento de identidad."]
+  correo varchar(150) [unique, note: "Correo de acceso."]
+  telefono varchar(30) [note: "Telefono de contacto."]
+  password_hash varchar(255) [note: "Contrasena cifrada."]
+  foto_perfil_url varchar(255) [note: "Ruta de foto de perfil."]
+  estado varchar [note: "ACTIVO, INACTIVO, BLOQUEADO o PENDIENTE."]
+  correo_verificado_en datetime [note: "Fecha de verificacion de correo."]
+  ultimo_acceso_en datetime [note: "Ultimo ingreso."]
+  creado_en timestamp [note: "Creacion."]
+  actualizado_en timestamp [note: "Actualizacion."]
 }
 
-Enum origen_registro_enum {
-  SELF_SERVICE
-  ADMINISTRATIVO
+Table roles {
+  id_rol int [pk, increment, note: "Identificador del rol."]
+  codigo varchar(50) [unique, note: "Codigo interno: ADMIN, COACH, CLIENTE, CLIENTE_INSTITUCIONAL."]
+  nombre varchar(80) [note: "Nombre visible del rol."]
+  descripcion varchar(255) [note: "Descripcion."]
+  estado varchar [note: "Estado del rol."]
+  creado_en timestamp [note: "Creacion."]
+  actualizado_en timestamp [note: "Actualizacion."]
 }
 
-Enum tipo_cliente_enum {
-  INDIVIDUAL
-  INSTITUCIONAL
+Table user_roles {
+  id_user_rol int [pk, increment, note: "Identificador."]
+  id_user int [note: "Usuario asociado."]
+  id_rol int [note: "Rol asociado."]
+  creado_en timestamp [note: "Fecha de asignacion."]
 }
 
-Enum estado_plan_general {
-  ACTIVO
-  INACTIVO
+Table tokens_recuperacion {
+  id_token int [pk, increment, note: "Identificador."]
+  id_user int [note: "Usuario solicitante."]
+  token varchar(255) [unique, note: "Token de recuperacion."]
+  usado tinyint(1) [note: "Indica si fue utilizado."]
+  expira_en datetime [note: "Fecha de expiracion."]
+  creado_en timestamp [note: "Fecha de creacion."]
 }
 
-Enum estado_plan_cliente {
-  ACTIVO
-  PAUSADO
-  FINALIZADO
-  CANCELADO
-  VENCIDO
+// =========================================================
+// Clientes, coaches e instituciones
+// =========================================================
+Table clientes {
+  id_cliente int [pk, increment, note: "Identificador."]
+  id_user int [unique, note: "Usuario asociado."]
+  id_coach int [note: "Coach asignado."]
+  id_institucion int [note: "Institucion asociada."]
+  fecha_nacimiento date [note: "Nacimiento."]
+  genero varchar [note: "Genero."]
+  direccion varchar(180) [note: "Direccion."]
+  ciudad varchar(100) [note: "Ciudad."]
+  objetivo_principal varchar(180) [note: "Objetivo fitness."]
+  peso_inicial_kg decimal(5,2) [note: "Peso inicial."]
+  estatura_cm decimal(5,2) [note: "Estatura."]
+  estado_cliente varchar [note: "ACTIVA, INACTIVA o SUSPENDIDA."]
+  fecha_alta date [note: "Fecha de activacion como cliente."]
+  creado_en timestamp [note: "Creacion."]
+  actualizado_en timestamp [note: "Actualizacion."]
 }
 
-Enum estado_plan_especifico {
-  ACTIVO
-  INACTIVO
-  FINALIZADO
+Table coaches {
+  id_coach int [pk, increment, note: "Identificador."]
+  id_user int [unique, note: "Usuario asociado."]
+  especialidad varchar(120) [note: "Especialidad."]
+  experiencia_anios int [note: "Experiencia."]
+  certificaciones text [note: "Certificaciones."]
+  biografia text [note: "Biografia."]
+  estado_coach varchar [note: "ACTIVO o INACTIVO."]
+  creado_en timestamp [note: "Creacion."]
+  actualizado_en timestamp [note: "Actualizacion."]
 }
 
-Enum material_tipo {
-  VIDEO
-  PDF
-  IMAGEN
-  AUDIO
+Table instituciones {
+  id_institucion int [pk, increment, note: "Identificador."]
+  nombre varchar(150) [note: "Nombre de institucion."]
+  nit varchar(50) [unique, note: "NIT o identificacion."]
+  tipo_institucion varchar(80) [note: "Tipo."]
+  nombre_contacto varchar(120) [note: "Contacto principal."]
+  correo_contacto varchar(150) [note: "Correo."]
+  telefono_contacto varchar(30) [note: "Telefono."]
+  direccion varchar(180) [note: "Direccion."]
+  ciudad varchar(100) [note: "Ciudad."]
+  observaciones text [note: "Notas."]
+  estado varchar [note: "ACTIVA o INACTIVA."]
+  creado_en timestamp [note: "Creacion."]
+  actualizado_en timestamp [note: "Actualizacion."]
 }
 
-Enum sesion_tipo {
-  INDIVIDUAL
-  GRUPAL
+// =========================================================
+// Planes, compra, cupos, pagos y acceso
+// =========================================================
+Table planes {
+  id_plan int [pk, increment, note: "Identificador."]
+  nombre varchar(150) [note: "Nombre del plan."]
+  slug varchar(170) [unique, note: "Identificador URL."]
+  descripcion text [note: "Descripcion."]
+  precio decimal(12,2) [note: "Precio."]
+  duracion_dias int [note: "Duracion."]
+  modalidad varchar [note: "VIRTUAL, PRESENCIAL o MIXTO."]
+  tipo_cliente varchar [note: "INDIVIDUAL, INSTITUCIONAL o AMBOS."]
+  cupo_maximo int [note: "Cupo maximo; NULL = sin limite."]
+  requiere_coach tinyint(1) [note: "Requiere coach."]
+  incluye_entrenamiento tinyint(1) [note: "Incluye modulo entrenamiento."]
+  incluye_nutricion tinyint(1) [note: "Incluye modulo nutricion."]
+  incluye_videos tinyint(1) [note: "Incluye videos."]
+  incluye_sesiones tinyint(1) [note: "Incluye sesiones."]
+  incluye_eventos tinyint(1) [note: "Incluye eventos."]
+  imagen_url varchar(255) [note: "Imagen."]
+  destacado tinyint(1) [note: "Plan destacado."]
+  fecha_inicio_programa date [note: "Inicio del programa."]
+  fecha_fin_programa date [note: "Fin del programa."]
+  estado_plan varchar [note: "ACTIVO o INACTIVO."]
+  creado_por int [note: "Usuario creador."]
+  creado_en timestamp [note: "Creacion."]
+  actualizado_en timestamp [note: "Actualizacion."]
 }
 
-Enum sesion_modalidad {
-  PRESENCIAL
-  VIRTUAL
+Table modulos_servicio {
+  id_modulo int [pk, increment, note: "Identificador."]
+  codigo varchar(50) [unique, note: "Codigo del modulo."]
+  nombre varchar(100) [note: "Nombre."]
+  descripcion varchar(255) [note: "Descripcion."]
+  estado varchar [note: "Estado."]
+  creado_en timestamp [note: "Creacion."]
 }
 
-Enum sesion_estado {
-  PROGRAMADA
-  EN_CURSO
-  COMPLETADA
-  CANCELADA
+Table plan_modulos {
+  id_plan_modulo int [pk, increment, note: "Identificador."]
+  id_plan int [note: "Plan."]
+  id_modulo int [note: "Modulo."]
+  creado_en timestamp [note: "Creacion."]
 }
 
-Enum estado_asistencia_sesion {
-  INSCRITO
-  ASISTIO
-  AUSENTE
-  CANCELADO
+Table solicitudes_compra {
+  id_solicitud int [pk, increment, note: "Identificador."]
+  codigo_solicitud varchar(40) [unique, note: "Codigo de trazabilidad."]
+  id_plan int [note: "Plan comprado."]
+  id_institucion int [note: "Institucion si aplica."]
+  nombres varchar(100) [note: "Nombres comprador."]
+  apellidos varchar(100) [note: "Apellidos comprador."]
+  documento_identidad varchar(30) [note: "Documento."]
+  correo varchar(150) [note: "Correo."]
+  telefono varchar(30) [note: "Telefono."]
+  ciudad varchar(100) [note: "Ciudad."]
+  tipo_cliente varchar [note: "Tipo comprador."]
+  observacion_usuario text [note: "Observacion."]
+  estado_solicitud varchar [note: "PENDIENTE, VALIDADA, RECHAZADA, CANCELADA."]
+  revisado_por int [note: "Administrador revisor."]
+  fecha_revision datetime [note: "Fecha revision."]
+  observacion_admin text [note: "Observacion de revision."]
+  creado_en timestamp [note: "Creacion."]
+  actualizado_en timestamp [note: "Actualizacion."]
 }
 
-Enum metodo_pago_enum {
-  EFECTIVO
-  TRANSFERENCIA
-  TARJETA
-  PSE
+Table pagos {
+  id_pago int [pk, increment, note: "Identificador."]
+  id_solicitud int [unique, note: "Solicitud relacionada."]
+  id_cliente int [note: "Cliente cuando ya exista."]
+  id_plan int [note: "Plan pagado."]
+  monto decimal(12,2) [note: "Monto."]
+  metodo_pago varchar [note: "Metodo usado."]
+  referencia_pago varchar(120) [note: "Referencia."]
+  comprobante_url varchar(255) [note: "Comprobante."]
+  estado_pago varchar [note: "PENDIENTE, VALIDADO, RECHAZADO."]
+  fecha_pago datetime [note: "Fecha pago."]
+  validado_por int [note: "Administrador validador."]
+  fecha_validacion datetime [note: "Fecha validacion."]
+  observacion_admin text [note: "Observacion."]
+  creado_en timestamp [note: "Creacion."]
+  actualizado_en timestamp [note: "Actualizacion."]
 }
 
-Enum estado_pago_enum {
-  PENDIENTE
-  PAGADO
-  FALLIDO
-  REEMBOLSADO
-}
-
-Enum evento_tipo {
-  WEBINAR
-  CLASE
-  TALLER
-  COMPETENCIA
-}
-
-Enum evento_modalidad {
-  PRESENCIAL
-  VIRTUAL
-  HIBRIDO
-}
-
-Enum evento_estado {
-  PROGRAMADO
-  EN_CURSO
-  FINALIZADO
-  CANCELADO
-}
-
-Enum estado_participacion_evento {
-  INSCRITO
-  ASISTIO
-  AUSENTE
-  CANCELADO
-}
-
-Enum tipo_mensaje_enum {
-  TEXTO
-  ARCHIVO
-  IMAGEN
-  AUDIO
-  VIDEO
-}
-
-Enum tipo_notificacion_enum {
-  SISTEMA
-  MENSAJE
-  PAGO
-  SESION
-  PLAN
-  EVENTO
-}
-
-Enum estado_registro_rutina_enum {
-  PENDIENTE
-  EN_PROGRESO
-  COMPLETADA
-  OMITIDA
-}
-
-Enum tipo_reporte_temporal {
-  PROGRESO
-  NUTRICIONAL
-  FINANCIERO
-  GENERAL
-}
-
-Enum modulo_servicio_nombre {
-  ENTRENAMIENTO
-  NUTRICION
-}
-
-Table rol {
-  id_rol bigint [pk, increment]
-  nombre rol_nombre [not null, unique]
-  descripcion varchar(255)
-  permisos text
-  activo boolean [default: true]
-}
-
-Table users {
-  id_usuario bigint [pk, increment]
-  nombre varchar(100) [not null]
-  apellido varchar(100) [not null]
-  correo varchar(150) [not null, unique]
-  hash_contrasena varchar(255) [not null]
-  estado user_estado [default: 'ACTIVO']
-  origen_registro origen_registro_enum [default: 'SELF_SERVICE']
-  fecha_registro timestamp [default: `now()`]
-  foto_perfil varchar(300)
-  telefono varchar(30)
-}
-
-Table users_roles {
-  id_usuario bigint [not null]
-  id_rol bigint [not null]
-
-  indexes {
-    (id_usuario, id_rol) [pk]
-  }
-}
-
-Table coach {
-  id_coach bigint [pk]
-  especialidad varchar(150)
-  credencial varchar(255)
-  biografia text
-}
-
-Table cliente {
-  id_cliente bigint [pk]
-  tipo_cliente tipo_cliente_enum [not null, default: 'INDIVIDUAL']
-  fecha_nacimiento date
-  estatura_m decimal(4,2)
-  peso_inicial decimal(5,2)
-  objetivos text
-  restricciones_medicas text
-}
-
-Table institucion {
-  id_institucion bigint [pk, increment]
-  nombre varchar(200) [not null]
-  tipo_institucion varchar(100)
-  nit varchar(50) [unique]
-  direccion varchar(255)
-  telefono varchar(30)
-  correo_contacto varchar(150)
-  num_participantes int
-  activo boolean [default: true]
-}
-
-Table cliente_institucional {
-  id_cliente bigint [pk]
-  id_institucion bigint [not null]
-  cargo varchar(100)
-  es_contacto_principal boolean [default: false]
-  fecha_vinculacion timestamp [default: `now()`]
-}
-
-Table modulo_servicio {
-  id_modulo_servicio bigint [pk, increment]
-  nombre modulo_servicio_nombre [not null, unique]
-  descripcion varchar(255)
-  activo boolean [default: true]
-}
-
-Table plan {
-  id_plan bigint [pk, increment]
-  nombre varchar(150) [not null]
-  descripcion text
-  precio decimal(10,2) [not null]
-  duracion_dias int
-  dias_previos_recordatorio_default int [default: 5]
-  estado_plan estado_plan_general [default: 'ACTIVO']
-}
-
-Table plan_modulo {
-  id_plan bigint [not null]
-  id_modulo_servicio bigint [not null]
-
-  indexes {
-    (id_plan, id_modulo_servicio) [pk]
-  }
-}
-
-Table plan_cliente {
-  id_plan_cliente bigint [pk, increment]
-  id_plan bigint [not null]
-  id_cliente bigint [not null]
-  id_coach bigint [not null]
-  fecha_inicio date [not null]
-  fecha_fin date [not null]
-  dias_previos_recordatorio int [default: 5]
-  estado estado_plan_cliente [default: 'ACTIVO']
-  observaciones text
+Table planes_cliente {
+  id_plan_cliente int [pk, increment, note: "Identificador."]
+  id_cliente int [note: "Cliente."]
+  id_plan int [note: "Plan."]
+  id_solicitud int [note: "Solicitud origen."]
+  id_pago int [note: "Pago origen."]
+  fecha_inicio date [note: "Inicio vigencia."]
+  fecha_fin date [note: "Fin vigencia."]
+  estado_plan_cliente varchar [note: "ACTIVO, VENCIDO, CANCELADO, SUSPENDIDO."]
+  creado_en timestamp [note: "Creacion."]
+  actualizado_en timestamp [note: "Actualizacion."]
 }
 
 Table acceso_cliente_modulo {
-  id_acceso_cliente_modulo bigint [pk, increment]
-  id_plan_cliente bigint [not null]
-  id_modulo_servicio bigint [not null]
-  habilitado boolean [default: false]
-  fecha_habilitacion timestamp
-  fecha_expiracion timestamp
+  id_acceso int [pk, increment, note: "Identificador."]
+  id_plan_cliente int [note: "Plan del cliente."]
+  id_cliente int [note: "Cliente."]
+  id_modulo int [note: "Modulo."]
+  fecha_inicio date [note: "Inicio."]
+  fecha_fin date [note: "Fin."]
+  estado_acceso varchar [note: "ACTIVO, INACTIVO, VENCIDO."]
+  creado_en timestamp [note: "Creacion."]
+  actualizado_en timestamp [note: "Actualizacion."]
 }
 
-Table plan_entrenamiento {
-  id_plan_entrenamiento bigint [pk, increment]
-  id_plan_cliente bigint [not null]
-  nombre varchar(150) [not null]
-  objetivo text
-  nivel_dificultad varchar(50)
-  duracion_total_dias int
-  estado_plan estado_plan_especifico [default: 'ACTIVO']
+// =========================================================
+// Programas virtuales y videos
+// =========================================================
+Table programas_virtuales {
+  id_programa int [pk, increment, note: "Identificador."]
+  id_plan int [note: "Plan asociado."]
+  nombre varchar(150) [note: "Nombre."]
+  descripcion text [note: "Descripcion."]
+  imagen_url varchar(255) [note: "Imagen."]
+  estado_programa varchar [note: "Estado."]
+  creado_en timestamp [note: "Creacion."]
+  actualizado_en timestamp [note: "Actualizacion."]
 }
 
-Table rutina {
-  id_rutina bigint [pk, increment]
-  id_plan_entrenamiento bigint [not null]
-  nombre varchar(150) [not null]
-  dias_semana varchar(100)
-  duracion_minutos int
-  version int [default: 1]
-  observaciones text
+Table categorias_video {
+  id_categoria int [pk, increment, note: "Identificador."]
+  nombre varchar(120) [note: "Nombre."]
+  descripcion varchar(255) [note: "Descripcion."]
+  orden int [note: "Orden."]
+  estado_categoria varchar [note: "Estado."]
+  creado_en timestamp [note: "Creacion."]
 }
 
-Table ejercicio {
-  id_ejercicio bigint [pk, increment]
-  id_rutina bigint [not null]
-  nombre varchar(150) [not null]
-  descripcion text
-  series int
-  repeticiones int
-  tiempo_segundos int
-  descanso_segundos int
-  instrucciones text
+Table videos {
+  id_video int [pk, increment, note: "Identificador."]
+  id_programa int [note: "Programa."]
+  id_categoria int [note: "Categoria."]
+  titulo varchar(160) [note: "Titulo."]
+  descripcion text [note: "Descripcion."]
+  url_video varchar(255) [note: "Enlace video."]
+  imagen_portada_url varchar(255) [note: "Portada."]
+  duracion_minutos int [note: "Duracion."]
+  orden int [note: "Orden."]
+  estado_video varchar [note: "Estado."]
+  creado_en timestamp [note: "Creacion."]
+  actualizado_en timestamp [note: "Actualizacion."]
 }
 
-Table material {
-  id_material bigint [pk, increment]
-  id_ejercicio bigint [not null]
-  tipo material_tipo [not null]
-  nombre varchar(150)
-  url_archivo varchar(300)
+Table progreso_videos {
+  id_progreso_video int [pk, increment, note: "Identificador."]
+  id_cliente int [note: "Cliente."]
+  id_video int [note: "Video."]
+  estado_progreso varchar [note: "NO_INICIADO, EN_PROGRESO, COMPLETADO."]
+  porcentaje_avance decimal(5,2) [note: "Porcentaje."]
+  iniciado_en datetime [note: "Inicio."]
+  completado_en datetime [note: "Fin."]
+  actualizado_en timestamp [note: "Actualizacion."]
 }
 
-Table plan_nutricional {
-  id_plan_nutricional bigint [pk, increment]
-  id_plan_cliente bigint [not null]
-  nombre varchar(150) [not null]
-  objetivo text
-  estado_plan estado_plan_especifico [default: 'ACTIVO']
-  recomendaciones_adicionales text
+// =========================================================
+// Entrenamiento
+// =========================================================
+Table planes_entrenamiento {
+  id_plan_entrenamiento int [pk, increment, note: "Identificador."]
+  id_cliente int [note: "Cliente."]
+  id_plan int [note: "Plan comercial."]
+  id_coach int [note: "Coach."]
+  titulo varchar(150) [note: "Titulo."]
+  objetivo text [note: "Objetivo."]
+  nivel varchar [note: "Nivel."]
+  fecha_inicio date [note: "Inicio."]
+  fecha_fin date [note: "Fin."]
+  estado_entrenamiento varchar [note: "Estado."]
+  creado_en timestamp [note: "Creacion."]
+  actualizado_en timestamp [note: "Actualizacion."]
 }
 
-Table comida {
-  id_comida bigint [pk, increment]
-  id_plan_nutricional bigint [not null]
-  tiempo_comida varchar(50)
-  grupos_alimenticios text
-  porciones varchar(255)
-  calorias_aprox decimal(7,2)
-  observaciones text
+Table rutinas {
+  id_rutina int [pk, increment, note: "Identificador."]
+  id_plan_entrenamiento int [note: "Plan entrenamiento."]
+  titulo varchar(150) [note: "Titulo."]
+  descripcion text [note: "Descripcion."]
+  dia_semana varchar [note: "Dia sugerido."]
+  orden int [note: "Orden."]
+  estado_rutina varchar [note: "Estado."]
+  creado_en timestamp [note: "Creacion."]
+  actualizado_en timestamp [note: "Actualizacion."]
 }
 
-Table registro_progreso {
-  id_registro_progreso bigint [pk, increment]
-  id_plan_cliente bigint [not null]
-  fecha date [not null]
-  peso decimal(5,2)
-  cintura decimal(5,2)
-  cadera decimal(5,2)
-  brazos decimal(5,2)
-  piernas decimal(5,2)
-  fotos_evolucion text
-  observacion_cliente text
-  observacion_coach text
+Table ejercicios {
+  id_ejercicio int [pk, increment, note: "Identificador."]
+  nombre varchar(150) [note: "Nombre."]
+  descripcion text [note: "Descripcion."]
+  grupo_muscular varchar(120) [note: "Grupo muscular."]
+  equipo_necesario varchar(150) [note: "Equipo."]
+  url_video varchar(255) [note: "Video."]
+  imagen_url varchar(255) [note: "Imagen."]
+  estado_ejercicio varchar [note: "Estado."]
+  creado_en timestamp [note: "Creacion."]
+  actualizado_en timestamp [note: "Actualizacion."]
 }
 
-Table registro_rutina {
-  id_registro_rutina bigint [pk, increment]
-  id_rutina bigint [not null]
-  fecha date [not null]
-  estado estado_registro_rutina_enum [default: 'PENDIENTE']
-  porcentaje_avance int
-  observaciones text
+Table rutina_ejercicios {
+  id_rutina_ejercicio int [pk, increment, note: "Identificador."]
+  id_rutina int [note: "Rutina."]
+  id_ejercicio int [note: "Ejercicio."]
+  series int [note: "Series."]
+  repeticiones varchar(50) [note: "Repeticiones."]
+  duracion_segundos int [note: "Duracion."]
+  descanso_segundos int [note: "Descanso."]
+  orden int [note: "Orden."]
+  observaciones text [note: "Observaciones."]
 }
 
-Table agenda {
-  id_agenda bigint [pk, increment]
-  id_coach bigint [not null]
-  fecha_hora_inicio timestamp [not null]
-  fecha_hora_fin timestamp [not null]
-  disponible boolean [default: true]
-  descripcion text
+Table material_entrenamiento {
+  id_material int [pk, increment, note: "Identificador."]
+  id_plan_entrenamiento int [note: "Plan entrenamiento."]
+  titulo varchar(150) [note: "Titulo."]
+  tipo_material varchar [note: "PDF, VIDEO, IMAGEN, ENLACE, OTRO."]
+  url_material varchar(255) [note: "Ruta o enlace."]
+  descripcion text [note: "Descripcion."]
+  creado_en timestamp [note: "Creacion."]
 }
 
-Table sesion {
-  id_sesion bigint [pk, increment]
-  id_coach bigint [not null]
-  titulo varchar(150)
-  descripcion text
-  fecha_hora_inicio timestamp [not null]
-  fecha_hora_fin timestamp [not null]
-  duracion_minutos int
-  tipo sesion_tipo [default: 'INDIVIDUAL']
-  modalidad sesion_modalidad [default: 'VIRTUAL']
-  estado sesion_estado [default: 'PROGRAMADA']
-  cupo_maximo int
-  enlace_virtual varchar(300)
-  ubicacion varchar(255)
+Table registro_rutinas {
+  id_registro_rutina int [pk, increment, note: "Identificador."]
+  id_cliente int [note: "Cliente."]
+  id_rutina int [note: "Rutina."]
+  fecha_registro date [note: "Fecha."]
+  estado_registro varchar [note: "PENDIENTE, COMPLETADA, NO_REALIZADA."]
+  observaciones text [note: "Observaciones."]
+  creado_en timestamp [note: "Creacion."]
 }
 
-Table sesion_participante {
-  id_sesion bigint [not null]
-  id_plan_cliente bigint [not null]
-  estado_asistencia estado_asistencia_sesion [default: 'INSCRITO']
-  observaciones text
-
-  indexes {
-    (id_sesion, id_plan_cliente) [pk]
-  }
+// =========================================================
+// Nutricion
+// =========================================================
+Table planes_nutricionales {
+  id_plan_nutricional int [pk, increment, note: "Identificador."]
+  id_cliente int [note: "Cliente."]
+  id_coach int [note: "Coach."]
+  titulo varchar(150) [note: "Titulo."]
+  objetivo text [note: "Objetivo."]
+  calorias_diarias int [note: "Calorias."]
+  recomendaciones_generales text [note: "Recomendaciones."]
+  fecha_inicio date [note: "Inicio."]
+  fecha_fin date [note: "Fin."]
+  estado_nutricional varchar [note: "Estado."]
+  creado_en timestamp [note: "Creacion."]
+  actualizado_en timestamp [note: "Actualizacion."]
 }
 
-Table pago {
-  id_pago bigint [pk, increment]
-  id_plan_cliente bigint [not null]
-  monto decimal(10,2) [not null]
-  moneda varchar(10) [default: 'COP']
-  fecha_pago timestamp
-  metodo_pago metodo_pago_enum
-  estado_pago estado_pago_enum [default: 'PENDIENTE']
-  proveedor_pago varchar(100)
-  referencia_transaccion varchar(150)
-  codigo_aprobacion varchar(100)
-  url_comprobante varchar(300)
-  fecha_vencimiento date
-  observacion text
+Table comidas {
+  id_comida int [pk, increment, note: "Identificador."]
+  id_plan_nutricional int [note: "Plan nutricional."]
+  tipo_comida varchar [note: "Tipo."]
+  nombre varchar(150) [note: "Nombre."]
+  descripcion text [note: "Descripcion."]
+  hora_sugerida time [note: "Hora sugerida."]
+  calorias_aprox int [note: "Calorias."]
+  orden int [note: "Orden."]
+  creado_en timestamp [note: "Creacion."]
+  actualizado_en timestamp [note: "Actualizacion."]
 }
 
-Table evento {
-  id_evento bigint [pk, increment]
-  id_coach bigint
-  titulo varchar(200) [not null]
-  descripcion text
-  fecha_hora_inicio timestamp [not null]
-  fecha_hora_fin timestamp [not null]
-  tipo evento_tipo
-  modalidad evento_modalidad [default: 'VIRTUAL']
-  estado evento_estado [default: 'PROGRAMADO']
-  cupo_maximo int
-  ubicacion varchar(255)
-  enlace_virtual varchar(300)
+// =========================================================
+// Progreso fisico
+// =========================================================
+Table registros_progreso {
+  id_registro_progreso int [pk, increment, note: "Identificador."]
+  id_cliente int [note: "Cliente."]
+  registrado_por int [note: "Usuario que registra."]
+  fecha_registro date [note: "Fecha."]
+  peso_kg decimal(5,2) [note: "Peso."]
+  cintura_cm decimal(5,2) [note: "Cintura."]
+  cadera_cm decimal(5,2) [note: "Cadera."]
+  pecho_cm decimal(5,2) [note: "Pecho."]
+  brazo_cm decimal(5,2) [note: "Brazo."]
+  pierna_cm decimal(5,2) [note: "Pierna."]
+  foto_url varchar(255) [note: "Foto."]
+  observaciones_cliente text [note: "Observaciones cliente."]
+  observaciones_coach text [note: "Observaciones coach."]
+  creado_en timestamp [note: "Creacion."]
 }
 
-Table evento_participante {
-  id_evento bigint [not null]
-  id_cliente bigint [not null]
-  estado estado_participacion_evento [default: 'INSCRITO']
-  fecha_inscripcion timestamp [default: `now()`]
-
-  indexes {
-    (id_evento, id_cliente) [pk]
-  }
+// =========================================================
+// Agenda, sesiones y eventos
+// =========================================================
+Table sesiones {
+  id_sesion int [pk, increment, note: "Identificador."]
+  id_coach int [note: "Coach."]
+  id_cliente int [note: "Cliente."]
+  id_institucion int [note: "Institucion."]
+  id_plan int [note: "Plan."]
+  titulo varchar(160) [note: "Titulo."]
+  descripcion text [note: "Descripcion."]
+  tipo_sesion varchar [note: "Tipo."]
+  modalidad varchar [note: "Modalidad."]
+  fecha_inicio datetime [note: "Inicio."]
+  fecha_fin datetime [note: "Fin."]
+  ubicacion varchar(180) [note: "Ubicacion."]
+  enlace_virtual varchar(255) [note: "Enlace."]
+  cupo_maximo int [note: "Cupo."]
+  estado_sesion varchar [note: "Estado."]
+  creado_por int [note: "Usuario creador."]
+  creado_en timestamp [note: "Creacion."]
+  actualizado_en timestamp [note: "Actualizacion."]
 }
 
-Table chat {
-  id_chat bigint [pk, increment]
-  id_cliente bigint [not null]
-  id_coach bigint [not null]
-  fecha_creacion timestamp [default: `now()`]
-  es_temporal boolean [default: false]
-  fecha_expiracion timestamp
-
-  indexes {
-    (id_cliente, id_coach) [unique]
-  }
+Table sesion_participantes {
+  id_sesion_participante int [pk, increment, note: "Identificador."]
+  id_sesion int [note: "Sesion."]
+  id_cliente int [note: "Cliente."]
+  estado_asistencia varchar [note: "Estado asistencia."]
+  observaciones text [note: "Observaciones."]
+  creado_en timestamp [note: "Creacion."]
 }
 
-Table mensaje {
-  id_mensaje bigint [pk, increment]
-  id_chat bigint [not null]
-  id_usuario_remitente bigint [not null]
-  contenido text [not null]
-  tipo_mensaje tipo_mensaje_enum [default: 'TEXTO']
-  url_adjunto varchar(300)
-  fecha_envio timestamp [default: `now()`]
-  leido boolean [default: false]
-  fecha_lectura timestamp
+Table eventos {
+  id_evento int [pk, increment, note: "Identificador."]
+  id_institucion int [note: "Institucion."]
+  titulo varchar(160) [note: "Titulo."]
+  descripcion text [note: "Descripcion."]
+  modalidad varchar [note: "Modalidad."]
+  fecha_inicio datetime [note: "Inicio."]
+  fecha_fin datetime [note: "Fin."]
+  ubicacion varchar(180) [note: "Ubicacion."]
+  enlace_virtual varchar(255) [note: "Enlace."]
+  cupo_maximo int [note: "Cupo."]
+  precio decimal(12,2) [note: "Precio."]
+  imagen_url varchar(255) [note: "Imagen."]
+  estado_evento varchar [note: "Estado."]
+  creado_por int [note: "Usuario creador."]
+  creado_en timestamp [note: "Creacion."]
+  actualizado_en timestamp [note: "Actualizacion."]
 }
 
-Table notificacion {
-  id_notificacion bigint [pk, increment]
-  id_usuario bigint [not null]
-  titulo varchar(150) [not null]
-  contenido text [not null]
-  tipo tipo_notificacion_enum [default: 'SISTEMA']
-  leida boolean [default: false]
-  fecha_envio timestamp [default: `now()`]
-  fecha_lectura timestamp
+Table evento_participantes {
+  id_evento_participante int [pk, increment, note: "Identificador."]
+  id_evento int [note: "Evento."]
+  id_cliente int [note: "Cliente."]
+  nombre_invitado varchar(150) [note: "Invitado."]
+  correo_invitado varchar(150) [note: "Correo invitado."]
+  telefono_invitado varchar(30) [note: "Telefono."]
+  estado_participacion varchar [note: "Estado."]
+  creado_en timestamp [note: "Creacion."]
 }
 
-Table token_recuperacion {
-  id_token_recuperacion bigint [pk, increment]
-  id_usuario bigint [not null]
-  token varchar(255) [not null, unique]
-  fecha_creacion timestamp [default: `now()`]
-  fecha_expiracion timestamp [not null]
-  usado boolean [default: false]
+// =========================================================
+// Comunicacion
+// =========================================================
+Table chats {
+  id_chat int [pk, increment, note: "Identificador."]
+  tipo_chat varchar [note: "Tipo."]
+  id_cliente int [note: "Cliente."]
+  id_coach int [note: "Coach."]
+  id_institucion int [note: "Institucion."]
+  asunto varchar(160) [note: "Asunto."]
+  estado_chat varchar [note: "Estado."]
+  creado_en timestamp [note: "Creacion."]
+  actualizado_en timestamp [note: "Actualizacion."]
 }
 
-Table reporte_temporal {
-  id_reporte_temporal bigint [pk, increment]
-  id_usuario_generador bigint [not null]
-  id_plan_cliente bigint
-  tipo tipo_reporte_temporal [not null]
-  fecha_generacion timestamp [default: `now()`]
-  periodo varchar(50)
-  contenido text
-  fecha_expiracion timestamp
+Table mensajes {
+  id_mensaje int [pk, increment, note: "Identificador."]
+  id_chat int [note: "Chat."]
+  id_user_emisor int [note: "Usuario emisor."]
+  mensaje text [note: "Texto."]
+  archivo_url varchar(255) [note: "Adjunto."]
+  leido tinyint(1) [note: "Leido."]
+  fecha_lectura datetime [note: "Fecha lectura."]
+  creado_en timestamp [note: "Creacion."]
 }
 
-Table bitacora_busqueda {
-  id_bitacora_busqueda bigint [pk, increment]
-  id_usuario bigint [not null]
-  accion varchar(255)
-  modulo varchar(100)
-  criterio_busqueda text
-  fecha_hora timestamp [default: `now()`]
-  fecha_expiracion timestamp
-  descripcion text
+Table notificaciones {
+  id_notificacion int [pk, increment, note: "Identificador."]
+  id_user int [note: "Destinatario."]
+  titulo varchar(160) [note: "Titulo."]
+  mensaje text [note: "Mensaje."]
+  tipo_notificacion varchar [note: "Tipo."]
+  url_destino varchar(255) [note: "Enlace destino."]
+  leida tinyint(1) [note: "Leida."]
+  fecha_lectura datetime [note: "Fecha lectura."]
+  creado_en timestamp [note: "Creacion."]
 }
 
-Ref: users_roles.id_usuario > users.id_usuario
-Ref: users_roles.id_rol > rol.id_rol
+// =========================================================
+// Reportes y trazabilidad
+// =========================================================
+Table reportes_generados {
+  id_reporte int [pk, increment, note: "Identificador."]
+  id_user int [note: "Usuario generador."]
+  tipo_reporte varchar [note: "Tipo."]
+  nombre_reporte varchar(160) [note: "Nombre."]
+  parametros_json json [note: "Parametros."]
+  archivo_url varchar(255) [note: "Archivo."]
+  generado_en timestamp [note: "Fecha generacion."]
+}
 
-Ref: coach.id_coach > users.id_usuario
-Ref: cliente.id_cliente > users.id_usuario
+Table bitacora_sistema {
+  id_bitacora int [pk, increment, note: "Identificador."]
+  id_user int [note: "Usuario responsable."]
+  modulo varchar(80) [note: "Modulo."]
+  accion varchar(120) [note: "Accion."]
+  descripcion text [note: "Detalle."]
+  ip varchar(45) [note: "Direccion IP."]
+  user_agent varchar(255) [note: "Agente navegador."]
+  creado_en timestamp [note: "Creacion."]
+}
 
-Ref: cliente_institucional.id_cliente > cliente.id_cliente
-Ref: cliente_institucional.id_institucion > institucion.id_institucion
-
-Ref: plan_modulo.id_plan > plan.id_plan
-Ref: plan_modulo.id_modulo_servicio > modulo_servicio.id_modulo_servicio
-
-Ref: plan_cliente.id_plan > plan.id_plan
-Ref: plan_cliente.id_cliente > cliente.id_cliente
-Ref: plan_cliente.id_coach > coach.id_coach
-
-Ref: acceso_cliente_modulo.id_plan_cliente > plan_cliente.id_plan_cliente
-Ref: acceso_cliente_modulo.id_modulo_servicio > modulo_servicio.id_modulo_servicio
-
-Ref: plan_entrenamiento.id_plan_cliente > plan_cliente.id_plan_cliente
-Ref: rutina.id_plan_entrenamiento > plan_entrenamiento.id_plan_entrenamiento
-Ref: ejercicio.id_rutina > rutina.id_rutina
-Ref: material.id_ejercicio > ejercicio.id_ejercicio
-
-Ref: plan_nutricional.id_plan_cliente > plan_cliente.id_plan_cliente
-Ref: comida.id_plan_nutricional > plan_nutricional.id_plan_nutricional
-
-Ref: registro_progreso.id_plan_cliente > plan_cliente.id_plan_cliente
-Ref: registro_rutina.id_rutina > rutina.id_rutina
-
-Ref: agenda.id_coach > coach.id_coach
-
-Ref: sesion.id_coach > coach.id_coach
-Ref: sesion_participante.id_sesion > sesion.id_sesion
-Ref: sesion_participante.id_plan_cliente > plan_cliente.id_plan_cliente
-
-Ref: pago.id_plan_cliente > plan_cliente.id_plan_cliente
-
-Ref: evento.id_coach > coach.id_coach
-Ref: evento_participante.id_evento > evento.id_evento
-Ref: evento_participante.id_cliente > cliente.id_cliente
-
-Ref: chat.id_cliente > cliente.id_cliente
-Ref: chat.id_coach > coach.id_coach
-
-Ref: mensaje.id_chat > chat.id_chat
-Ref: mensaje.id_usuario_remitente > users.id_usuario
-
-Ref: notificacion.id_usuario > users.id_usuario
-Ref: token_recuperacion.id_usuario > users.id_usuario
-
-Ref: reporte_temporal.id_usuario_generador > users.id_usuario
-Ref: reporte_temporal.id_plan_cliente > plan_cliente.id_plan_cliente
-
-Ref: bitacora_busqueda.id_usuario > users.id_usuario
+// Relaciones principales
+Ref: user_roles.id_user > user.id_user // Un usuario puede tener uno o varios roles.
+Ref: user_roles.id_rol > roles.id_rol // Un rol puede asignarse a muchos usuarios.
+Ref: tokens_recuperacion.id_user > user.id_user // Un usuario puede solicitar tokens de recuperacion.
+Ref: coaches.id_user > user.id_user // Cada coach pertenece a un usuario.
+Ref: clientes.id_user > user.id_user // Cada cliente pertenece a un usuario.
+Ref: clientes.id_coach > coaches.id_coach // Un coach puede tener varios clientes.
+Ref: clientes.id_institucion > instituciones.id_institucion // Una institucion puede vincular varios clientes.
+Ref: planes.creado_por > user.id_user // Usuario administrador que crea el plan.
+Ref: plan_modulos.id_plan > planes.id_plan // Un plan puede incluir varios modulos.
+Ref: plan_modulos.id_modulo > modulos_servicio.id_modulo // Un modulo puede estar en varios planes.
+Ref: solicitudes_compra.id_plan > planes.id_plan // Cada solicitud corresponde a un plan.
+Ref: solicitudes_compra.id_institucion > instituciones.id_institucion // Solicitud institucional opcional.
+Ref: solicitudes_compra.revisado_por > user.id_user // Administrador que valida o rechaza.
+Ref: pagos.id_solicitud > solicitudes_compra.id_solicitud // Un pago pertenece a una solicitud.
+Ref: pagos.id_cliente > clientes.id_cliente // Pago asociado al cliente cuando existe.
+Ref: pagos.id_plan > planes.id_plan // Plan pagado.
+Ref: pagos.validado_por > user.id_user // Administrador que valida pago.
+Ref: planes_cliente.id_cliente > clientes.id_cliente // Cliente dueño del plan.
+Ref: planes_cliente.id_plan > planes.id_plan // Plan adquirido.
+Ref: planes_cliente.id_solicitud > solicitudes_compra.id_solicitud // Solicitud origen.
+Ref: planes_cliente.id_pago > pagos.id_pago // Pago origen.
+Ref: acceso_cliente_modulo.id_plan_cliente > planes_cliente.id_plan_cliente // Acceso generado desde plan cliente.
+Ref: acceso_cliente_modulo.id_cliente > clientes.id_cliente // Cliente con acceso.
+Ref: acceso_cliente_modulo.id_modulo > modulos_servicio.id_modulo // Modulo habilitado.
+Ref: programas_virtuales.id_plan > planes.id_plan // Programa virtual asociado a plan.
+Ref: videos.id_programa > programas_virtuales.id_programa // Video dentro de programa.
+Ref: videos.id_categoria > categorias_video.id_categoria // Categoria opcional.
+Ref: progreso_videos.id_cliente > clientes.id_cliente // Avance por cliente.
+Ref: progreso_videos.id_video > videos.id_video // Avance por video.
+Ref: planes_entrenamiento.id_cliente > clientes.id_cliente // Plan operativo de cliente.
+Ref: planes_entrenamiento.id_plan > planes.id_plan // Plan comercial asociado.
+Ref: planes_entrenamiento.id_coach > coaches.id_coach // Coach responsable.
+Ref: rutinas.id_plan_entrenamiento > planes_entrenamiento.id_plan_entrenamiento // Rutinas del plan.
+Ref: rutina_ejercicios.id_rutina > rutinas.id_rutina // Ejercicios de una rutina.
+Ref: rutina_ejercicios.id_ejercicio > ejercicios.id_ejercicio // Ejercicio catalogado.
+Ref: material_entrenamiento.id_plan_entrenamiento > planes_entrenamiento.id_plan_entrenamiento // Material del plan.
+Ref: registro_rutinas.id_cliente > clientes.id_cliente // Cliente que registra.
+Ref: registro_rutinas.id_rutina > rutinas.id_rutina // Rutina ejecutada.
+Ref: planes_nutricionales.id_cliente > clientes.id_cliente // Plan nutricional de cliente.
+Ref: planes_nutricionales.id_coach > coaches.id_coach // Coach responsable.
+Ref: comidas.id_plan_nutricional > planes_nutricionales.id_plan_nutricional // Comidas del plan.
+Ref: registros_progreso.id_cliente > clientes.id_cliente // Progreso del cliente.
+Ref: registros_progreso.registrado_por > user.id_user // Usuario que registra.
+Ref: sesiones.id_coach > coaches.id_coach // Coach de la sesion.
+Ref: sesiones.id_cliente > clientes.id_cliente // Cliente opcional de sesion.
+Ref: sesiones.id_institucion > instituciones.id_institucion // Institucion opcional.
+Ref: sesiones.id_plan > planes.id_plan // Plan asociado.
+Ref: sesiones.creado_por > user.id_user // Usuario creador.
+Ref: sesion_participantes.id_sesion > sesiones.id_sesion // Participantes de sesion.
+Ref: sesion_participantes.id_cliente > clientes.id_cliente // Cliente participante.
+Ref: eventos.id_institucion > instituciones.id_institucion // Evento institucional opcional.
+Ref: eventos.creado_por > user.id_user // Usuario creador.
+Ref: evento_participantes.id_evento > eventos.id_evento // Participante de evento.
+Ref: evento_participantes.id_cliente > clientes.id_cliente // Cliente participante opcional.
+Ref: chats.id_cliente > clientes.id_cliente // Chat de cliente.
+Ref: chats.id_coach > coaches.id_coach // Chat de coach.
+Ref: chats.id_institucion > instituciones.id_institucion // Chat institucional opcional.
+Ref: mensajes.id_chat > chats.id_chat // Mensajes de chat.
+Ref: mensajes.id_user_emisor > user.id_user // Usuario emisor.
+Ref: notificaciones.id_user > user.id_user // Destinatario.
+Ref: reportes_generados.id_user > user.id_user // Usuario que genera.
+Ref: bitacora_sistema.id_user > user.id_user // Responsable de accion.

@@ -8,8 +8,9 @@ if (!function_exists('e')) { // Evita duplicar función
 
 $planEntrenamiento = $planEntrenamiento ?? null; // Plan asignado
 $rutinas = $rutinas ?? []; // Rutinas asignadas
-$videos = $videos ?? []; // Videos institucionales
-$avanceVirtual = $avanceVirtual ?? 0; // Avance virtual
+$videos = $videos ?? [];
+$avanceVirtual = $avanceVirtual ?? 0;
+$programaVirtual = $programaVirtual ?? null;
 
 ?>
 
@@ -98,13 +99,19 @@ $avanceVirtual = $avanceVirtual ?? 0; // Avance virtual
             margin-bottom: 15px;
         }
 
-        .video {
+        .video, .leccion-card {
             border: 1px solid #eee;
             border-radius: 16px;
             padding: 16px;
             margin-bottom: 15px;
             background: #FFFFFF;
         }
+
+        .leccion-embed { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin: 12px 0; }
+        .leccion-embed iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+        .leccion-video, .leccion-img { width: 100%; max-height: 360px; border-radius: 12px; margin: 12px 0; }
+        .leccion-badge { font-size: 12px; padding: 4px 10px; border-radius: 12px; background: #eee; }
+        .leccion-badge--completado { background: #3EB489; color: #fff; }
 
         .badge {
             display: inline-block;
@@ -258,31 +265,26 @@ $avanceVirtual = $avanceVirtual ?? 0; // Avance virtual
             </div>
 
             <div class="card">
-                <h3>Contenido virtual</h3>
+                <h3>Programa virtual</h3>
 
-                <p>Avance del contenido institucional: <strong><?= e($avanceVirtual) ?>%</strong></p>
+                <?php if ($programaVirtual): ?>
+                    <p><strong><?= e($programaVirtual['nombre'] ?? '') ?></strong></p>
+                    <?php if (!empty($programaVirtual['descripcion'])): ?>
+                        <p><?= nl2br(e($programaVirtual['descripcion'])) ?></p>
+                    <?php endif; ?>
+                <?php endif; ?>
 
-                <div class="progress-box">
-                    <div class="progress-bar"></div>
-                </div>
+                <p>Avance: <strong><?= e($avanceVirtual) ?>%</strong></p>
 
                 <?php if (empty($videos)): ?>
-                    <div class="empty">No tienes videos institucionales asignados.</div>
+                    <div class="empty">No hay material virtual asignado.</div>
                 <?php endif; ?>
 
                 <?php foreach ($videos as $video): ?>
-                    <div class="video">
-                        <strong><?= e($video['titulo'] ?? 'Video StayFit') ?></strong>
-                        <p><?= e($video['descripcion'] ?? 'Contenido virtual del programa institucional.') ?></p>
-
-                        <?php if (!empty($video['url_video'])): ?>
-                            <a class="btn" href="<?= e($video['url_video']) ?>" target="_blank">Ver video</a>
-                        <?php endif; ?>
-
-                        <a class="btn btn-green" href="../../controller/clienteIns/contenidoVirtualController.php?accion=marcarVisto&video_id=<?= e($video['id'] ?? '') ?>">
-                            Marcar como visto
-                        </a>
-                    </div>
+                    <?php
+                    $clienteController = '../../controller/clienteIns/contenidoVirtualController.php';
+                    require __DIR__ . '/../cliente/partials/materialVirtual.php';
+                    ?>
                 <?php endforeach; ?>
             </div>
 

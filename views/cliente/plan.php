@@ -7,6 +7,7 @@ if (!function_exists('e')) { // Evita duplicar función
 }
 
 $plan = $plan ?? null; // Plan activo
+$coach = $coach ?? null;
 $accesos = $accesos ?? []; // Accesos del cliente
 
 ?>
@@ -194,6 +195,19 @@ $accesos = $accesos ?? []; // Accesos del cliente
                     <p><strong>Duración:</strong> <?= e($plan['duracion'] ?? '0') ?> días</p>
                     <p><strong>Inicio:</strong> <?= e($plan['fecha_inicio'] ?? 'No registrada') ?></p>
                     <p><strong>Vencimiento:</strong> <?= e($plan['fecha_fin'] ?? 'No registrada') ?></p>
+
+                    <h3 style="margin-top: 24px;">Coach asignado</h3>
+                    <?php if ($coach || !empty($plan['coach_nombre'])): ?>
+                        <p><strong><?= e($coach['nombre_completo'] ?? $plan['coach_nombre'] ?? '') ?></strong></p>
+                        <p><?= e($coach['especialidad'] ?? $plan['coach_especialidad'] ?? '') ?></p>
+                        <p><?= e($coach['correo'] ?? $plan['coach_correo'] ?? '') ?></p>
+                    <?php else: ?>
+                        <?php
+                        $modalidadPlan = strtoupper($plan['modalidad'] ?? '');
+                        $requiereCoach = !empty($plan['requiere_coach']) || in_array($modalidadPlan, ['PRESENCIAL', 'MIXTA'], true);
+                        ?>
+                        <p><?= $requiereCoach ? 'Pendiente de asignación por el administrador.' : 'No aplica para tu modalidad.' ?></p>
+                    <?php endif; ?>
                 <?php endif; ?>
             </div>
 

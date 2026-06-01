@@ -204,6 +204,8 @@ $clientes = $clientes ?? []; // Clientes asignados
         <a href="planController.php">Planes</a>
         <a href="pagoController.php">Pagos</a>
         <a href="solicitudController.php">Solicitudes</a>
+        <?php require_once __DIR__ . '/../partials/cerrarSesion.php'; ?>
+
     </aside>
 
     <main class="content">
@@ -230,6 +232,9 @@ $clientes = $clientes ?? []; // Clientes asignados
 
                     <label>Celular</label>
                     <input type="text" name="celular" required>
+
+                    <label>Contraseña de acceso</label>
+                    <input type="password" name="contrasena" minlength="6" placeholder="Si se deja vacío, se usa la identificación">
 
                     <label>Especialidad</label>
                     <input type="text" name="especialidad" placeholder="Ej: Fuerza, pérdida de grasa, movilidad" required>
