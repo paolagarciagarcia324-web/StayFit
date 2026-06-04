@@ -205,14 +205,14 @@ $flash = $flash ?? null;
 
     <aside class="sidebar">
         <h2>StayFit</h2>
-        <a href="../../controller/coach/dashboardController.php">Dashboard</a>
-        <a href="../../controller/coach/clientesController.php">Clientes</a>
-        <a href="../../controller/coach/agendaController.php">Agenda</a>
-        <a href="../../controller/coach/entrenamientoController.php">Entrenamientos</a>
-        <a href="../../controller/coach/nutricionController.php">Nutrición</a>
-        <a href="../../controller/coach/progresoController.php">Progreso</a>
-        <a class="active" href="../../controller/coach/comunicacionController.php">Comunicación</a>
-        <a href="../../controller/auth/logouthController.php">Cerrar sesión</a>
+        <a href="../../controllers/coach/dashboardController.php">Dashboard</a>
+        <a href="../../controllers/coach/clientesController.php">Clientes</a>
+        <a href="../../controllers/coach/agendaController.php">Agenda</a>
+        <a href="../../controllers/coach/entrenamientoController.php">Entrenamientos</a>
+        <a href="../../controllers/coach/nutricionController.php">Nutrición</a>
+        <a href="../../controllers/coach/progresoController.php">Progreso</a>
+        <a class="active" href="../../controllers/coach/comunicacionController.php">Comunicación</a>
+        <a href="../../controllers/auth/logouthController.php">Cerrar sesión</a>
     </aside>
 
     <main class="content">
@@ -233,7 +233,7 @@ $flash = $flash ?? null;
             <div class="card">
                 <h3>Enviar mensaje</h3>
 
-                <form action="../../controller/coach/comunicacionController.php?accion=enviar" method="POST">
+                <form action="../../controllers/coach/comunicacionController.php?accion=enviar" method="POST">
                     <label>Cliente</label>
                     <select name="cliente_id" required>
                         <option value="">Seleccione cliente</option>

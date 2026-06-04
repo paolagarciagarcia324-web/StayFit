@@ -167,12 +167,12 @@ $clientesInstitucionales = $clientesInstitucionales ?? []; // Clientes instituci
 
     <aside class="sidebar">
         <h2>StayFit</h2>
-        <a href="../../controller/admin/dashboardController.php">Dashboard</a>
-        <a href="../../controller/admin/clienteController.php">Clientes</a>
-        <a href="../../controller/admin/planController.php">Planes</a>
-        <a class="active" href="../../controller/admin/institucionController.php">Instituciones</a>
-        <a href="../../controller/admin/asignacionController.php">Asignaciones</a>
-        <a href="../../controller/admin/pagoController.php">Pagos</a>
+        <a href="../../controllers/admin/dashboardController.php">Dashboard</a>
+        <a href="../../controllers/admin/clienteController.php">Clientes</a>
+        <a href="../../controllers/admin/planController.php">Planes</a>
+        <a class="active" href="../../controllers/admin/institucionController.php">Instituciones</a>
+        <a href="../../controllers/admin/asignacionController.php">Asignaciones</a>
+        <a href="../../controllers/admin/pagoController.php">Pagos</a>
         <?php require_once __DIR__ . '/../partials/cerrarSesion.php'; ?>
 
     </aside>
@@ -189,7 +189,7 @@ $clientesInstitucionales = $clientesInstitucionales ?? []; // Clientes instituci
             <div class="card">
                 <h3>Registrar institución</h3>
 
-                <form action="../../controller/admin/institucionController.php?accion=guardar" method="POST">
+                <form action="../../controllers/admin/institucionController.php?accion=guardar" method="POST">
                     <label>Nombre</label>
                     <input type="text" name="nombre" required>
 
@@ -249,9 +249,9 @@ $clientesInstitucionales = $clientesInstitucionales ?? []; // Clientes instituci
 
                                 <td>
                                     <?php if (($item['estado'] ?? '') === 'activo'): ?>
-                                        <a class="btn" href="../../controller/admin/institucionController.php?accion=cambiarEstado&id=<?= e($item['id'] ?? '') ?>&estado=inactivo">Inactivar</a>
+                                        <a class="btn" href="../../controllers/admin/institucionController.php?accion=cambiarEstado&id=<?= e($item['id'] ?? '') ?>&estado=inactivo">Inactivar</a>
                                     <?php else: ?>
-                                        <a class="btn btn-green" href="../../controller/admin/institucionController.php?accion=cambiarEstado&id=<?= e($item['id'] ?? '') ?>&estado=activo">Activar</a>
+                                        <a class="btn btn-green" href="../../controllers/admin/institucionController.php?accion=cambiarEstado&id=<?= e($item['id'] ?? '') ?>&estado=activo">Activar</a>
                                     <?php endif; ?>
                                 </td>
                             </tr>

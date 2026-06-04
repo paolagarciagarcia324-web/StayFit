@@ -7,10 +7,31 @@ class UsuarioModel
 {
     private $db; // Conexión BD
 
-    public function __construct()
+    public function __construct(?PDO $db = null)
     {
+        if ($db instanceof PDO) {
+            $this->db = $db;
+            return;
+        }
+
         $database = new Database(); // Instancia conexión
         $this->db = $database->conectar(); // Abre conexión
+    }
+
+    private function usaEsquemaNuevo()
+    {
+        static $usaNuevo = null;
+
+        if ($usaNuevo !== null) {
+            return $usaNuevo;
+        }
+
+        $tablaVieja = $this->db->query("SHOW TABLES LIKE 'users'")->fetch();
+        $tablaNueva = $this->db->query("SHOW TABLES LIKE 'user'")->fetch();
+
+        $usaNuevo = !$tablaVieja && (bool) $tablaNueva;
+
+        return $usaNuevo;
     }
 
     private function normalizarUsuario($usuario)
@@ -20,6 +41,9 @@ class UsuarioModel
         }
 
         $usuario['id'] = $usuario['id_usuario'] ?? $usuario['id'] ?? null; // ID unificado
+        $usuario['id_usuario'] = $usuario['id_usuario'] ?? $usuario['id_user'] ?? $usuario['id'] ?? null;
+        $usuario['nombre'] = $usuario['nombre'] ?? $usuario['nombres'] ?? '';
+        $usuario['apellido'] = $usuario['apellido'] ?? $usuario['apellidos'] ?? '';
         $usuario['password'] = $usuario['hash_contrasena'] ?? $usuario['password'] ?? $usuario['password_hash'] ?? ''; // Hash unificado
 
         if (isset($usuario['estado'])) { // Normaliza estado
@@ -45,6 +69,23 @@ class UsuarioModel
 
     public function obtenerPorId($id)
     {
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "SELECT u.id_user AS id_usuario, u.nombres AS nombre, u.apellidos AS apellido,
+                           u.documento_identidad, u.correo, u.telefono, u.password_hash AS hash_contrasena,
+                           u.estado, r.nombre AS rol
+                    FROM user u
+                    LEFT JOIN user_roles ur ON ur.id_user = u.id_user
+                    LEFT JOIN roles r ON r.id_rol = ur.id_rol
+                    WHERE u.id_user = :id
+                    LIMIT 1";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+
+            return $this->normalizarUsuario($stmt->fetch(PDO::FETCH_ASSOC));
+        }
+
         $sql = "SELECT u.*, r.nombre AS rol
                 FROM users u
                 LEFT JOIN users_roles ur ON ur.id_usuario = u.id_usuario
@@ -61,6 +102,23 @@ class UsuarioModel
 
     public function obtenerPorCorreo($correo)
     {
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "SELECT u.id_user AS id_usuario, u.nombres AS nombre, u.apellidos AS apellido,
+                           u.documento_identidad, u.correo, u.telefono, u.password_hash AS hash_contrasena,
+                           u.estado, r.nombre AS rol
+                    FROM user u
+                    LEFT JOIN user_roles ur ON ur.id_user = u.id_user
+                    LEFT JOIN roles r ON r.id_rol = ur.id_rol
+                    WHERE u.correo = :correo
+                    LIMIT 1";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':correo', $correo);
+            $stmt->execute();
+
+            return $this->normalizarUsuario($stmt->fetch(PDO::FETCH_ASSOC));
+        }
+
         $sql = "SELECT u.*, r.nombre AS rol
                 FROM users u
                 LEFT JOIN users_roles ur ON ur.id_usuario = u.id_usuario
@@ -79,6 +137,23 @@ class UsuarioModel
     {
         if ($documento === '' || $documento === null) {
             return false;
+        }
+
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "SELECT u.id_user AS id_usuario, u.nombres AS nombre, u.apellidos AS apellido,
+                           u.documento_identidad, u.correo, u.telefono, u.password_hash AS hash_contrasena,
+                           u.estado, r.nombre AS rol
+                    FROM user u
+                    LEFT JOIN user_roles ur ON ur.id_user = u.id_user
+                    LEFT JOIN roles r ON r.id_rol = ur.id_rol
+                    WHERE u.documento_identidad = :documento
+                    LIMIT 1";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':documento', $documento);
+            $stmt->execute();
+
+            return $this->normalizarUsuario($stmt->fetch(PDO::FETCH_ASSOC));
         }
 
         $sql = "SELECT u.*, r.nombre AS rol
@@ -119,6 +194,25 @@ class UsuarioModel
             ? $passwordPlano
             : password_hash($passwordPlano, PASSWORD_DEFAULT);
 
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "INSERT INTO user
+                    (nombres, apellidos, documento_identidad, correo, telefono, password_hash, estado)
+                    VALUES
+                    (:nombre, :apellido, :documento_identidad, :correo, :telefono, :password_hash, :estado)";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':nombre', $datos['nombre']);
+            $stmt->bindValue(':apellido', $datos['apellido'] ?? '');
+            $stmt->bindValue(':documento_identidad', $datos['documento_identidad'] ?? null);
+            $stmt->bindParam(':correo', $datos['correo']);
+            $stmt->bindValue(':telefono', $datos['telefono'] ?? null);
+            $stmt->bindParam(':password_hash', $passwordHash);
+            $stmt->bindValue(':estado', strtoupper($datos['estado'] ?? 'ACTIVO'));
+            $stmt->execute();
+
+            return $this->db->lastInsertId();
+        }
+
         $sql = "INSERT INTO users 
                 (nombre, apellido, correo, hash_contrasena, estado, origen_registro, telefono, documento_identidad, fecha_registro)
                 VALUES
@@ -141,6 +235,15 @@ class UsuarioModel
 
     public function asignarRol($usuarioId, $rolId)
     {
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "INSERT IGNORE INTO user_roles (id_user, id_rol) VALUES (:id_user, :id_rol)";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':id_user', $usuarioId);
+            $stmt->bindParam(':id_rol', $rolId);
+
+            return $stmt->execute();
+        }
+
         $sql = "INSERT IGNORE INTO users_roles (id_usuario, id_rol) VALUES (:id_usuario, :id_rol)"; // Asigna rol
         $stmt = $this->db->prepare($sql); // Prepara consulta
         $stmt->bindParam(':id_usuario', $usuarioId); // Usuario
@@ -168,6 +271,15 @@ class UsuarioModel
     {
         $passwordHash = password_hash($password, PASSWORD_DEFAULT); // Encripta nueva contraseña
 
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "UPDATE user SET password_hash = :password_hash WHERE id_user = :id";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':password_hash', $passwordHash);
+            $stmt->bindParam(':id', $id);
+
+            return $stmt->execute();
+        }
+
         $sql = "UPDATE users SET hash_contrasena = :hash_contrasena WHERE id_usuario = :id"; // Actualiza contraseña
         $stmt = $this->db->prepare($sql); // Prepara consulta
         $stmt->bindParam(':hash_contrasena', $passwordHash); // Contraseña segura
@@ -184,7 +296,17 @@ class UsuarioModel
             return false; // No existe
         }
 
-        $hash = $usuario['password'] ?? $usuario['hash_contrasena'] ?? '';
+        $hash = $usuario['password'] ?? $usuario['hash_contrasena'] ?? $usuario['password_hash'] ?? '';
+
+        if (!password_verify($password, $hash)) {
+            $infoHash = password_get_info($hash);
+
+            if (($infoHash['algo'] ?? 0) === 0 && $hash !== '' && hash_equals($hash, $password)) {
+                $this->actualizarPassword($usuario['id'] ?? $usuario['id_usuario'], $password);
+
+                return $this->obtenerPorId($usuario['id'] ?? $usuario['id_usuario']);
+            }
+        }
 
         if (!password_verify($password, $hash)) {
             return false;

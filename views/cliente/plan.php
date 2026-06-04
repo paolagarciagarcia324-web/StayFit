@@ -157,15 +157,15 @@ $accesos = $accesos ?? []; // Accesos del cliente
 
     <aside class="sidebar">
         <h2>StayFit</h2>
-        <a href="../../controller/cliente/dashboardController.php">Dashboard</a>
-        <a href="../../controller/cliente/perfilController.php">Perfil</a>
-        <a class="active" href="../../controller/cliente/planController.php">Mi plan</a>
-        <a href="../../controller/cliente/entrenamientoController.php">Entrenamiento</a>
-        <a href="../../controller/cliente/nutricionController.php">Nutrición</a>
-        <a href="../../controller/cliente/progresoController.php">Progreso</a>
-        <a href="../../controller/cliente/calendarioController.php">Calendario</a>
-        <a href="../../controller/cliente/pagoController.php">Pagos</a>
-        <a href="../../controller/auth/logouthController.php">Cerrar sesión</a>
+        <a href="../../controllers/cliente/dashboardController.php">Dashboard</a>
+        <a href="../../controllers/cliente/perfilController.php">Perfil</a>
+        <a class="active" href="../../controllers/cliente/planController.php">Mi plan</a>
+        <a href="../../controllers/cliente/entrenamientoController.php">Entrenamiento</a>
+        <a href="../../controllers/cliente/nutricionController.php">Nutrición</a>
+        <a href="../../controllers/cliente/progresoController.php">Progreso</a>
+        <a href="../../controllers/cliente/calendarioController.php">Calendario</a>
+        <a href="../../controllers/cliente/pagoController.php">Pagos</a>
+        <a href="../../controllers/auth/logouthController.php">Cerrar sesión</a>
     </aside>
 
     <main class="content">
@@ -204,7 +204,7 @@ $accesos = $accesos ?? []; // Accesos del cliente
                     <?php else: ?>
                         <?php
                         $modalidadPlan = strtoupper($plan['modalidad'] ?? '');
-                        $requiereCoach = !empty($plan['requiere_coach']) || in_array($modalidadPlan, ['PRESENCIAL', 'MIXTA'], true);
+                        $requiereCoach = !empty($plan['requiere_coach']) || in_array($modalidadPlan, ['PRESENCIAL', 'MIXTA', 'MIXTO'], true);
                         ?>
                         <p><?= $requiereCoach ? 'Pendiente de asignación por el administrador.' : 'No aplica para tu modalidad.' ?></p>
                     <?php endif; ?>
@@ -225,7 +225,7 @@ $accesos = $accesos ?? []; // Accesos del cliente
                     </div>
                 <?php endforeach; ?>
 
-                <a class="btn" href="../../controller/cliente/pagoController.php">Renovar o enviar pago</a>
+                <a class="btn" href="../../controllers/cliente/pagoController.php">Renovar o enviar pago</a>
             </div>
 
         </section>

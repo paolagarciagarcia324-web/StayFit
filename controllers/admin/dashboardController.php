@@ -1,92 +1,140 @@
 <?php
 
-require_once __DIR__ . '/../../config/database.php'; // Importa la conexión
-require_once __DIR__ . '/../../config/roles.php'; // Helpers de roles
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../config/roles.php';
 
 class DashboardController
 {
-    private $db; // Variable para la conexión
+    private $db;
 
     public function __construct()
     {
-        session_start(); // Inicia la sesión
+        session_start();
 
-        $database = new Database(); // Crea instancia de la base de datos
-        $this->db = $database->conectar(); // Guarda la conexión
+        $database = new Database();
+        $this->db = $database->conectar();
     }
 
     public function index()
     {
-        $this->validarAdministrador(); // Valida acceso del administrador
+        $this->validarAdministrador();
 
         $datos = [
-            'clientesActivos' => $this->contarClientesActivos(), // Total de clientes activos
-            'solicitudesPendientes' => $this->contarSolicitudesPendientes(), // Solicitudes sin aprobar
-            'pagosPendientes' => $this->contarPagosPendientes(), // Pagos por validar
-            'planesVirtuales' => $this->contarPlanesVirtuales(), // Clientes con modalidad virtual
-            'accesosVencidos' => $this->contarAccesosVencidos() // Clientes con acceso vencido
+            'clientesActivos' => $this->contarClientesActivos(),
+            'solicitudesPendientes' => $this->contarSolicitudesPendientes(),
+            'pagosPendientes' => $this->contarPagosPendientes(),
+            'planesVirtuales' => $this->contarPlanesVirtuales(),
+            'accesosVencidos' => $this->contarAccesosVencidos()
         ];
 
-        require_once __DIR__ . '/../../views/admin/dashboard.php'; // Carga la vista
+        require_once __DIR__ . '/../../views/admin/dashboard.php';
     }
 
     private function validarAdministrador()
     {
-        validarAccesoAdministrador(); // Valida sesión admin
+        validarAccesoAdministrador();
     }
 
     private function ejecutarConteo($sql)
     {
-        $stmt = $this->db->prepare($sql); // Prepara la consulta
-        $stmt->execute(); // Ejecuta la consulta
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
 
-        return (int) $stmt->fetchColumn(); // Retorna el total
+            return (int) $stmt->fetchColumn();
+        } catch (PDOException $e) {
+            return 0;
+        }
+    }
+
+    private function tablaExiste($tabla)
+    {
+        $stmt = $this->db->query('SHOW TABLES LIKE ' . $this->db->quote($tabla));
+
+        return (bool) $stmt->fetch();
     }
 
     private function contarClientesActivos()
     {
+        if ($this->tablaExiste('clientes')) {
+            $sql = "SELECT COUNT(*)
+                    FROM clientes c
+                    INNER JOIN user u ON u.id_user = c.id_user
+                    WHERE c.estado_cliente = 'ACTIVO' AND u.estado = 'ACTIVO'";
+
+            return $this->ejecutarConteo($sql);
+        }
+
         $sql = "SELECT COUNT(*)
                 FROM cliente c
                 INNER JOIN users u ON u.id_usuario = c.id_cliente
-                WHERE u.estado = 'ACTIVO'"; // Clientes con usuario activo
+                WHERE u.estado = 'ACTIVO'";
 
-        return $this->ejecutarConteo($sql); // Retorna total
+        return $this->ejecutarConteo($sql);
     }
 
     private function contarSolicitudesPendientes()
     {
-        try { // Tabla opcional (puede no existir aún en la BD)
-            $sql = "SELECT COUNT(*) FROM solicitud_ingreso WHERE estado = 'PENDIENTE'";
+        if ($this->tablaExiste('solicitudes_compra')) {
+            $sql = "SELECT COUNT(*)
+                    FROM solicitudes_compra
+                    WHERE estado_solicitud IN ('PENDIENTE', 'EN_REVISION')";
 
             return $this->ejecutarConteo($sql);
-        } catch (PDOException $e) {
-            return 0; // Sin tabla de solicitudes
         }
+
+        $sql = "SELECT COUNT(*) FROM solicitud_ingreso WHERE estado = 'PENDIENTE'";
+
+        return $this->ejecutarConteo($sql);
     }
 
     private function contarPagosPendientes()
     {
-        $sql = "SELECT COUNT(*) FROM pago WHERE estado_pago = 'PENDIENTE'"; // Pagos por validar
+        if ($this->tablaExiste('pagos')) {
+            $sql = "SELECT COUNT(*) FROM pagos WHERE estado_pago = 'PENDIENTE'";
 
-        return $this->ejecutarConteo($sql); // Retorna total
+            return $this->ejecutarConteo($sql);
+        }
+
+        $sql = "SELECT COUNT(*) FROM pago WHERE estado_pago = 'PENDIENTE'";
+
+        return $this->ejecutarConteo($sql);
     }
 
     private function contarPlanesVirtuales()
     {
-        $sql = "SELECT COUNT(*) FROM plan_cliente WHERE estado = 'ACTIVO'"; // Planes activos asignados
+        if ($this->tablaExiste('planes_cliente')) {
+            $sql = "SELECT COUNT(*)
+                    FROM planes_cliente pc
+                    INNER JOIN planes p ON p.id_plan = pc.id_plan
+                    WHERE pc.estado_plan_cliente = 'ACTIVO' AND p.modalidad = 'VIRTUAL'";
 
-        return $this->ejecutarConteo($sql); // Retorna total
+            return $this->ejecutarConteo($sql);
+        }
+
+        $sql = "SELECT COUNT(*) FROM plan_cliente WHERE estado = 'ACTIVO'";
+
+        return $this->ejecutarConteo($sql);
     }
 
     private function contarAccesosVencidos()
     {
-        $sql = "SELECT COUNT(*) FROM plan_cliente WHERE estado = 'VENCIDO'"; // Planes vencidos
+        if ($this->tablaExiste('planes_cliente')) {
+            $sql = "SELECT COUNT(*)
+                    FROM planes_cliente
+                    WHERE estado_plan_cliente = 'VENCIDO'
+                       OR (fecha_fin IS NOT NULL AND fecha_fin < CURDATE())";
 
-        return $this->ejecutarConteo($sql); // Retorna total
+            return $this->ejecutarConteo($sql);
+        }
+
+        $sql = "SELECT COUNT(*) FROM plan_cliente WHERE estado = 'VENCIDO'";
+
+        return $this->ejecutarConteo($sql);
     }
 }
 
-$controller = new DashboardController(); // Crea el controlador
-$controller->index(); // Ejecuta el dashboard
+$controller = new DashboardController();
+$controller->index();
 
 ?>

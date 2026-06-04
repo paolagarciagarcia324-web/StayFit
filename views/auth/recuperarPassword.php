@@ -139,7 +139,7 @@ unset($_SESSION['alert']); // Limpia alerta
             </div>
         <?php endif; ?>
 
-        <form action="../../controller/auth/recuperacion_passwordController.php" method="POST">
+        <form action="../../controllers/auth/recuperacion_passwordController.php" method="POST">
             <label>Correo electrónico</label>
             <input type="email" name="correo" placeholder="ejemplo@correo.com" required>
 
@@ -152,7 +152,7 @@ unset($_SESSION['alert']); // Limpia alerta
             <h1>Nueva contraseña</h1>
             <p>Proceso temporal para actualizar la contraseña desde el sistema.</p>
 
-            <form action="../../controller/auth/recuperacion_passwordController.php?accion=cambiar" method="POST">
+            <form action="../../controllers/auth/recuperacion_passwordController.php?accion=cambiar" method="POST">
                 <input type="hidden" name="token" value="<?= htmlspecialchars($token, ENT_QUOTES, 'UTF-8') ?>">
 
                 <label>Nueva contraseña</label>

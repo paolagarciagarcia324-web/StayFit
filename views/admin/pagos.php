@@ -201,12 +201,12 @@ $comprobante = $comprobante ?? null; // Comprobante del pago
 
     <aside class="sidebar">
         <h2>StayFit</h2>
-        <a href="../../controller/admin/dashboardController.php">Dashboard</a>
-        <a href="../../controller/admin/solicitudController.php">Solicitudes</a>
-        <a class="active" href="../../controller/admin/pagoController.php">Pagos</a>
-        <a href="../../controller/admin/clienteController.php">Clientes</a>
-        <a href="../../controller/admin/asignacionController.php">Asignaciones</a>
-        <a href="../../controller/admin/planController.php">Planes</a>
+        <a href="../../controllers/admin/dashboardController.php">Dashboard</a>
+        <a href="../../controllers/admin/solicitudController.php">Solicitudes</a>
+        <a class="active" href="../../controllers/admin/pagoController.php">Pagos</a>
+        <a href="../../controllers/admin/clienteController.php">Clientes</a>
+        <a href="../../controllers/admin/asignacionController.php">Asignaciones</a>
+        <a href="../../controllers/admin/planController.php">Planes</a>
         <?php require_once __DIR__ . '/../partials/cerrarSesion.php'; ?>
 
     </aside>
@@ -269,12 +269,12 @@ $comprobante = $comprobante ?? null; // Comprobante del pago
                             </td>
                             <td><?= e($item['fecha'] ?? '') ?></td>
                             <td>
-                                <a class="btn" href="../../controller/admin/pagoController.php?accion=detalle&id=<?= e($item['id'] ?? '') ?>">
+                                <a class="btn" href="../../controllers/admin/pagoController.php?accion=detalle&id=<?= e($item['id'] ?? '') ?>">
                                     Ver
                                 </a>
 
                                 <?php if (($item['estado'] ?? '') === 'pendiente'): ?>
-                                    <a class="btn btn-green" href="../../controller/admin/pagoController.php?accion=aprobar&id=<?= e($item['id'] ?? '') ?>">
+                                    <a class="btn btn-green" href="../../controllers/admin/pagoController.php?accion=aprobar&id=<?= e($item['id'] ?? '') ?>">
                                         Aprobar
                                     </a>
                                 <?php endif; ?>
@@ -297,7 +297,7 @@ $comprobante = $comprobante ?? null; // Comprobante del pago
                 require __DIR__ . '/partials/comprobanteVista.php';
                 ?>
 
-                <form action="../../controller/admin/pagoController.php?accion=rechazar" method="POST">
+                <form action="../../controllers/admin/pagoController.php?accion=rechazar" method="POST">
                     <input type="hidden" name="id" value="<?= e($pago['id'] ?? '') ?>">
                     <textarea name="observacion" placeholder="Motivo del rechazo"></textarea>
                     <button class="btn" type="submit">Rechazar pago</button>

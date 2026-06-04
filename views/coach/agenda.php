@@ -173,14 +173,14 @@ $clientes = $clientes ?? []; // Clientes del coach
 
     <aside class="sidebar">
         <h2>StayFit</h2>
-        <a href="../../controller/coach/dashboardController.php">Dashboard</a>
-        <a href="../../controller/coach/clientesController.php">Clientes</a>
-        <a class="active" href="../../controller/coach/agendaController.php">Agenda</a>
-        <a href="../../controller/coach/entrenamientoController.php">Entrenamientos</a>
-        <a href="../../controller/coach/nutricionController.php">Nutrición</a>
-        <a href="../../controller/coach/progresoController.php">Progreso</a>
-        <a href="../../controller/coach/comunicacionController.php">Comunicación</a>
-        <a href="../../controller/auth/logouthController.php">Cerrar sesión</a>
+        <a href="../../controllers/coach/dashboardController.php">Dashboard</a>
+        <a href="../../controllers/coach/clientesController.php">Clientes</a>
+        <a class="active" href="../../controllers/coach/agendaController.php">Agenda</a>
+        <a href="../../controllers/coach/entrenamientoController.php">Entrenamientos</a>
+        <a href="../../controllers/coach/nutricionController.php">Nutrición</a>
+        <a href="../../controllers/coach/progresoController.php">Progreso</a>
+        <a href="../../controllers/coach/comunicacionController.php">Comunicación</a>
+        <a href="../../controllers/auth/logouthController.php">Cerrar sesión</a>
     </aside>
 
     <main class="content">
@@ -195,7 +195,7 @@ $clientes = $clientes ?? []; // Clientes del coach
             <div class="card">
                 <h3>Programar sesión</h3>
 
-                <form action="../../controller/coach/sesionController.php?accion=crear" method="POST">
+                <form action="../../controllers/coach/sesionController.php?accion=crear" method="POST">
                     <label>Cliente</label>
                     <select name="cliente_id" required>
                         <option value="">Seleccione cliente</option>

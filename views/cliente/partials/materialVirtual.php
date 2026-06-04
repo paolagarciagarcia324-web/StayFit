@@ -9,7 +9,7 @@ if (!function_exists('e')) {
 }
 
 $video = $video ?? [];
-$clienteController = $clienteController ?? '../../controller/cliente/contenidoVirtualController.php';
+$clienteController = $clienteController ?? '../../controllers/cliente/contenidoVirtualController.php';
 $videoId = (int) ($video['id'] ?? $video['id_video'] ?? 0);
 $urlMedia = $video['url_video'] ?? '';
 $urlPublica = urlPublicaMaterialVirtual($urlMedia, $videoId);

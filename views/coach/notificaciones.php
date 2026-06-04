@@ -126,14 +126,14 @@ $notificaciones = $notificaciones ?? []; // Lista de notificaciones
 
     <aside class="sidebar">
         <h2>StayFit</h2>
-        <a href="../../controller/coach/dashboardController.php">Dashboard</a>
-        <a href="../../controller/coach/clientesController.php">Clientes</a>
-        <a href="../../controller/coach/agendaController.php">Agenda</a>
-        <a href="../../controller/coach/entrenamientoController.php">Entrenamientos</a>
-        <a href="../../controller/coach/nutricionController.php">Nutrición</a>
-        <a href="../../controller/coach/progresoController.php">Progreso</a>
-        <a class="active" href="../../controller/coach/notificacionController.php">Notificaciones</a>
-        <a href="../../controller/auth/logouthController.php">Cerrar sesión</a>
+        <a href="../../controllers/coach/dashboardController.php">Dashboard</a>
+        <a href="../../controllers/coach/clientesController.php">Clientes</a>
+        <a href="../../controllers/coach/agendaController.php">Agenda</a>
+        <a href="../../controllers/coach/entrenamientoController.php">Entrenamientos</a>
+        <a href="../../controllers/coach/nutricionController.php">Nutrición</a>
+        <a href="../../controllers/coach/progresoController.php">Progreso</a>
+        <a class="active" href="../../controllers/coach/notificacionController.php">Notificaciones</a>
+        <a href="../../controllers/auth/logouthController.php">Cerrar sesión</a>
     </aside>
 
     <main class="content">
@@ -157,7 +157,7 @@ $notificaciones = $notificaciones ?? []; // Lista de notificaciones
 
                     <?php if (($item['estado'] ?? '') !== 'leida'): ?>
                         <br>
-                        <a class="btn" href="../../controller/coach/notificacionController.php?accion=marcarLeida&id=<?= e($item['id'] ?? '') ?>">
+                        <a class="btn" href="../../controllers/coach/notificacionController.php?accion=marcarLeida&id=<?= e($item['id'] ?? '') ?>">
                             Marcar como leída
                         </a>
                     <?php endif; ?>

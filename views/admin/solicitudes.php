@@ -206,11 +206,11 @@ $flash = $flash ?? null;
 
     <aside class="sidebar">
         <h2>StayFit</h2>
-        <a href="../../controller/admin/dashboardController.php">Dashboard</a>
-        <a class="active" href="../../controller/admin/solicitudController.php">Solicitudes</a>
-        <a href="../../controller/admin/pagoController.php">Pagos</a>
-        <a href="../../controller/admin/clienteController.php">Clientes</a>
-        <a href="../../controller/admin/asignacionController.php">Asignaciones</a>
+        <a href="../../controllers/admin/dashboardController.php">Dashboard</a>
+        <a class="active" href="../../controllers/admin/solicitudController.php">Solicitudes</a>
+        <a href="../../controllers/admin/pagoController.php">Pagos</a>
+        <a href="../../controllers/admin/clienteController.php">Clientes</a>
+        <a href="../../controllers/admin/asignacionController.php">Asignaciones</a>
         <?php require_once __DIR__ . '/../partials/cerrarSesion.php'; ?>
 
     </aside>
@@ -268,7 +268,7 @@ $flash = $flash ?? null;
                                        href="<?= e(urlPublicaComprobante($item['url_comprobante'], (int) ($item['id'] ?? 0))) ?>">
                                         Ver archivo
                                     </a>
-                                    <a class="btn btn-mini" href="../../controller/admin/solicitudController.php?accion=detalle&id=<?= e($item['id'] ?? '') ?>#detalle-comprobante">
+                                    <a class="btn btn-mini" href="../../controllers/admin/solicitudController.php?accion=detalle&id=<?= e($item['id'] ?? '') ?>#detalle-comprobante">
                                         En detalle
                                     </a>
                                 <?php else: ?>
@@ -283,13 +283,13 @@ $flash = $flash ?? null;
                             </td>
 
                             <td>
-                                <a class="btn" href="../../controller/admin/solicitudController.php?accion=detalle&id=<?= e($item['id'] ?? '') ?>">Ver</a>
+                                <a class="btn" href="../../controllers/admin/solicitudController.php?accion=detalle&id=<?= e($item['id'] ?? '') ?>">Ver</a>
 
                                 <?php if (($item['estado'] ?? '') === 'pendiente'): ?>
-                                    <a class="btn-green btn" href="../../controller/admin/solicitudController.php?accion=marcarRevision&id=<?= e($item['id'] ?? '') ?>">Revisar</a>
+                                    <a class="btn-green btn" href="../../controllers/admin/solicitudController.php?accion=marcarRevision&id=<?= e($item['id'] ?? '') ?>">Revisar</a>
                                 <?php endif; ?>
 
-                                <a class="btn-green btn" href="../../controller/admin/validacionPagoController.php?accion=aprobar&solicitud_id=<?= e($item['id'] ?? '') ?>">Aprobar pago</a>
+                                <a class="btn-green btn" href="../../controllers/admin/validacionPagoController.php?accion=aprobar&solicitud_id=<?= e($item['id'] ?? '') ?>">Aprobar pago</a>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -319,7 +319,7 @@ $flash = $flash ?? null;
                 require __DIR__ . '/partials/comprobanteVista.php';
                 ?>
 
-                <form action="../../controller/admin/solicitudController.php?accion=rechazar" method="POST">
+                <form action="../../controllers/admin/solicitudController.php?accion=rechazar" method="POST">
                     <input type="hidden" name="id" value="<?= e($solicitud['id'] ?? '') ?>">
                     <textarea name="observacion" placeholder="Motivo del rechazo"></textarea>
                     <button class="btn" type="submit">Rechazar solicitud</button>

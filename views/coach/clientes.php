@@ -149,14 +149,14 @@ $esDetalle = !empty($cliente);
 
     <aside class="sidebar">
         <h2>StayFit</h2>
-        <a href="../../controller/coach/dashboardController.php">Dashboard</a>
-        <a class="active" href="../../controller/coach/clientesController.php">Clientes</a>
-        <a href="../../controller/coach/agendaController.php">Agenda</a>
-        <a href="../../controller/coach/entrenamientoController.php">Entrenamientos</a>
-        <a href="../../controller/coach/nutricionController.php">Nutrición</a>
-        <a href="../../controller/coach/progresoController.php">Progreso</a>
-        <a href="../../controller/coach/comunicacionController.php">Comunicación</a>
-        <a href="../../controller/auth/logouthController.php">Cerrar sesión</a>
+        <a href="../../controllers/coach/dashboardController.php">Dashboard</a>
+        <a class="active" href="../../controllers/coach/clientesController.php">Clientes</a>
+        <a href="../../controllers/coach/agendaController.php">Agenda</a>
+        <a href="../../controllers/coach/entrenamientoController.php">Entrenamientos</a>
+        <a href="../../controllers/coach/nutricionController.php">Nutrición</a>
+        <a href="../../controllers/coach/progresoController.php">Progreso</a>
+        <a href="../../controllers/coach/comunicacionController.php">Comunicación</a>
+        <a href="../../controllers/auth/logouthController.php">Cerrar sesión</a>
     </aside>
 
     <main class="content">
@@ -170,7 +170,7 @@ $esDetalle = !empty($cliente);
                 <p>Detalle de la clienta asignada a tu acompañamiento.</p>
             </section>
 
-            <a class="btn btn-secondary" href="../../controller/coach/clientesController.php">Volver al listado</a>
+            <a class="btn btn-secondary" href="../../controllers/coach/clientesController.php">Volver al listado</a>
 
             <section class="card" style="margin-top: 24px;">
                 <h3>Información</h3>
@@ -237,7 +237,7 @@ $esDetalle = !empty($cliente);
                                     <td><?= e($item['tipo_cliente'] ?? 'INDIVIDUAL') ?></td>
                                     <td><span class="badge"><?= e($item['estado_plan'] ?? 'ACTIVO') ?></span></td>
                                     <td>
-                                        <a class="btn" href="../../controller/coach/clientesController.php?accion=detalle&id=<?= e($item['id'] ?? '') ?>">Ver</a>
+                                        <a class="btn" href="../../controllers/coach/clientesController.php?accion=detalle&id=<?= e($item['id'] ?? '') ?>">Ver</a>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

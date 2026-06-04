@@ -8,10 +8,31 @@ class ClienteModel
 {
     private $db; // Conexión BD
 
-    public function __construct()
+    public function __construct(?PDO $db = null)
     {
+        if ($db instanceof PDO) {
+            $this->db = $db;
+            return;
+        }
+
         $database = new Database(); // Instancia conexión
         $this->db = $database->conectar(); // Abre conexión
+    }
+
+    private function usaEsquemaNuevo()
+    {
+        static $usaNuevo = null;
+
+        if ($usaNuevo !== null) {
+            return $usaNuevo;
+        }
+
+        $tablaVieja = $this->db->query("SHOW TABLES LIKE 'cliente'")->fetch();
+        $tablaNueva = $this->db->query("SHOW TABLES LIKE 'clientes'")->fetch();
+
+        $usaNuevo = !$tablaVieja && (bool) $tablaNueva;
+
+        return $usaNuevo;
     }
 
     public function obtenerTodos()
@@ -37,6 +58,27 @@ class ClienteModel
 
     public function obtenerPorId($id)
     {
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "SELECT c.id_cliente AS id, u.id_user AS id_usuario, u.nombres AS nombre,
+                           u.apellidos AS apellido, u.correo, u.estado, u.telefono,
+                           u.documento_identidad AS identificacion,
+                           'INDIVIDUAL' AS tipo_cliente, c.fecha_nacimiento,
+                           c.estatura_cm AS estatura_m, c.peso_inicial_kg AS peso_inicial,
+                           c.objetivo_principal AS objetivos, NULL AS restricciones_medicas
+                    FROM clientes c
+                    INNER JOIN user u ON u.id_user = c.id_user
+                    WHERE c.id_cliente = :id
+                    LIMIT 1";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+
+            $fila = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            return $fila ? $this->normalizarFilaCliente($fila) : null;
+        }
+
         $sql = "SELECT u.id_usuario, u.nombre, u.apellido, u.correo, u.estado, u.telefono,
                        u.documento_identidad AS identificacion,
                        c.tipo_cliente, c.fecha_nacimiento, c.estatura_m, c.peso_inicial,
@@ -57,6 +99,27 @@ class ClienteModel
 
     public function obtenerPorUsuario($usuarioId)
     {
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "SELECT c.id_cliente AS id, u.id_user AS id_usuario, u.nombres AS nombre,
+                           u.apellidos AS apellido, u.correo, u.estado, u.telefono,
+                           u.documento_identidad AS identificacion,
+                           'INDIVIDUAL' AS tipo_cliente, c.fecha_nacimiento,
+                           c.estatura_cm AS estatura_m, c.peso_inicial_kg AS peso_inicial,
+                           c.objetivo_principal AS objetivos, NULL AS restricciones_medicas
+                    FROM clientes c
+                    INNER JOIN user u ON u.id_user = c.id_user
+                    WHERE c.id_user = :usuario_id
+                    LIMIT 1";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':usuario_id', $usuarioId);
+            $stmt->execute();
+
+            $fila = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            return $fila ? $this->normalizarFilaCliente($fila) : null;
+        }
+
         $sql = "SELECT u.id_usuario, u.nombre, u.apellido, u.correo, u.estado, u.telefono,
                        u.documento_identidad AS identificacion,
                        c.tipo_cliente, c.fecha_nacimiento, c.estatura_m, c.peso_inicial,
@@ -95,6 +158,20 @@ class ClienteModel
 
     public function crear($datos)
     {
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "INSERT INTO clientes
+                    (id_user, fecha_nacimiento, objetivo_principal, fecha_alta)
+                    VALUES
+                    (:id_user, :fecha_nacimiento, :objetivo_principal, CURDATE())";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':id_user', $datos['id_cliente']);
+            $stmt->bindValue(':fecha_nacimiento', $datos['fecha_nacimiento'] ?? null);
+            $stmt->bindValue(':objetivo_principal', $datos['objetivos'] ?? null);
+
+            return $stmt->execute();
+        }
+
         $sql = "INSERT INTO cliente 
                 (id_cliente, tipo_cliente, fecha_nacimiento, estatura_m, peso_inicial, objetivos, restricciones_medicas)
                 VALUES 
@@ -197,7 +274,7 @@ class ClienteModel
 
     private function normalizarFilaCliente(array $fila)
     {
-        $fila['id'] = $fila['id_usuario'] ?? $fila['id'] ?? null;
+        $fila['id'] = $fila['id'] ?? $fila['id_cliente'] ?? $fila['id_usuario'] ?? null;
         $fila['estado'] = strtolower($fila['estado'] ?? 'activo');
         $fila['celular'] = $fila['telefono'] ?? $fila['celular'] ?? null;
         $fila['edad'] = calcularEdadDesdeFecha($fila['fecha_nacimiento'] ?? null);

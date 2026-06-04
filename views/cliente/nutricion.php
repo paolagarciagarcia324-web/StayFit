@@ -140,15 +140,15 @@ $comidas = $comidas ?? []; // Comidas del plan
 
     <aside class="sidebar">
         <h2>StayFit</h2>
-        <a href="../../controller/cliente/dashboardController.php">Dashboard</a>
-        <a href="../../controller/cliente/perfilController.php">Perfil</a>
-        <a href="../../controller/cliente/planController.php">Mi plan</a>
-        <a href="../../controller/cliente/entrenamientoController.php">Entrenamiento</a>
-        <a class="active" href="../../controller/cliente/nutricionController.php">Nutrición</a>
-        <a href="../../controller/cliente/progresoController.php">Progreso</a>
-        <a href="../../controller/cliente/calendarioController.php">Calendario</a>
-        <a href="../../controller/cliente/comunicacionController.php">Comunicación</a>
-        <a href="../../controller/auth/logouthController.php">Cerrar sesión</a>
+        <a href="../../controllers/cliente/dashboardController.php">Dashboard</a>
+        <a href="../../controllers/cliente/perfilController.php">Perfil</a>
+        <a href="../../controllers/cliente/planController.php">Mi plan</a>
+        <a href="../../controllers/cliente/entrenamientoController.php">Entrenamiento</a>
+        <a class="active" href="../../controllers/cliente/nutricionController.php">Nutrición</a>
+        <a href="../../controllers/cliente/progresoController.php">Progreso</a>
+        <a href="../../controllers/cliente/calendarioController.php">Calendario</a>
+        <a href="../../controllers/cliente/comunicacionController.php">Comunicación</a>
+        <a href="../../controllers/auth/logouthController.php">Cerrar sesión</a>
     </aside>
 
     <main class="content">

@@ -169,15 +169,15 @@ $progresos = $progresos ?? []; // Historial de progresos
 
     <aside class="sidebar">
         <h2>StayFit</h2>
-        <a href="../../controller/cliente/dashboardController.php">Dashboard</a>
-        <a href="../../controller/cliente/perfilController.php">Perfil</a>
-        <a href="../../controller/cliente/planController.php">Mi plan</a>
-        <a href="../../controller/cliente/entrenamientoController.php">Entrenamiento</a>
-        <a href="../../controller/cliente/nutricionController.php">Nutrición</a>
-        <a class="active" href="../../controller/cliente/progresoController.php">Progreso</a>
-        <a href="../../controller/cliente/calendarioController.php">Calendario</a>
-        <a href="../../controller/cliente/comunicacionController.php">Comunicación</a>
-        <a href="../../controller/auth/logouthController.php">Cerrar sesión</a>
+        <a href="../../controllers/cliente/dashboardController.php">Dashboard</a>
+        <a href="../../controllers/cliente/perfilController.php">Perfil</a>
+        <a href="../../controllers/cliente/planController.php">Mi plan</a>
+        <a href="../../controllers/cliente/entrenamientoController.php">Entrenamiento</a>
+        <a href="../../controllers/cliente/nutricionController.php">Nutrición</a>
+        <a class="active" href="../../controllers/cliente/progresoController.php">Progreso</a>
+        <a href="../../controllers/cliente/calendarioController.php">Calendario</a>
+        <a href="../../controllers/cliente/comunicacionController.php">Comunicación</a>
+        <a href="../../controllers/auth/logouthController.php">Cerrar sesión</a>
     </aside>
 
     <main class="content">
@@ -192,7 +192,7 @@ $progresos = $progresos ?? []; // Historial de progresos
             <div class="card">
                 <h3>Registrar progreso</h3>
 
-                <form action="../../controller/cliente/progresoController.php?accion=registrar" method="POST" enctype="multipart/form-data">
+                <form action="../../controllers/cliente/progresoController.php?accion=registrar" method="POST" enctype="multipart/form-data">
                     <label>Peso actual</label>
                     <input type="number" step="0.1" name="peso" required>
 

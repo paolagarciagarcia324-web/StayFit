@@ -208,13 +208,13 @@ $flash = $flash ?? null;
 
     <aside class="sidebar">
         <h2>StayFit</h2>
-        <a href="dashboardController.php">Dashboard</a>
-        <a href="clienteController.php">Clientes</a>
-        <a href="coachController.php">Coaches</a>
-        <a class="active" href="asignacionController.php">Asignaciones</a>
-        <a href="planController.php">Planes</a>
-        <a href="pagoController.php">Pagos</a>
-        <a href="solicitudController.php">Solicitudes</a>
+        <a href="../../controllers/admin/dashboardController.php">Dashboard</a>
+        <a href="../../controllers/admin/clienteController.php">Clientes</a>
+        <a href="../../controllers/admin/coachController.php">Coaches</a>
+        <a class="active" href="../../controllers/admin/asignacionController.php">Asignaciones</a>
+        <a href="../../controllers/admin/planController.php">Planes</a>
+        <a href="../../controllers/admin/pagoController.php">Pagos</a>
+        <a href="../../controllers/admin/solicitudController.php">Solicitudes</a>
         <?php require_once __DIR__ . '/../partials/cerrarSesion.php'; ?>
 
     </aside>
@@ -228,7 +228,7 @@ $flash = $flash ?? null;
 
         <?php if ($totalPlanes === 0): ?>
             <div class="alert-warning">
-                No hay planes en el catálogo. Ve a <a href="planController.php" style="color:#7a5a00;font-weight:700;">Planes</a> y crea al menos uno antes de asignar coaches.
+                No hay planes en el catálogo. Ve a <a href="../../controllers/admin/planController.php" style="color:#7a5a00;font-weight:700;">Planes</a> y crea al menos uno antes de asignar coaches.
             </div>
         <?php endif; ?>
 
@@ -243,7 +243,7 @@ $flash = $flash ?? null;
             <div class="card">
                 <h3>Asignar Coach</h3>
 
-                <form action="../../controller/admin/asignacionController.php?accion=asignarCoach" method="POST">
+                <form action="../../controllers/admin/asignacionController.php?accion=asignarCoach" method="POST">
                     <label>Cliente</label>
                     <select name="cliente_id" required>
                         <option value="">Seleccione cliente</option>
@@ -271,7 +271,7 @@ $flash = $flash ?? null;
             <div class="card">
                 <h3>Asignar Contenido Virtual</h3>
 
-                <form action="../../controller/admin/asignacionController.php?accion=asignarContenidoVirtual" method="POST">
+                <form action="../../controllers/admin/asignacionController.php?accion=asignarContenidoVirtual" method="POST">
                     <label>Cliente</label>
                     <select name="cliente_id" required>
                         <option value="">Seleccione cliente</option>

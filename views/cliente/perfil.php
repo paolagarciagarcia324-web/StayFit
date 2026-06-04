@@ -158,15 +158,15 @@ $cuenta = $cuenta ?? []; // Datos de cuenta (cuentaController)
 
     <aside class="sidebar">
         <h2>StayFit</h2>
-        <a href="../../controller/cliente/dashboardController.php">Dashboard</a>
-        <a class="active" href="../../controller/cliente/perfilController.php">Perfil</a>
-        <a href="../../controller/cliente/planController.php">Mi plan</a>
-        <a href="../../controller/cliente/entrenamientoController.php">Entrenamiento</a>
-        <a href="../../controller/cliente/nutricionController.php">Nutrición</a>
-        <a href="../../controller/cliente/progresoController.php">Progreso</a>
-        <a href="../../controller/cliente/calendarioController.php">Calendario</a>
-        <a href="../../controller/cliente/pagoController.php">Pagos</a>
-        <a href="../../controller/auth/logouthController.php">Cerrar sesión</a>
+        <a href="../../controllers/cliente/dashboardController.php">Dashboard</a>
+        <a class="active" href="../../controllers/cliente/perfilController.php">Perfil</a>
+        <a href="../../controllers/cliente/planController.php">Mi plan</a>
+        <a href="../../controllers/cliente/entrenamientoController.php">Entrenamiento</a>
+        <a href="../../controllers/cliente/nutricionController.php">Nutrición</a>
+        <a href="../../controllers/cliente/progresoController.php">Progreso</a>
+        <a href="../../controllers/cliente/calendarioController.php">Calendario</a>
+        <a href="../../controllers/cliente/pagoController.php">Pagos</a>
+        <a href="../../controllers/auth/logouthController.php">Cerrar sesión</a>
     </aside>
 
     <main class="content">
@@ -181,7 +181,7 @@ $cuenta = $cuenta ?? []; // Datos de cuenta (cuentaController)
             <div class="card">
                 <h3>Datos personales</h3>
 
-                <form action="../../controller/cliente/perfilController.php?accion=actualizar" method="POST">
+                <form action="../../controllers/cliente/perfilController.php?accion=actualizar" method="POST">
                     <label>Nombre completo</label>
                     <input type="text" name="nombre" value="<?= e($usuario['nombre'] ?? $cliente['nombre'] ?? '') ?>" required>
 
@@ -204,7 +204,7 @@ $cuenta = $cuenta ?? []; // Datos de cuenta (cuentaController)
             <div class="card">
                 <h3>Datos físicos</h3>
 
-                <form action="../../controller/cliente/datosFisicosController.php?accion=actualizar" method="POST">
+                <form action="../../controllers/cliente/datosFisicosController.php?accion=actualizar" method="POST">
                     <label>Peso (kg)</label>
                     <input type="number" step="0.1" name="peso" value="<?= e($datosFisicos['peso'] ?? '') ?>" required>
 
@@ -231,7 +231,7 @@ $cuenta = $cuenta ?? []; // Datos de cuenta (cuentaController)
             <div class="card">
                 <h3>Cambiar contraseña</h3>
 
-                <form action="../../controller/cliente/cuentaController.php?accion=cambiarPassword" method="POST">
+                <form action="../../controllers/cliente/cuentaController.php?accion=cambiarPassword" method="POST">
                     <label>Nueva contraseña</label>
                     <input type="password" name="password" minlength="6" required>
 

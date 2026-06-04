@@ -128,16 +128,16 @@ $nombreUsuario = $_SESSION['nombre'] ?? 'Coach'; // Nombre en sesión
     <aside class="sidebar">
         <h2>StayFit</h2>
 
-        <a class="<?= $vistaActiva === 'dashboard' ? 'active' : '' ?>" href="../../controller/coach/dashboardController.php">Dashboard</a>
-        <a class="<?= $vistaActiva === 'clientes' ? 'active' : '' ?>" href="../../controller/coach/clientesController.php">Clientes</a>
-        <a class="<?= $vistaActiva === 'agenda' ? 'active' : '' ?>" href="../../controller/coach/agendaController.php">Agenda</a>
-        <a class="<?= $vistaActiva === 'entrenamiento' ? 'active' : '' ?>" href="../../controller/coach/entrenamientoController.php">Entrenamientos</a>
-        <a class="<?= $vistaActiva === 'nutricion' ? 'active' : '' ?>" href="../../controller/coach/nutricionController.php">Nutrición</a>
-        <a class="<?= $vistaActiva === 'progreso' ? 'active' : '' ?>" href="../../controller/coach/progresoController.php">Progreso</a>
-        <a class="<?= $vistaActiva === 'seguimientoVirtual' ? 'active' : '' ?>" href="../../controller/coach/seguimientoVirtualController.php">Seguimiento virtual</a>
-        <a class="<?= $vistaActiva === 'comunicacion' ? 'active' : '' ?>" href="../../controller/coach/comunicacionController.php">Comunicación</a>
-        <a class="<?= $vistaActiva === 'notificaciones' ? 'active' : '' ?>" href="../../controller/coach/notificacionController.php">Notificaciones</a>
-        <a class="<?= $vistaActiva === 'reportes' ? 'active' : '' ?>" href="../../controller/coach/reporteController.php">Reportes</a>
+        <a class="<?= $vistaActiva === 'dashboard' ? 'active' : '' ?>" href="../../controllers/coach/dashboardController.php">Dashboard</a>
+        <a class="<?= $vistaActiva === 'clientes' ? 'active' : '' ?>" href="../../controllers/coach/clientesController.php">Clientes</a>
+        <a class="<?= $vistaActiva === 'agenda' ? 'active' : '' ?>" href="../../controllers/coach/agendaController.php">Agenda</a>
+        <a class="<?= $vistaActiva === 'entrenamiento' ? 'active' : '' ?>" href="../../controllers/coach/entrenamientoController.php">Entrenamientos</a>
+        <a class="<?= $vistaActiva === 'nutricion' ? 'active' : '' ?>" href="../../controllers/coach/nutricionController.php">Nutrición</a>
+        <a class="<?= $vistaActiva === 'progreso' ? 'active' : '' ?>" href="../../controllers/coach/progresoController.php">Progreso</a>
+        <a class="<?= $vistaActiva === 'seguimientoVirtual' ? 'active' : '' ?>" href="../../controllers/coach/seguimientoVirtualController.php">Seguimiento virtual</a>
+        <a class="<?= $vistaActiva === 'comunicacion' ? 'active' : '' ?>" href="../../controllers/coach/comunicacionController.php">Comunicación</a>
+        <a class="<?= $vistaActiva === 'notificaciones' ? 'active' : '' ?>" href="../../controllers/coach/notificacionController.php">Notificaciones</a>
+        <a class="<?= $vistaActiva === 'reportes' ? 'active' : '' ?>" href="../../controllers/coach/reporteController.php">Reportes</a>
         <?php require_once __DIR__ . '/../partials/cerrarSesion.php'; ?>
     </aside>
 
@@ -149,7 +149,7 @@ $nombreUsuario = $_SESSION['nombre'] ?? 'Coach'; // Nombre en sesión
                 <p style="margin: 4px 0 0;">Hola, <?= e($nombreUsuario) ?></p>
             </div>
 
-            <a class="logout" href="../../controller/auth/logouthController.php">Cerrar sesión</a>
+            <a class="logout" href="../../controllers/auth/logouthController.php">Cerrar sesión</a>
         </header>
 
         <main class="content">

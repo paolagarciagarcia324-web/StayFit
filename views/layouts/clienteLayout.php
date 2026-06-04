@@ -128,16 +128,16 @@ $nombreUsuario = $_SESSION['nombre'] ?? 'Cliente'; // Nombre del cliente
     <aside class="sidebar">
         <h2>StayFit</h2>
 
-        <a class="<?= $vistaActiva === 'dashboard' ? 'active' : '' ?>" href="../../controller/cliente/dashboardController.php">Dashboard</a>
-        <a class="<?= $vistaActiva === 'perfil' ? 'active' : '' ?>" href="../../controller/cliente/perfilController.php">Perfil</a>
-        <a class="<?= $vistaActiva === 'plan' ? 'active' : '' ?>" href="../../controller/cliente/planController.php">Mi plan</a>
-        <a class="<?= $vistaActiva === 'entrenamiento' ? 'active' : '' ?>" href="../../controller/cliente/entrenamientoController.php">Entrenamiento</a>
-        <a class="<?= $vistaActiva === 'nutricion' ? 'active' : '' ?>" href="../../controller/cliente/nutricionController.php">Nutrición</a>
-        <a class="<?= $vistaActiva === 'progreso' ? 'active' : '' ?>" href="../../controller/cliente/progresoController.php">Progreso</a>
-        <a class="<?= $vistaActiva === 'calendario' ? 'active' : '' ?>" href="../../controller/cliente/calendarioController.php">Calendario</a>
-        <a class="<?= $vistaActiva === 'pagos' ? 'active' : '' ?>" href="../../controller/cliente/pagoController.php">Pagos</a>
-        <a class="<?= $vistaActiva === 'comunicacion' ? 'active' : '' ?>" href="../../controller/cliente/comunicacionController.php">Comunicación</a>
-        <a class="<?= $vistaActiva === 'notificaciones' ? 'active' : '' ?>" href="../../controller/cliente/notificacionController.php">Notificaciones</a>
+        <a class="<?= $vistaActiva === 'dashboard' ? 'active' : '' ?>" href="../../controllers/cliente/dashboardController.php">Dashboard</a>
+        <a class="<?= $vistaActiva === 'perfil' ? 'active' : '' ?>" href="../../controllers/cliente/perfilController.php">Perfil</a>
+        <a class="<?= $vistaActiva === 'plan' ? 'active' : '' ?>" href="../../controllers/cliente/planController.php">Mi plan</a>
+        <a class="<?= $vistaActiva === 'entrenamiento' ? 'active' : '' ?>" href="../../controllers/cliente/entrenamientoController.php">Entrenamiento</a>
+        <a class="<?= $vistaActiva === 'nutricion' ? 'active' : '' ?>" href="../../controllers/cliente/nutricionController.php">Nutrición</a>
+        <a class="<?= $vistaActiva === 'progreso' ? 'active' : '' ?>" href="../../controllers/cliente/progresoController.php">Progreso</a>
+        <a class="<?= $vistaActiva === 'calendario' ? 'active' : '' ?>" href="../../controllers/cliente/calendarioController.php">Calendario</a>
+        <a class="<?= $vistaActiva === 'pagos' ? 'active' : '' ?>" href="../../controllers/cliente/pagoController.php">Pagos</a>
+        <a class="<?= $vistaActiva === 'comunicacion' ? 'active' : '' ?>" href="../../controllers/cliente/comunicacionController.php">Comunicación</a>
+        <a class="<?= $vistaActiva === 'notificaciones' ? 'active' : '' ?>" href="../../controllers/cliente/notificacionController.php">Notificaciones</a>
         <?php require_once __DIR__ . '/../partials/cerrarSesion.php'; ?>
     </aside>
 
@@ -149,7 +149,7 @@ $nombreUsuario = $_SESSION['nombre'] ?? 'Cliente'; // Nombre del cliente
                 <p style="margin: 4px 0 0;">Hola, <?= e($nombreUsuario) ?></p>
             </div>
 
-            <a class="logout" href="../../controller/auth/logouthController.php">Cerrar sesión</a>
+            <a class="logout" href="../../controllers/auth/logouthController.php">Cerrar sesión</a>
         </header>
 
         <main class="content">

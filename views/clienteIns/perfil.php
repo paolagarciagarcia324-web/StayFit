@@ -157,15 +157,15 @@ $datosFisicos = $datosFisicos ?? []; // Datos físicos
 
     <aside class="sidebar">
         <h2>StayFit</h2>
-        <a href="../../controller/clienteIns/dashboardController.php">Dashboard</a>
-        <a class="active" href="../../controller/clienteIns/perfilController.php">Perfil</a>
-        <a href="../../controller/clienteIns/institucionController.php">Institución</a>
-        <a href="../../controller/clienteIns/planController.php">Mi plan</a>
-        <a href="../../controller/clienteIns/entrenamientoController.php">Entrenamiento</a>
-        <a href="../../controller/clienteIns/nutricionController.php">Nutrición</a>
-        <a href="../../controller/clienteIns/progresoController.php">Progreso</a>
-        <a href="../../controller/clienteIns/sesionGrupalController.php">Sesiones grupales</a>
-        <a href="../../controller/auth/logouthController.php">Cerrar sesión</a>
+        <a href="../../controllers/clienteIns/dashboardController.php">Dashboard</a>
+        <a class="active" href="../../controllers/clienteIns/perfilController.php">Perfil</a>
+        <a href="../../controllers/clienteIns/institucionController.php">Institución</a>
+        <a href="../../controllers/clienteIns/planController.php">Mi plan</a>
+        <a href="../../controllers/clienteIns/entrenamientoController.php">Entrenamiento</a>
+        <a href="../../controllers/clienteIns/nutricionController.php">Nutrición</a>
+        <a href="../../controllers/clienteIns/progresoController.php">Progreso</a>
+        <a href="../../controllers/clienteIns/sesionGrupalController.php">Sesiones grupales</a>
+        <a href="../../controllers/auth/logouthController.php">Cerrar sesión</a>
     </aside>
 
     <main class="content">
@@ -180,7 +180,7 @@ $datosFisicos = $datosFisicos ?? []; // Datos físicos
             <div class="card">
                 <h3>Datos personales</h3>
 
-                <form action="../../controller/clienteIns/perfilController.php?accion=actualizar" method="POST">
+                <form action="../../controllers/clienteIns/perfilController.php?accion=actualizar" method="POST">
                     <label>Nombre completo</label>
                     <input type="text" name="nombre" value="<?= e($usuario['nombre'] ?? $cliente['nombre'] ?? '') ?>" required>
 
@@ -203,7 +203,7 @@ $datosFisicos = $datosFisicos ?? []; // Datos físicos
             <div class="card">
                 <h3>Datos físicos</h3>
 
-                <form action="../../controller/clienteIns/progresoController.php?accion=registrar" method="POST" enctype="multipart/form-data">
+                <form action="../../controllers/clienteIns/progresoController.php?accion=registrar" method="POST" enctype="multipart/form-data">
                     <label>Peso actual</label>
                     <input type="number" step="0.1" name="peso" value="<?= e($datosFisicos['peso'] ?? '') ?>" required>
 

@@ -186,14 +186,14 @@ $rutina = $rutina ?? null; // Rutina seleccionada
 
     <aside class="sidebar">
         <h2>StayFit</h2>
-        <a href="../../controller/coach/dashboardController.php">Dashboard</a>
-        <a href="../../controller/coach/clientesController.php">Clientes</a>
-        <a href="../../controller/coach/agendaController.php">Agenda</a>
-        <a class="active" href="../../controller/coach/entrenamientoController.php">Entrenamientos</a>
-        <a href="../../controller/coach/nutricionController.php">Nutrición</a>
-        <a href="../../controller/coach/progresoController.php">Progreso</a>
-        <a href="../../controller/coach/comunicacionController.php">Comunicación</a>
-        <a href="../../controller/auth/logouthController.php">Cerrar sesión</a>
+        <a href="../../controllers/coach/dashboardController.php">Dashboard</a>
+        <a href="../../controllers/coach/clientesController.php">Clientes</a>
+        <a href="../../controllers/coach/agendaController.php">Agenda</a>
+        <a class="active" href="../../controllers/coach/entrenamientoController.php">Entrenamientos</a>
+        <a href="../../controllers/coach/nutricionController.php">Nutrición</a>
+        <a href="../../controllers/coach/progresoController.php">Progreso</a>
+        <a href="../../controllers/coach/comunicacionController.php">Comunicación</a>
+        <a href="../../controllers/auth/logouthController.php">Cerrar sesión</a>
     </aside>
 
     <main class="content">
@@ -209,7 +209,7 @@ $rutina = $rutina ?? null; // Rutina seleccionada
                 <div class="card">
                     <h3>Crear plan</h3>
 
-                    <form action="../../controller/coach/entrenamientoController.php?accion=crearPlan" method="POST">
+                    <form action="../../controllers/coach/entrenamientoController.php?accion=crearPlan" method="POST">
                         <label>Cliente</label>
                         <select name="cliente_id" required>
                             <option value="">Seleccione cliente</option>
@@ -241,7 +241,7 @@ $rutina = $rutina ?? null; // Rutina seleccionada
                 <div class="card">
                     <h3>Crear rutina</h3>
 
-                    <form action="../../controller/coach/rutinaController.php?accion=guardar" method="POST">
+                    <form action="../../controllers/coach/rutinaController.php?accion=guardar" method="POST">
                         <label>Cliente</label>
                         <select name="cliente_id" required>
                             <option value="">Seleccione cliente</option>
@@ -270,7 +270,7 @@ $rutina = $rutina ?? null; // Rutina seleccionada
                 <div class="card">
                     <h3>Crear ejercicio</h3>
 
-                    <form action="../../controller/coach/ejercicioController.php?accion=guardar" method="POST">
+                    <form action="../../controllers/coach/ejercicioController.php?accion=guardar" method="POST">
                         <label>Rutina</label>
                         <select name="rutina_id" required>
                             <option value="">Seleccione rutina</option>
@@ -313,8 +313,8 @@ $rutina = $rutina ?? null; // Rutina seleccionada
                             <p><?= e($item['descripcion'] ?? '') ?></p>
                             <span class="badge"><?= e($item['estado'] ?? 'activa') ?></span>
                             <br>
-                            <a class="btn" href="../../controller/coach/rutinaController.php?accion=detalle&id=<?= e($item['id'] ?? '') ?>">Ver detalle</a>
-                            <a class="btn btn-green" href="../../controller/coach/rutinaController.php?accion=cambiarEstado&id=<?= e($item['id'] ?? '') ?>&estado=finalizada">Finalizar</a>
+                            <a class="btn" href="../../controllers/coach/rutinaController.php?accion=detalle&id=<?= e($item['id'] ?? '') ?>">Ver detalle</a>
+                            <a class="btn btn-green" href="../../controllers/coach/rutinaController.php?accion=cambiarEstado&id=<?= e($item['id'] ?? '') ?>&estado=finalizada">Finalizar</a>
                         </div>
                     <?php endforeach; ?>
                 </div>

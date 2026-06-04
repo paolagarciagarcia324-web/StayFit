@@ -132,16 +132,16 @@ $notificaciones = $notificaciones ?? []; // Lista de notificaciones
 
     <aside class="sidebar">
         <h2>StayFit</h2>
-        <a href="../../controller/clienteIns/dashboardController.php">Dashboard</a>
-        <a href="../../controller/clienteIns/perfilController.php">Perfil</a>
-        <a href="../../controller/clienteIns/institucionController.php">Institución</a>
-        <a href="../../controller/clienteIns/planController.php">Mi plan</a>
-        <a href="../../controller/clienteIns/entrenamientoController.php">Entrenamiento</a>
-        <a href="../../controller/clienteIns/nutricionController.php">Nutrición</a>
-        <a href="../../controller/clienteIns/progresoController.php">Progreso</a>
-        <a href="../../controller/clienteIns/sesionGrupalController.php">Sesiones grupales</a>
-        <a class="active" href="../../controller/clienteIns/notificacionController.php">Notificaciones</a>
-        <a href="../../controller/auth/logouthController.php">Cerrar sesión</a>
+        <a href="../../controllers/clienteIns/dashboardController.php">Dashboard</a>
+        <a href="../../controllers/clienteIns/perfilController.php">Perfil</a>
+        <a href="../../controllers/clienteIns/institucionController.php">Institución</a>
+        <a href="../../controllers/clienteIns/planController.php">Mi plan</a>
+        <a href="../../controllers/clienteIns/entrenamientoController.php">Entrenamiento</a>
+        <a href="../../controllers/clienteIns/nutricionController.php">Nutrición</a>
+        <a href="../../controllers/clienteIns/progresoController.php">Progreso</a>
+        <a href="../../controllers/clienteIns/sesionGrupalController.php">Sesiones grupales</a>
+        <a class="active" href="../../controllers/clienteIns/notificacionController.php">Notificaciones</a>
+        <a href="../../controllers/auth/logouthController.php">Cerrar sesión</a>
     </aside>
 
     <main class="content">
@@ -165,7 +165,7 @@ $notificaciones = $notificaciones ?? []; // Lista de notificaciones
 
                     <?php if (($item['estado'] ?? '') !== 'leida'): ?>
                         <br><br>
-                        <a class="btn" href="../../controller/clienteIns/notificacionController.php?accion=marcarLeida&id=<?= e($item['id'] ?? '') ?>">
+                        <a class="btn" href="../../controllers/clienteIns/notificacionController.php?accion=marcarLeida&id=<?= e($item['id'] ?? '') ?>">
                             Marcar como leída
                         </a>
                     <?php endif; ?>

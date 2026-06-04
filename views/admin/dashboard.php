@@ -169,16 +169,16 @@ $accesosVencidos = $datos['accesosVencidos'] ?? 0; // Accesos vencidos
 
     <aside class="sidebar">
         <h2>StayFit</h2>
-        <a class="active" href="../../controller/admin/dashboardController.php">Dashboard</a>
-        <a href="../../controller/admin/solicitudController.php">Solicitudes</a>
-        <a href="../../controller/admin/pagoController.php">Pagos</a>
-        <a href="../../controller/admin/clienteController.php">Clientes</a>
-        <a href="../../controller/admin/coachController.php">Coaches</a>
-        <a href="../../controller/admin/asignacionController.php">Asignaciones</a>
-        <a href="../../controller/admin/planController.php">Planes</a>
-        <a href="../../controller/admin/contenidoVirtualController.php">Contenido virtual</a>
-        <a href="../../controller/admin/institucionController.php">Instituciones</a>
-        <a href="../../controller/admin/notificacionController.php">Notificaciones</a>
+        <a class="active" href="../../controllers/admin/dashboardController.php">Dashboard</a>
+        <a href="../../controllers/admin/solicitudController.php">Solicitudes</a>
+        <a href="../../controllers/admin/pagoController.php">Pagos</a>
+        <a href="../../controllers/admin/clienteController.php">Clientes</a>
+        <a href="../../controllers/admin/coachController.php">Coaches</a>
+        <a href="../../controllers/admin/asignacionController.php">Asignaciones</a>
+        <a href="../../controllers/admin/planController.php">Planes</a>
+        <a href="../../controllers/admin/contenidoVirtualController.php">Contenido virtual</a>
+        <a href="../../controllers/admin/institucionController.php">Instituciones</a>
+        <a href="../../controllers/admin/notificacionController.php">Notificaciones</a>
         <?php require_once __DIR__ . '/../partials/cerrarSesion.php'; ?>
 
     </aside>
@@ -247,11 +247,11 @@ $accesosVencidos = $datos['accesosVencidos'] ?? 0; // Accesos vencidos
 
             <div class="card">
                 <h3>Acciones rápidas</h3>
-                <p><a href="../../controller/admin/solicitudController.php">Revisar solicitudes pendientes</a></p>
-                <p><a href="../../controller/admin/pagoController.php">Validar pagos</a></p>
-                <p><a href="../../controller/admin/clienteController.php">Gestionar clientes</a></p>
-                <p><a href="../../controller/admin/asignacionController.php">Asignar coach o videos</a></p>
-                <p><a href="../../controller/admin/planController.php">Administrar planes</a></p>
+                <p><a href="../../controllers/admin/solicitudController.php">Revisar solicitudes pendientes</a></p>
+                <p><a href="../../controllers/admin/pagoController.php">Validar pagos</a></p>
+                <p><a href="../../controllers/admin/clienteController.php">Gestionar clientes</a></p>
+                <p><a href="../../controllers/admin/asignacionController.php">Asignar coach o videos</a></p>
+                <p><a href="../../controllers/admin/planController.php">Administrar planes</a></p>
             </div>
         </section>
 

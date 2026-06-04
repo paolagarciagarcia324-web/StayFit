@@ -127,11 +127,11 @@ $notificaciones = $notificaciones ?? []; // Lista de notificaciones
 
     <aside class="sidebar">
         <h2>StayFit</h2>
-        <a href="../../controller/admin/dashboardController.php">Dashboard</a>
-        <a href="../../controller/admin/solicitudController.php">Solicitudes</a>
-        <a href="../../controller/admin/pagoController.php">Pagos</a>
-        <a href="../../controller/admin/clienteController.php">Clientes</a>
-        <a class="active" href="../../controller/admin/notificacionController.php">Notificaciones</a>
+        <a href="../../controllers/admin/dashboardController.php">Dashboard</a>
+        <a href="../../controllers/admin/solicitudController.php">Solicitudes</a>
+        <a href="../../controllers/admin/pagoController.php">Pagos</a>
+        <a href="../../controllers/admin/clienteController.php">Clientes</a>
+        <a class="active" href="../../controllers/admin/notificacionController.php">Notificaciones</a>
         <?php require_once __DIR__ . '/../partials/cerrarSesion.php'; ?>
 
     </aside>
@@ -160,12 +160,12 @@ $notificaciones = $notificaciones ?? []; // Lista de notificaciones
                     <br><br>
 
                     <?php if (($item['estado'] ?? '') !== 'leida'): ?>
-                        <a class="btn btn-green" href="../../controller/admin/notificacionController.php?accion=marcarLeida&id=<?= e($item['id'] ?? '') ?>">
+                        <a class="btn btn-green" href="../../controllers/admin/notificacionController.php?accion=marcarLeida&id=<?= e($item['id'] ?? '') ?>">
                             Marcar como leída
                         </a>
                     <?php endif; ?>
 
-                    <a class="btn" href="../../controller/admin/notificacionController.php?accion=eliminar&id=<?= e($item['id'] ?? '') ?>">
+                    <a class="btn" href="../../controllers/admin/notificacionController.php?accion=eliminar&id=<?= e($item['id'] ?? '') ?>">
                         Eliminar
                     </a>
                 </article>

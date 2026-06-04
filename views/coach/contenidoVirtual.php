@@ -15,7 +15,7 @@ $materiales = $materiales ?? [];
 $categorias = $categorias ?? [];
 $flash = $flash ?? null;
 $planId = (int) ($plan['id_plan'] ?? $_GET['plan_id'] ?? 0);
-$ctrl = '../../controller/coach/contenidoVirtualController.php';
+$ctrl = '../../controllers/coach/contenidoVirtualController.php';
 
 ?>
 <!DOCTYPE html>
@@ -54,13 +54,13 @@ $ctrl = '../../controller/coach/contenidoVirtualController.php';
 <div class="coach-wrapper">
     <aside class="sidebar">
         <h2>StayFit</h2>
-        <a href="../../controller/coach/dashboardController.php">Dashboard</a>
-        <a href="../../controller/coach/clientesController.php">Clientes</a>
-        <a href="../../controller/coach/entrenamientoController.php">Entrenamientos</a>
+        <a href="../../controllers/coach/dashboardController.php">Dashboard</a>
+        <a href="../../controllers/coach/clientesController.php">Clientes</a>
+        <a href="../../controllers/coach/entrenamientoController.php">Entrenamientos</a>
         <a class="active" href="<?= e($ctrl) ?>">Contenido virtual</a>
-        <a href="../../controller/coach/seguimientoVirtualController.php">Seguimiento virtual</a>
-        <a href="../../controller/coach/comunicacionController.php">Comunicación</a>
-        <a href="../../controller/auth/logouthController.php">Cerrar sesión</a>
+        <a href="../../controllers/coach/seguimientoVirtualController.php">Seguimiento virtual</a>
+        <a href="../../controllers/coach/comunicacionController.php">Comunicación</a>
+        <a href="../../controllers/auth/logouthController.php">Cerrar sesión</a>
     </aside>
 
     <main class="content">

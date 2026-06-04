@@ -198,11 +198,11 @@ $adminSesionId = (int) ($_SESSION['usuario_id'] ?? 0);
 
     <aside class="sidebar">
         <h2>StayFit</h2>
-        <a href="../../controller/admin/dashboardController.php">Dashboard</a>
-        <a class="active" href="../../controller/admin/usuarioController.php">Usuarios</a>
-        <a href="../../controller/admin/clienteController.php">Clientes</a>
-        <a href="../../controller/admin/coachController.php">Coaches</a>
-        <a href="../../controller/admin/notificacionController.php">Notificaciones</a>
+        <a href="../../controllers/admin/dashboardController.php">Dashboard</a>
+        <a class="active" href="../../controllers/admin/usuarioController.php">Usuarios</a>
+        <a href="../../controllers/admin/clienteController.php">Clientes</a>
+        <a href="../../controllers/admin/coachController.php">Coaches</a>
+        <a href="../../controllers/admin/notificacionController.php">Notificaciones</a>
         <?php require_once __DIR__ . '/../partials/cerrarSesion.php'; ?>
 
     </aside>
@@ -225,7 +225,7 @@ $adminSesionId = (int) ($_SESSION['usuario_id'] ?? 0);
             <div class="card">
                 <h3>Crear usuario</h3>
 
-                <form action="../../controller/admin/usuarioController.php?accion=guardar" method="POST">
+                <form action="../../controllers/admin/usuarioController.php?accion=guardar" method="POST">
                     <label>Nombre</label>
                     <input type="text" name="nombre" required>
 
@@ -286,14 +286,14 @@ $adminSesionId = (int) ($_SESSION['usuario_id'] ?? 0);
                                 <td>
                                     <div class="acciones-usuario">
                                         <?php if (($item['estado'] ?? '') === 'activo'): ?>
-                                            <a class="btn" href="../../controller/admin/usuarioController.php?accion=cambiarEstado&id=<?= e($item['id'] ?? $item['id_usuario'] ?? '') ?>&estado=inactivo">Inactivar</a>
+                                            <a class="btn" href="../../controllers/admin/usuarioController.php?accion=cambiarEstado&id=<?= e($item['id'] ?? $item['id_usuario'] ?? '') ?>&estado=inactivo">Inactivar</a>
                                         <?php else: ?>
-                                            <a class="btn btn-green" href="../../controller/admin/usuarioController.php?accion=cambiarEstado&id=<?= e($item['id'] ?? $item['id_usuario'] ?? '') ?>&estado=activo">Activar</a>
+                                            <a class="btn btn-green" href="../../controllers/admin/usuarioController.php?accion=cambiarEstado&id=<?= e($item['id'] ?? $item['id_usuario'] ?? '') ?>&estado=activo">Activar</a>
                                         <?php endif; ?>
 
                                         <?php if ((int) ($item['id'] ?? $item['id_usuario'] ?? 0) !== $adminSesionId): ?>
                                             <a class="btn btn-danger"
-                                               href="../../controller/admin/usuarioController.php?accion=eliminar&id=<?= e($item['id'] ?? $item['id_usuario'] ?? '') ?>"
+                                               href="../../controllers/admin/usuarioController.php?accion=eliminar&id=<?= e($item['id'] ?? $item['id_usuario'] ?? '') ?>"
                                                onclick="return confirm('¿Eliminar este usuario de forma permanente?');">
                                                 Eliminar
                                             </a>

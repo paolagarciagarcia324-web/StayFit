@@ -58,11 +58,11 @@ $planId = (int) ($plan['id_plan'] ?? $_GET['plan_id'] ?? 0);
 <div class="admin-wrapper">
     <aside class="sidebar">
         <h2>StayFit</h2>
-        <a href="../../controller/admin/dashboardController.php">Dashboard</a>
-        <a href="../../controller/admin/planController.php">Planes</a>
-        <a class="active" href="../../controller/admin/contenidoVirtualController.php">Contenido virtual</a>
-        <a href="../../controller/admin/asignacionController.php">Asignaciones</a>
-        <a href="../../controller/admin/clienteController.php">Clientes</a>
+        <a href="../../controllers/admin/dashboardController.php">Dashboard</a>
+        <a href="../../controllers/admin/planController.php">Planes</a>
+        <a class="active" href="../../controllers/admin/contenidoVirtualController.php">Contenido virtual</a>
+        <a href="../../controllers/admin/asignacionController.php">Asignaciones</a>
+        <a href="../../controllers/admin/clienteController.php">Clientes</a>
         <?php require_once __DIR__ . '/../partials/cerrarSesion.php'; ?>
     </aside>
 
@@ -80,7 +80,7 @@ $planId = (int) ($plan['id_plan'] ?? $_GET['plan_id'] ?? 0);
 
         <section class="card">
             <h3>1. Seleccionar plan virtual</h3>
-            <form method="GET" action="../../controller/admin/contenidoVirtualController.php">
+            <form method="GET" action="../../controllers/admin/contenidoVirtualController.php">
                 <label>Plan</label>
                 <select name="plan_id" onchange="this.form.submit()">
                     <option value="">— Elija un plan —</option>
@@ -97,7 +97,7 @@ $planId = (int) ($plan['id_plan'] ?? $_GET['plan_id'] ?? 0);
 
         <section class="card">
             <h3>2. Programa del plan: <?= e($plan['nombre']) ?></h3>
-            <form action="../../controller/admin/contenidoVirtualController.php?accion=guardarPrograma" method="POST">
+            <form action="../../controllers/admin/contenidoVirtualController.php?accion=guardarPrograma" method="POST">
                 <input type="hidden" name="plan_id" value="<?= e($planId) ?>">
                 <label>Nombre del programa</label>
                 <input type="text" name="nombre" required value="<?= e($programa['nombre'] ?? 'Programa ' . ($plan['nombre'] ?? '')) ?>">
@@ -113,7 +113,7 @@ $planId = (int) ($plan['id_plan'] ?? $_GET['plan_id'] ?? 0);
         <div class="grid-2">
             <section class="card">
                 <h3>3. Añadir material</h3>
-                <form action="../../controller/admin/contenidoVirtualController.php?accion=guardarMaterial" method="POST" enctype="multipart/form-data">
+                <form action="../../controllers/admin/contenidoVirtualController.php?accion=guardarMaterial" method="POST" enctype="multipart/form-data">
                     <input type="hidden" name="plan_id" value="<?= e($planId) ?>">
                     <label>Título de la lección</label>
                     <input type="text" name="titulo" required placeholder="Ej: Calentamiento día 1">
@@ -151,7 +151,7 @@ $planId = (int) ($plan['id_plan'] ?? $_GET['plan_id'] ?? 0);
 
             <section class="card">
                 <h3>Nueva categoría</h3>
-                <form action="../../controller/admin/contenidoVirtualController.php?accion=guardarCategoria" method="POST">
+                <form action="../../controllers/admin/contenidoVirtualController.php?accion=guardarCategoria" method="POST">
                     <input type="hidden" name="plan_id" value="<?= e($planId) ?>">
                     <input type="text" name="nombre" placeholder="Nombre categoría" required>
                     <textarea name="descripcion" placeholder="Descripción opcional"></textarea>
@@ -208,11 +208,11 @@ $planId = (int) ($plan['id_plan'] ?? $_GET['plan_id'] ?? 0);
                                     <a class="btn" href="<?= e($urlVer) ?>" target="_blank">Abrir</a>
                                 <?php endif; ?>
                                 <?php if (!empty($m['activo'])): ?>
-                                    <a class="btn btn-muted" href="../../controller/admin/contenidoVirtualController.php?accion=cambiarEstadoMaterial&plan_id=<?= e($planId) ?>&id=<?= e($m['id']) ?>&estado=inactivo">Ocultar</a>
+                                    <a class="btn btn-muted" href="../../controllers/admin/contenidoVirtualController.php?accion=cambiarEstadoMaterial&plan_id=<?= e($planId) ?>&id=<?= e($m['id']) ?>&estado=inactivo">Ocultar</a>
                                 <?php else: ?>
-                                    <a class="btn btn-green" href="../../controller/admin/contenidoVirtualController.php?accion=cambiarEstadoMaterial&plan_id=<?= e($planId) ?>&id=<?= e($m['id']) ?>&estado=activo">Activar</a>
+                                    <a class="btn btn-green" href="../../controllers/admin/contenidoVirtualController.php?accion=cambiarEstadoMaterial&plan_id=<?= e($planId) ?>&id=<?= e($m['id']) ?>&estado=activo">Activar</a>
                                 <?php endif; ?>
-                                <a class="btn btn-muted" href="../../controller/admin/contenidoVirtualController.php?accion=eliminarMaterial&plan_id=<?= e($planId) ?>&id=<?= e($m['id']) ?>" onclick="return confirm('¿Eliminar este material?');">Eliminar</a>
+                                <a class="btn btn-muted" href="../../controllers/admin/contenidoVirtualController.php?accion=eliminarMaterial&plan_id=<?= e($planId) ?>&id=<?= e($m['id']) ?>" onclick="return confirm('¿Eliminar este material?');">Eliminar</a>
                             </td>
                         </tr>
                     <?php endforeach; ?>

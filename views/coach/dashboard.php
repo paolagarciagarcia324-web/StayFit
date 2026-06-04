@@ -172,15 +172,15 @@ $totalMensajes = count($mensajes); // Total mensajes
 
     <aside class="sidebar">
         <h2>StayFit</h2>
-        <a class="active" href="../../controller/coach/dashboardController.php">Dashboard</a>
-        <a href="../../controller/coach/clientesController.php">Clientes</a>
-        <a href="../../controller/coach/agendaController.php">Agenda</a>
-        <a href="../../controller/coach/entrenamientoController.php">Entrenamientos</a>
-        <a href="../../controller/coach/contenidoVirtualController.php">Contenido virtual</a>
-        <a href="../../controller/coach/nutricionController.php">Nutrición</a>
-        <a href="../../controller/coach/progresoController.php">Progreso</a>
-        <a href="../../controller/coach/comunicacionController.php">Comunicación</a>
-        <a href="../../controller/auth/logouthController.php">Cerrar sesión</a>
+        <a class="active" href="../../controllers/coach/dashboardController.php">Dashboard</a>
+        <a href="../../controllers/coach/clientesController.php">Clientes</a>
+        <a href="../../controllers/coach/agendaController.php">Agenda</a>
+        <a href="../../controllers/coach/entrenamientoController.php">Entrenamientos</a>
+        <a href="../../controllers/coach/contenidoVirtualController.php">Contenido virtual</a>
+        <a href="../../controllers/coach/nutricionController.php">Nutrición</a>
+        <a href="../../controllers/coach/progresoController.php">Progreso</a>
+        <a href="../../controllers/coach/comunicacionController.php">Comunicación</a>
+        <a href="../../controllers/auth/logouthController.php">Cerrar sesión</a>
     </aside>
 
     <main class="content">
@@ -194,25 +194,25 @@ $totalMensajes = count($mensajes); // Total mensajes
             <div class="card">
                 <h3>Clientes asignadas</h3>
                 <p class="number"><?= e($totalClientes) ?></p>
-                <a class="btn" href="../../controller/coach/clientesController.php">Ver clientes</a>
+                <a class="btn" href="../../controllers/coach/clientesController.php">Ver clientes</a>
             </div>
 
             <div class="card">
                 <h3>Sesiones próximas</h3>
                 <p class="number"><?= e($totalSesiones) ?></p>
-                <a class="btn" href="../../controller/coach/agendaController.php">Ver agenda</a>
+                <a class="btn" href="../../controllers/coach/agendaController.php">Ver agenda</a>
             </div>
 
             <div class="card">
                 <h3>Rutinas pendientes</h3>
                 <p class="number"><?= e($totalRutinas) ?></p>
-                <a class="btn" href="../../controller/coach/entrenamientoController.php">Gestionar</a>
+                <a class="btn" href="../../controllers/coach/entrenamientoController.php">Gestionar</a>
             </div>
 
             <div class="card">
                 <h3>Mensajes nuevos</h3>
                 <p class="number"><?= e($totalMensajes) ?></p>
-                <a class="btn" href="../../controller/coach/comunicacionController.php">Responder</a>
+                <a class="btn" href="../../controllers/coach/comunicacionController.php">Responder</a>
             </div>
         </section>
 
@@ -231,7 +231,7 @@ $totalMensajes = count($mensajes); // Total mensajes
                     <strong><?= e($nombreCliente !== '' ? $nombreCliente : 'Cliente') ?></strong>
                     <p><?= e($cliente['objetivos'] ?? 'Sin objetivos registrados') ?></p>
                     <span class="badge"><?= e($cliente['tipo_cliente'] ?? 'INDIVIDUAL') ?></span>
-                    <a class="btn" href="../../controller/coach/clientesController.php?accion=detalle&id=<?= e($cliente['id'] ?? '') ?>">Ver detalle</a>
+                    <a class="btn" href="../../controllers/coach/clientesController.php?accion=detalle&id=<?= e($cliente['id'] ?? '') ?>">Ver detalle</a>
                 </div>
             <?php endforeach; ?>
         </section>

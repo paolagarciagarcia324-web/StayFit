@@ -179,15 +179,15 @@ $notificaciones = $notificaciones ?? []; // Notificaciones
 
     <aside class="sidebar">
         <h2>StayFit</h2>
-        <a class="active" href="../../controller/cliente/dashboardController.php">Dashboard</a>
-        <a href="../../controller/cliente/perfilController.php">Perfil</a>
-        <a href="../../controller/cliente/planController.php">Mi plan</a>
-        <a href="../../controller/cliente/entrenamientoController.php">Entrenamiento</a>
-        <a href="../../controller/cliente/nutricionController.php">Nutrición</a>
-        <a href="../../controller/cliente/progresoController.php">Progreso</a>
-        <a href="../../controller/cliente/calendarioController.php">Calendario</a>
-        <a href="../../controller/cliente/comunicacionController.php">Comunicación</a>
-        <a href="../../controller/auth/logouthController.php">Cerrar sesión</a>
+        <a class="active" href="../../controllers/cliente/dashboardController.php">Dashboard</a>
+        <a href="../../controllers/cliente/perfilController.php">Perfil</a>
+        <a href="../../controllers/cliente/planController.php">Mi plan</a>
+        <a href="../../controllers/cliente/entrenamientoController.php">Entrenamiento</a>
+        <a href="../../controllers/cliente/nutricionController.php">Nutrición</a>
+        <a href="../../controllers/cliente/progresoController.php">Progreso</a>
+        <a href="../../controllers/cliente/calendarioController.php">Calendario</a>
+        <a href="../../controllers/cliente/comunicacionController.php">Comunicación</a>
+        <a href="../../controllers/auth/logouthController.php">Cerrar sesión</a>
     </aside>
 
     <main class="content">
@@ -209,7 +209,7 @@ $notificaciones = $notificaciones ?? []; // Notificaciones
                 <h3>Progreso reciente</h3>
                 <p class="number"><?= e($progreso['peso'] ?? '0') ?> kg</p>
                 <p><?= e($progreso['fecha'] ?? 'Sin registro reciente') ?></p>
-                <a class="btn" href="../../controller/cliente/progresoController.php">Registrar progreso</a>
+                <a class="btn" href="../../controllers/cliente/progresoController.php">Registrar progreso</a>
             </div>
 
             <div class="card">
@@ -218,7 +218,7 @@ $notificaciones = $notificaciones ?? []; // Notificaciones
                 <div class="progress-box">
                     <div class="progress-bar"></div>
                 </div>
-                <a class="btn btn-green" href="../../controller/cliente/contenidoVirtualController.php">Ver videos</a>
+                <a class="btn btn-green" href="../../controllers/cliente/contenidoVirtualController.php">Ver videos</a>
             </div>
 
             <div class="card">
@@ -227,11 +227,11 @@ $notificaciones = $notificaciones ?? []; // Notificaciones
                     <p class="number" style="font-size: 22px;"><?= e($coach['nombre_completo'] ?? trim(($coach['nombre'] ?? '') . ' ' . ($coach['apellido'] ?? ''))) ?></p>
                     <p><?= e($coach['especialidad'] ?? 'Especialidad no registrada') ?></p>
                     <p><?= e($coach['correo'] ?? '') ?></p>
-                    <a class="btn" href="../../controller/cliente/comunicacionController.php">Contactar coach</a>
+                    <a class="btn" href="../../controllers/cliente/comunicacionController.php">Contactar coach</a>
                 <?php else: ?>
                     <?php
                     $modalidadPlan = strtoupper($plan['modalidad'] ?? '');
-                    $requiereCoach = !empty($plan['requiere_coach']) || in_array($modalidadPlan, ['PRESENCIAL', 'MIXTA'], true);
+                    $requiereCoach = !empty($plan['requiere_coach']) || in_array($modalidadPlan, ['PRESENCIAL', 'MIXTA', 'MIXTO'], true);
                     ?>
                     <?php if ($requiereCoach): ?>
                         <p>Pendiente de asignación por el administrador.</p>

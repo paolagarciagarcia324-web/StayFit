@@ -216,13 +216,13 @@ $coach = $coach ?? null; // Coach asignado
 
     <aside class="sidebar">
         <h2>StayFit</h2>
-        <a href="dashboardController.php">Dashboard</a>
-        <a class="active" href="clienteController.php">Clientes</a>
-        <a href="coachController.php">Coaches</a>
-        <a href="asignacionController.php">Asignaciones</a>
-        <a href="planController.php">Planes</a>
-        <a href="pagoController.php">Pagos</a>
-        <a href="solicitudController.php">Solicitudes</a>
+        <a href="../../controllers/admin/dashboardController.php">Dashboard</a>
+        <a class="active" href="../../controllers/admin/clienteController.php">Clientes</a>
+        <a href="../../controllers/admin/coachController.php">Coaches</a>
+        <a href="../../controllers/admin/asignacionController.php">Asignaciones</a>
+        <a href="../../controllers/admin/planController.php">Planes</a>
+        <a href="../../controllers/admin/pagoController.php">Pagos</a>
+        <a href="../../controllers/admin/solicitudController.php">Solicitudes</a>
         <?php require_once __DIR__ . '/../partials/cerrarSesion.php'; ?>
 
     </aside>
@@ -267,7 +267,7 @@ $coach = $coach ?? null; // Coach asignado
             <div class="card">
                 <h3>Registrar clienta fija</h3>
 
-                <form action="../../controller/admin/clienteController.php?accion=guardarClienteFijo" method="POST">
+                <form action="../../controllers/admin/clienteController.php?accion=guardarClienteFijo" method="POST">
                     <label>Nombre</label>
                     <input type="text" name="nombre" required>
 
@@ -345,16 +345,16 @@ $coach = $coach ?? null; // Coach asignado
                                 </td>
 
                                 <td>
-                                    <a class="btn btn-dark" href="../../controller/admin/clienteController.php?accion=detalle&id=<?= e($item['id'] ?? '') ?>">
+                                    <a class="btn btn-dark" href="../../controllers/admin/clienteController.php?accion=detalle&id=<?= e($item['id'] ?? '') ?>">
                                         Ver
                                     </a>
 
                                     <?php if (($item['estado'] ?? '') === 'activo'): ?>
-                                        <a class="btn" href="../../controller/admin/clienteController.php?accion=cambiarEstado&id=<?= e($item['id'] ?? '') ?>&estado=inactivo">
+                                        <a class="btn" href="../../controllers/admin/clienteController.php?accion=cambiarEstado&id=<?= e($item['id'] ?? '') ?>&estado=inactivo">
                                             Inactivar
                                         </a>
                                     <?php else: ?>
-                                        <a class="btn btn-green" href="../../controller/admin/clienteController.php?accion=cambiarEstado&id=<?= e($item['id'] ?? '') ?>&estado=activo">
+                                        <a class="btn btn-green" href="../../controllers/admin/clienteController.php?accion=cambiarEstado&id=<?= e($item['id'] ?? '') ?>&estado=activo">
                                             Activar
                                         </a>
                                     <?php endif; ?>

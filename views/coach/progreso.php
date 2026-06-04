@@ -176,15 +176,15 @@ $reporteProgreso = $reporteProgreso ?? []; // Reporte progreso
 
     <aside class="sidebar">
         <h2>StayFit</h2>
-        <a href="../../controller/coach/dashboardController.php">Dashboard</a>
-        <a href="../../controller/coach/clientesController.php">Clientes</a>
-        <a href="../../controller/coach/agendaController.php">Agenda</a>
-        <a href="../../controller/coach/entrenamientoController.php">Entrenamientos</a>
-        <a href="../../controller/coach/nutricionController.php">Nutrición</a>
-        <a class="active" href="../../controller/coach/progresoController.php">Progreso</a>
-        <a href="../../controller/coach/seguimientoVirtualController.php">Seguimiento virtual</a>
-        <a href="../../controller/coach/comunicacionController.php">Comunicación</a>
-        <a href="../../controller/auth/logouthController.php">Cerrar sesión</a>
+        <a href="../../controllers/coach/dashboardController.php">Dashboard</a>
+        <a href="../../controllers/coach/clientesController.php">Clientes</a>
+        <a href="../../controllers/coach/agendaController.php">Agenda</a>
+        <a href="../../controllers/coach/entrenamientoController.php">Entrenamientos</a>
+        <a href="../../controllers/coach/nutricionController.php">Nutrición</a>
+        <a class="active" href="../../controllers/coach/progresoController.php">Progreso</a>
+        <a href="../../controllers/coach/seguimientoVirtualController.php">Seguimiento virtual</a>
+        <a href="../../controllers/coach/comunicacionController.php">Comunicación</a>
+        <a href="../../controllers/auth/logouthController.php">Cerrar sesión</a>
     </aside>
 
     <main class="content">
@@ -200,7 +200,7 @@ $reporteProgreso = $reporteProgreso ?? []; // Reporte progreso
                 <div class="card">
                     <h3>Registrar observación</h3>
 
-                    <form action="../../controller/coach/progresoController.php?accion=observacion" method="POST">
+                    <form action="../../controllers/coach/progresoController.php?accion=observacion" method="POST">
                         <label>Cliente</label>
                         <select name="cliente_id" required>
                             <option value="">Seleccione cliente</option>

@@ -183,13 +183,13 @@ foreach ($planes as $planItem) { // Recorre planes
 
     <aside class="sidebar">
         <h2>StayFit</h2>
-        <a href="../../controller/admin/dashboardController.php">Dashboard</a>
-        <a href="../../controller/admin/clienteController.php">Clientes</a>
-        <a class="active" href="../../controller/admin/planController.php">Planes</a>
-        <a href="../../controller/admin/contenidoVirtualController.php">Contenido virtual</a>
-        <a href="../../controller/admin/pagoController.php">Pagos</a>
-        <a href="../../controller/admin/asignacionController.php">Asignaciones</a>
-        <a href="../../controller/admin/solicitudController.php">Solicitudes</a>
+        <a href="../../controllers/admin/dashboardController.php">Dashboard</a>
+        <a href="../../controllers/admin/clienteController.php">Clientes</a>
+        <a class="active" href="../../controllers/admin/planController.php">Planes</a>
+        <a href="../../controllers/admin/contenidoVirtualController.php">Contenido virtual</a>
+        <a href="../../controllers/admin/pagoController.php">Pagos</a>
+        <a href="../../controllers/admin/asignacionController.php">Asignaciones</a>
+        <a href="../../controllers/admin/solicitudController.php">Solicitudes</a>
         <?php require_once __DIR__ . '/../partials/cerrarSesion.php'; ?>
 
     </aside>
@@ -206,7 +206,7 @@ foreach ($planes as $planItem) { // Recorre planes
             <div class="card">
                 <h3>Crear plan</h3>
 
-                <form action="../../controller/admin/planController.php?accion=guardarPlan" method="POST">
+                <form action="../../controllers/admin/planController.php?accion=guardarPlan" method="POST">
                     <label>Nombre</label>
                     <input type="text" name="nombre" required>
 
@@ -286,14 +286,14 @@ foreach ($planes as $planItem) { // Recorre planes
                                 <td>
                                     <?php
                                     $mod = strtoupper($item['modalidad'] ?? '');
-                                    if (in_array($mod, ['VIRTUAL', 'MIXTA'], true)):
+                                    if (in_array($mod, ['VIRTUAL', 'MIXTA', 'MIXTO'], true)):
                                     ?>
-                                        <a class="btn btn-green" href="../../controller/admin/contenidoVirtualController.php?plan_id=<?= e($item['id'] ?? $item['id_plan'] ?? '') ?>">Material virtual</a>
+                                        <a class="btn btn-green" href="../../controllers/admin/contenidoVirtualController.php?plan_id=<?= e($item['id'] ?? $item['id_plan'] ?? '') ?>">Material virtual</a>
                                     <?php endif; ?>
                                     <?php if (($item['estado'] ?? '') === 'activo'): ?>
-                                        <a class="btn" href="../../controller/admin/planController.php?accion=cambiarEstado&id=<?= e($item['id'] ?? '') ?>&estado=inactivo">Inactivar</a>
+                                        <a class="btn" href="../../controllers/admin/planController.php?accion=cambiarEstado&id=<?= e($item['id'] ?? '') ?>&estado=inactivo">Inactivar</a>
                                     <?php else: ?>
-                                        <a class="btn btn-green" href="../../controller/admin/planController.php?accion=cambiarEstado&id=<?= e($item['id'] ?? '') ?>&estado=activo">Activar</a>
+                                        <a class="btn btn-green" href="../../controllers/admin/planController.php?accion=cambiarEstado&id=<?= e($item['id'] ?? '') ?>&estado=activo">Activar</a>
                                     <?php endif; ?>
                                 </td>
                             </tr>
