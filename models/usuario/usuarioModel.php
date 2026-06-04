@@ -26,10 +26,10 @@ class UsuarioModel
             return $usaNuevo;
         }
 
-        $tablaVieja = $this->db->query("SHOW TABLES LIKE 'users'")->fetch();
-        $tablaNueva = $this->db->query("SHOW TABLES LIKE 'user'")->fetch();
+        $tablaUser = $this->db->query("SHOW TABLES LIKE 'user'")->fetch();
+        $tablaClientes = $this->db->query("SHOW TABLES LIKE 'clientes'")->fetch();
 
-        $usaNuevo = !$tablaVieja && (bool) $tablaNueva;
+        $usaNuevo = (bool) ($tablaUser && $tablaClientes);
 
         return $usaNuevo;
     }
@@ -55,16 +55,32 @@ class UsuarioModel
 
     public function obtenerTodos()
     {
-        $sql = "SELECT u.*, r.nombre AS rol
-                FROM users u
-                LEFT JOIN users_roles ur ON ur.id_usuario = u.id_usuario
-                LEFT JOIN rol r ON r.id_rol = ur.id_rol
-                ORDER BY u.id_usuario DESC"; // Consulta usuarios
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "SELECT u.id_user AS id_usuario, u.nombres AS nombre, u.apellidos AS apellido,
+                           u.documento_identidad, u.correo, u.telefono, u.password_hash AS hash_contrasena,
+                           u.estado, r.nombre AS rol
+                    FROM user u
+                    LEFT JOIN user_roles ur ON ur.id_user = u.id_user
+                    LEFT JOIN roles r ON r.id_rol = ur.id_rol
+                    ORDER BY u.id_user DESC";
+        } else {
+            $sql = "SELECT u.*, r.nombre AS rol
+                    FROM users u
+                    LEFT JOIN users_roles ur ON ur.id_usuario = u.id_usuario
+                    LEFT JOIN rol r ON r.id_rol = ur.id_rol
+                    ORDER BY u.id_usuario DESC";
+        }
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->execute(); // Ejecuta consulta
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna lista
+        $lista = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($lista as &$usuario) {
+            $usuario = $this->normalizarUsuario($usuario);
+        }
+
+        return $lista;
     }
 
     public function obtenerPorId($id)
@@ -172,6 +188,22 @@ class UsuarioModel
 
     public function activarDesdeSolicitud($usuarioId, array $datos)
     {
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "UPDATE user
+                    SET nombres = :nombre, apellidos = :apellido, telefono = :telefono,
+                        documento_identidad = :documento_identidad, estado = 'ACTIVO'
+                    WHERE id_user = :id";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':nombre', $datos['nombre']);
+            $stmt->bindValue(':apellido', $datos['apellido'] ?? '');
+            $stmt->bindValue(':telefono', $datos['telefono'] ?? null);
+            $stmt->bindValue(':documento_identidad', $datos['documento_identidad'] ?? null);
+            $stmt->bindParam(':id', $usuarioId);
+
+            return $stmt->execute();
+        }
+
         $sql = "UPDATE users
                 SET nombre = :nombre, apellido = :apellido, telefono = :telefono,
                     documento_identidad = :documento_identidad, estado = 'ACTIVO'
@@ -267,6 +299,21 @@ class UsuarioModel
         return $stmt->execute(); // Ejecuta actualización
     }
 
+    public function establecerPasswordHash($id, $passwordHash)
+    {
+        if ($this->usaEsquemaNuevo()) {
+            $sql = 'UPDATE user SET password_hash = :password_hash WHERE id_user = :id';
+        } else {
+            $sql = 'UPDATE users SET hash_contrasena = :password_hash WHERE id_usuario = :id';
+        }
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':password_hash', $passwordHash);
+        $stmt->bindParam(':id', $id);
+
+        return $stmt->execute();
+    }
+
     public function actualizarPassword($id, $password)
     {
         $passwordHash = password_hash($password, PASSWORD_DEFAULT); // Encripta nueva contraseña
@@ -317,28 +364,48 @@ class UsuarioModel
 
     public function obtenerPorRol($rolNombre)
     {
-        $sql = "SELECT u.*, r.nombre AS rol
-                FROM users u
-                INNER JOIN users_roles ur ON ur.id_usuario = u.id_usuario
-                INNER JOIN rol r ON r.id_rol = ur.id_rol
-                WHERE r.nombre = :rol
-                ORDER BY u.nombre ASC"; // Usuarios por rol
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "SELECT u.id_user AS id_usuario, u.nombres AS nombre, u.apellidos AS apellido,
+                           u.correo, u.estado, r.nombre AS rol
+                    FROM user u
+                    INNER JOIN user_roles ur ON ur.id_user = u.id_user
+                    INNER JOIN roles r ON r.id_rol = ur.id_rol
+                    WHERE r.nombre = :rol OR r.codigo = :rol_codigo
+                    ORDER BY u.nombres ASC";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':rol', $rolNombre);
+            $stmt->bindValue(':rol_codigo', strtoupper($rolNombre));
+        } else {
+            $sql = "SELECT u.*, r.nombre AS rol
+                    FROM users u
+                    INNER JOIN users_roles ur ON ur.id_usuario = u.id_usuario
+                    INNER JOIN rol r ON r.id_rol = ur.id_rol
+                    WHERE r.nombre = :rol
+                    ORDER BY u.nombre ASC";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':rol', $rolNombre);
+        }
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':rol', $rolNombre); // Nombre del rol
-        $stmt->execute(); // Ejecuta consulta
+        $stmt->execute();
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna usuarios
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function cambiarEstado($id, $estado)
     {
-        $sql = "UPDATE users SET estado = :estado WHERE id_usuario = :id"; // Cambia estado
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':estado', $estado); // Estado nuevo
-        $stmt->bindParam(':id', $id); // ID usuario
+        $estado = strtoupper($estado);
 
-        return $stmt->execute(); // Ejecuta cambio
+        if ($this->usaEsquemaNuevo()) {
+            $sql = 'UPDATE user SET estado = :estado WHERE id_user = :id';
+        } else {
+            $sql = 'UPDATE users SET estado = :estado WHERE id_usuario = :id';
+        }
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':estado', $estado);
+        $stmt->bindParam(':id', $id);
+
+        return $stmt->execute();
     }
 
     public function eliminar($id)
@@ -418,17 +485,28 @@ class UsuarioModel
 
     public function contarPorRol($rolNombre)
     {
-        $sql = "SELECT COUNT(*) AS total
-                FROM users u
-                INNER JOIN users_roles ur ON ur.id_usuario = u.id_usuario
-                INNER JOIN rol r ON r.id_rol = ur.id_rol
-                WHERE r.nombre = :rol"; // Cuenta por rol
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "SELECT COUNT(*) AS total
+                    FROM user u
+                    INNER JOIN user_roles ur ON ur.id_user = u.id_user
+                    INNER JOIN roles r ON r.id_rol = ur.id_rol
+                    WHERE r.nombre = :rol OR r.codigo = :rol_codigo";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':rol', $rolNombre);
+            $stmt->bindValue(':rol_codigo', strtoupper($rolNombre));
+        } else {
+            $sql = "SELECT COUNT(*) AS total
+                    FROM users u
+                    INNER JOIN users_roles ur ON ur.id_usuario = u.id_usuario
+                    INNER JOIN rol r ON r.id_rol = ur.id_rol
+                    WHERE r.nombre = :rol";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':rol', $rolNombre);
+        }
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':rol', $rolNombre); // Rol
-        $stmt->execute(); // Ejecuta consulta
+        $stmt->execute();
 
-        return $stmt->fetch(PDO::FETCH_ASSOC); // Retorna total
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function registrarTrazabilidad($usuarioId, $accion)

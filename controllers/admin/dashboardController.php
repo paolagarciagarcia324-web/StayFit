@@ -60,7 +60,7 @@ class DashboardController
             $sql = "SELECT COUNT(*)
                     FROM clientes c
                     INNER JOIN user u ON u.id_user = c.id_user
-                    WHERE c.estado_cliente = 'ACTIVO' AND u.estado = 'ACTIVO'";
+                    WHERE c.estado_cliente IN ('ACTIVA', 'ACTIVO') AND u.estado = 'ACTIVO'";
 
             return $this->ejecutarConteo($sql);
         }
@@ -78,7 +78,7 @@ class DashboardController
         if ($this->tablaExiste('solicitudes_compra')) {
             $sql = "SELECT COUNT(*)
                     FROM solicitudes_compra
-                    WHERE estado_solicitud IN ('PENDIENTE', 'EN_REVISION')";
+                    WHERE estado_solicitud = 'PENDIENTE'";
 
             return $this->ejecutarConteo($sql);
         }

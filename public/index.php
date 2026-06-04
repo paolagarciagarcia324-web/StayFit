@@ -1,8 +1,17 @@
 <?php
 // Página principal pública de StayFit
+require_once __DIR__ . '/../models/plan/planModel.php';
+
 $whatsappNumero = '573213642994'; // 57 + 3213642994
 $whatsappMensaje = 'Hola, me interesa FigueFit';
 $whatsappUrl = 'https://api.whatsapp.com/send?phone=' . $whatsappNumero . '&text=' . rawurlencode($whatsappMensaje);
+
+$planModel = new PlanModel();
+$planesPublicos = $planModel->obtenerActivos();
+usort($planesPublicos, static function ($a, $b) {
+    return (int) ($b['id_plan'] ?? 0) <=> (int) ($a['id_plan'] ?? 0);
+});
+$totalPlanesPublicos = count($planesPublicos);
 ?>
 
 <!DOCTYPE html>
@@ -218,114 +227,16 @@ $whatsappUrl = 'https://api.whatsapp.com/send?phone=' . $whatsappNumero . '&text
                 <span class="plans-kicker">Membresías FigueFit</span>
             </div>
             <h2>Planes y programas</h2>
-            <p class="plans-lead">Elige tu plan, valida cupo y empieza tu proceso con FigueFit.</p>
+            <p class="plans-lead">
+                <?php if ($totalPlanesPublicos > 0): ?>
+                    <?= $totalPlanesPublicos ?> plan<?= $totalPlanesPublicos === 1 ? '' : 'es' ?> activo<?= $totalPlanesPublicos === 1 ? '' : 's' ?> disponible<?= $totalPlanesPublicos === 1 ? '' : 's' ?>. Elige el tuyo y empieza tu proceso con FigueFit.
+                <?php else: ?>
+                    Elige tu plan, valida cupo y empieza tu proceso con FigueFit.
+                <?php endif; ?>
+            </p>
         </header>
 
-        <div class="plans-grid plans-grid--catalog">
-            <article class="plan-card-premium plan-card-premium--activate" data-animate style="--i: 0">
-                <span class="plan-tier plan-tier--activate">Actívate</span>
-                <div class="plan-icon-wrap plan-icon-wrap--sm" aria-hidden="true">
-                    <svg class="plan-icon" viewBox="0 0 48 48" fill="none"><circle cx="18" cy="20" r="5" stroke="currentColor" stroke-width="1.4"/><circle cx="30" cy="20" r="5" stroke="currentColor" stroke-width="1.4"/><path d="M12 32c2-4 6-6 12-6s10 2 12 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-                </div>
-                <h3>Plan Básico</h3>
-                <p class="plan-tagline">Actívate con entrenamiento grupal</p>
-                <ul class="plan-features plan-features--compact">
-                    <li><span>Entrenamiento grupal</span></li>
-                </ul>
-                <div class="plan-price plan-price--dual">
-                    <span class="plan-price-label">Inversión</span>
-                    <div class="plan-price-rows">
-                        <div class="plan-price-row"><span>Presencial</span><strong>$80.000</strong></div>
-                        <div class="plan-price-row"><span>Virtual</span><strong>$60.000</strong></div>
-                    </div>
-                </div>
-                <a href="solicitud.php" class="plan-cta">Elegir plan</a>
-            </article>
-
-            <article class="plan-card-premium plan-card-premium--evolution is-featured" data-animate style="--i: 1">
-                <span class="plan-badge">Recomendado</span>
-                <span class="plan-tier plan-tier--evolution">Transforma</span>
-                <div class="plan-icon-wrap plan-icon-wrap--sm" aria-hidden="true">
-                    <svg class="plan-icon" viewBox="0 0 48 48" fill="none"><path d="M24 8v28M16 20l8-8 8 8M16 36h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </div>
-                <h3>Evolución</h3>
-                <p class="plan-tagline">Proceso guiado con seguimiento mensual</p>
-                <ul class="plan-features plan-features--compact plan-features--split">
-                    <li><span>Entrenamiento grupal</span><em>$80.000</em></li>
-                    <li><span>Valoración inicial</span><em>$50.000</em></li>
-                    <li><span>Test físico</span><em>$20.000</em></li>
-                    <li><span>Seguimiento mensual</span><em>$40.000</em></li>
-                </ul>
-                <p class="plan-value-real">Valor real <s>$190.000</s></p>
-                <div class="plan-price plan-price--dual">
-                    <span class="plan-price-label">Inversión</span>
-                    <div class="plan-price-rows">
-                        <div class="plan-price-row"><span>Presencial</span><strong>$120.000</strong></div>
-                        <div class="plan-price-row"><span>Virtual</span><strong>$100.000</strong></div>
-                    </div>
-                </div>
-                <a href="solicitud.php" class="plan-cta plan-cta--featured">Elegir plan</a>
-            </article>
-
-            <article class="plan-card-premium plan-card-premium--premium" data-animate style="--i: 2">
-                <span class="plan-tier plan-tier--premium">Premium</span>
-                <div class="plan-icon-wrap plan-icon-wrap--sm" aria-hidden="true">
-                    <svg class="plan-icon" viewBox="0 0 48 48" fill="none"><path d="M24 6l4.2 8.5 9.4 1.4-6.8 6.6 1.6 9.3L24 27.8l-8.4 4.4 1.6-9.3-6.8-6.6 9.4-1.4L24 6z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
-                </div>
-                <h3>Plan Premium</h3>
-                <p class="plan-tagline">Nutrición y seguimiento quincenal</p>
-                <ul class="plan-features plan-features--compact plan-features--split">
-                    <li><span>Entrenamiento grupal</span><em>$80.000</em></li>
-                    <li><span>Valoración inicial</span><em>$50.000</em></li>
-                    <li><span>Test físico</span><em>$20.000</em></li>
-                    <li><span>Plan alimentación</span><em>$80.000</em></li>
-                    <li><span>Seguimiento quincenal</span><em>$70.000</em></li>
-                </ul>
-                <p class="plan-value-real">Valor real <s>$300.000</s></p>
-                <div class="plan-price plan-price--dual">
-                    <span class="plan-price-label">Inversión</span>
-                    <div class="plan-price-rows">
-                        <div class="plan-price-row"><span>Presencial</span><strong>$170.000</strong></div>
-                        <div class="plan-price-row"><span>Virtual</span><strong>$150.000</strong></div>
-                    </div>
-                </div>
-                <a href="solicitud.php" class="plan-cta">Elegir plan</a>
-            </article>
-
-            <article class="plan-card-premium plan-card-premium--unlimited" data-animate style="--i: 3">
-                <span class="plan-tier plan-tier--unlimited">Sin límites</span>
-                <div class="plan-unlimited-layout">
-                    <div class="plan-unlimited-head">
-                        <div class="plan-icon-wrap plan-icon-wrap--sm" aria-hidden="true">
-                            <svg class="plan-icon" viewBox="0 0 48 48" fill="none"><path d="M14 38V22l10-10 10 10v16" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M20 38v-8h8v8" stroke="currentColor" stroke-width="1.5"/></svg>
-                        </div>
-                        <div>
-                            <h3>Plan Sin Límites</h3>
-                            <p class="plan-tagline">Entrenamiento personalizado y acompañamiento integral</p>
-                            <p class="plan-value-real plan-value-real--inline">Valor real <s>$620.000 – $820.000</s></p>
-                        </div>
-                    </div>
-                    <ul class="plan-features plan-features--compact plan-features--split plan-features--cols">
-                        <li><span>Entrenamiento 3× semana (12 ses.)</span><em>$300.000</em></li>
-                        <li><span>Entrenamiento 4–5× semana</span><em>$500.000</em></li>
-                        <li><span>Valoración</span><em>$50.000</em></li>
-                        <li><span>Test físico</span><em>$20.000</em></li>
-                        <li><span>Nutrición personalizada</span><em>$80.000</em></li>
-                        <li><span>Seguimiento quincenal</span><em>$70.000</em></li>
-                        <li><span>Monitoreo</span><em>$40.000</em></li>
-                        <li><span>Masaje</span><em>$60.000</em></li>
-                    </ul>
-                    <div class="plan-price plan-price--dual plan-price--highlight">
-                        <span class="plan-price-label">Inversión</span>
-                        <div class="plan-price-rows">
-                            <div class="plan-price-row"><span>12 sesiones</span><strong>$400.000</strong></div>
-                            <div class="plan-price-row"><span>16–20 sesiones</span><strong>$600.000</strong></div>
-                        </div>
-                    </div>
-                </div>
-                <a href="solicitud.php" class="plan-cta">Consultar plan</a>
-            </article>
-        </div>
+        <?php require __DIR__ . '/../views/partials/public/planesCatalogo.php'; ?>
     </div>
 </section>
 

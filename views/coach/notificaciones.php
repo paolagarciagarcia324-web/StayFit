@@ -14,61 +14,11 @@ $notificaciones = $notificaciones ?? []; // Lista de notificaciones
 <head>
     <meta charset="UTF-8"> <!-- Codificación -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
-    <title>Notificaciones Coach | StayFit</title> <!-- Título -->
+    <title>Notificaciones Coach | StayFit</title>
+    <link rel="stylesheet" href="../../public/panel.css?v=1"> <!-- Título -->
 
     <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: #f7f7f7;
-            color: #2D2D2D;
-        }
-
-        .coach-wrapper {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        .sidebar {
-            width: 245px;
-            background: #2D2D2D;
-            color: #FFFFFF;
-            padding: 28px 20px;
-        }
-
-        .sidebar h2 {
-            color: #D63384;
-            margin-bottom: 30px;
-        }
-
-        .sidebar a {
-            display: block;
-            color: #FFFFFF;
-            text-decoration: none;
-            padding: 12px 14px;
-            border-radius: 12px;
-            margin-bottom: 8px;
-        }
-
-        .sidebar a:hover,
-        .sidebar a.active {
-            background: #D63384;
-        }
-
-        .content {
-            flex: 1;
-            padding: 34px;
-        }
-
-        .page-header {
-            background: linear-gradient(135deg, #D63384, #2D2D2D);
-            color: #FFFFFF;
-            border-radius: 24px;
-            padding: 32px;
-            margin-bottom: 28px;
-        }
-
-        .notification-list {
+.notification-list {
             display: grid;
             gap: 18px;
         }
@@ -91,16 +41,7 @@ $notificaciones = $notificaciones ?? []; // Lista de notificaciones
             color: #D63384;
         }
 
-        .btn {
-            display: inline-block;
-            background: #3EB489;
-            color: #FFFFFF;
-            text-decoration: none;
-            padding: 9px 14px;
-            border-radius: 12px;
-            font-weight: 700;
-            margin-top: 12px;
-        }
+        
 
         .empty {
             background: #FFFFFF;
@@ -108,33 +49,13 @@ $notificaciones = $notificaciones ?? []; // Lista de notificaciones
             border-radius: 20px;
             color: #777;
         }
-
-        @media (max-width: 900px) {
-            .coach-wrapper {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                width: auto;
-            }
-        }
     </style>
 </head>
 
-<body>
+<body class="fp-panel">
 <div class="coach-wrapper">
 
-    <aside class="sidebar">
-        <h2>StayFit</h2>
-        <a href="../../controllers/coach/dashboardController.php">Dashboard</a>
-        <a href="../../controllers/coach/clientesController.php">Clientes</a>
-        <a href="../../controllers/coach/agendaController.php">Agenda</a>
-        <a href="../../controllers/coach/entrenamientoController.php">Entrenamientos</a>
-        <a href="../../controllers/coach/nutricionController.php">Nutrición</a>
-        <a href="../../controllers/coach/progresoController.php">Progreso</a>
-        <a class="active" href="../../controllers/coach/notificacionController.php">Notificaciones</a>
-        <a href="../../controllers/auth/logouthController.php">Cerrar sesión</a>
-    </aside>
+    <?php require __DIR__ . '/../partials/panel/sidebarCoach.php'; ?>
 
     <main class="content">
 

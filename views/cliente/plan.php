@@ -17,94 +17,18 @@ $accesos = $accesos ?? []; // Accesos del cliente
 <head>
     <meta charset="UTF-8"> <!-- Codificación -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
-    <title>Mi plan | StayFit</title> <!-- Título -->
+    <title>Mi plan | StayFit</title>
+    <link rel="stylesheet" href="../../public/panel.css?v=1"> <!-- Título -->
 
     <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: #f7f7f7;
-            color: #2D2D2D;
-        }
-
-        .cliente-wrapper {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        .sidebar {
-            width: 245px;
-            background: #2D2D2D;
-            color: #FFFFFF;
-            padding: 28px 20px;
-        }
-
-        .sidebar h2 {
-            color: #D63384;
-            margin-bottom: 30px;
-        }
-
-        .sidebar a {
-            display: block;
-            color: #FFFFFF;
-            text-decoration: none;
-            padding: 12px 14px;
-            border-radius: 12px;
-            margin-bottom: 8px;
-        }
-
-        .sidebar a:hover,
-        .sidebar a.active {
-            background: #D63384;
-        }
-
-        .content {
-            flex: 1;
-            padding: 34px;
-        }
-
-        .page-header {
-            background: linear-gradient(135deg, #D63384, #2D2D2D);
-            color: #FFFFFF;
-            border-radius: 24px;
-            padding: 32px;
-            margin-bottom: 28px;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 1.2fr 1fr;
-            gap: 22px;
-        }
-
-        .card {
-            background: #FFFFFF;
-            border-radius: 22px;
-            padding: 24px;
-            box-shadow: 0 10px 28px rgba(45, 45, 45, 0.08);
-        }
-
-        .card h3 {
-            margin-top: 0;
-            color: #D63384;
-        }
-
-        .plan-title {
+.plan-title {
             font-size: 32px;
             font-weight: 800;
             color: #D63384;
             margin: 0 0 10px;
         }
 
-        .badge {
-            display: inline-block;
-            background: #3EB489;
-            color: #FFFFFF;
-            padding: 7px 13px;
-            border-radius: 20px;
-            font-size: 13px;
-            margin: 6px 6px 6px 0;
-        }
+        
 
         .badge-pink {
             background: #D63384;
@@ -124,49 +48,13 @@ $accesos = $accesos ?? []; // Accesos del cliente
             border-radius: 16px;
             padding: 18px;
         }
-
-        .btn {
-            display: inline-block;
-            background: #D63384;
-            color: #FFFFFF;
-            text-decoration: none;
-            padding: 11px 16px;
-            border-radius: 14px;
-            font-weight: 800;
-            margin-top: 16px;
-        }
-
-        @media (max-width: 900px) {
-            .cliente-wrapper {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                width: auto;
-            }
-
-            .grid {
-                grid-template-columns: 1fr;
-            }
-        }
     </style>
 </head>
 
-<body>
+<body class="fp-panel">
 <div class="cliente-wrapper">
 
-    <aside class="sidebar">
-        <h2>StayFit</h2>
-        <a href="../../controllers/cliente/dashboardController.php">Dashboard</a>
-        <a href="../../controllers/cliente/perfilController.php">Perfil</a>
-        <a class="active" href="../../controllers/cliente/planController.php">Mi plan</a>
-        <a href="../../controllers/cliente/entrenamientoController.php">Entrenamiento</a>
-        <a href="../../controllers/cliente/nutricionController.php">Nutrición</a>
-        <a href="../../controllers/cliente/progresoController.php">Progreso</a>
-        <a href="../../controllers/cliente/calendarioController.php">Calendario</a>
-        <a href="../../controllers/cliente/pagoController.php">Pagos</a>
-        <a href="../../controllers/auth/logouthController.php">Cerrar sesión</a>
-    </aside>
+    <?php require __DIR__ . '/../partials/panel/sidebarCliente.php'; ?>
 
     <main class="content">
 

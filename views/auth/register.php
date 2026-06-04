@@ -385,7 +385,7 @@ function e($valor) {
                 </div>
             <?php endif; ?>
 
-            <form action="../../controller/auth/registerController.php" method="POST">
+            <form action="../../controllers/auth/registerController.php" method="POST">
                 <div class="form-grid">
 
                     <div class="form-group full">

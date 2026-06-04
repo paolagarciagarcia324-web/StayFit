@@ -33,24 +33,31 @@ class PlanController
 
     public function guardarPlan()
     {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Verifica envío del formulario
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+            $modalidad = trim($_POST['modalidad'] ?? 'VIRTUAL');
 
             $datos = [
-                'nombre'                          => trim($_POST['nombre']),                    // Nombre del plan
-                'descripcion'                     => trim($_POST['descripcion']),               // Descripción
-                'precio'                          => $_POST['precio'],                          // Precio del plan
-                'duracion_dias'                   => $_POST['duracion_dias'] ?? null,           // Duración en días
-                'dias_previos_recordatorio_default' => $_POST['dias_previos_recordatorio_default'] ?? 5, // Días recordatorio
-                'estado_plan'                     => 'ACTIVO'                                  // Estado inicial
+                'nombre' => trim($_POST['nombre'] ?? ''),
+                'descripcion' => trim($_POST['descripcion'] ?? ''),
+                'precio' => $_POST['precio'] ?? 0,
+                'duracion_dias' => $_POST['duracion_dias'] ?? $_POST['duracion'] ?? null,
+                'modalidad' => $modalidad,
+                'requiere_coach' => isset($_POST['requiere_coach']),
+                'incluye_entrenamiento' => isset($_POST['incluye_entrenamiento']),
+                'incluye_nutricion' => isset($_POST['incluye_nutricion']),
+                'incluye_videos' => !empty($_POST['programa_virtual_id'])
+                    || in_array(strtoupper($modalidad), ['VIRTUAL', 'MIXTA', 'MIXTO'], true),
+                'estado_plan' => 'ACTIVO',
             ];
 
-            $this->planModel->crear($datos); // Guarda plan
+            $this->planModel->crear($datos);
 
-            $this->registrarTrazabilidad('Plan creado'); // Guarda trazabilidad
+            $this->registrarTrazabilidad('Plan creado');
         }
 
-        header('Location: planController.php'); // Redirige al panel
-        exit; // Detiene la ejecución
+        header('Location: planController.php');
+        exit;
     }
 
     public function actualizarPlan()

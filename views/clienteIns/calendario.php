@@ -17,100 +17,16 @@ $sesionesGrupales = $sesionesGrupales ?? []; // Sesiones grupales institucionale
 <head>
     <meta charset="UTF-8"> <!-- Codificación -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
-    <title>Calendario Institucional | StayFit</title> <!-- Título -->
+    <title>Calendario Institucional | StayFit</title>
+    <link rel="stylesheet" href="../../public/panel.css?v=1"> <!-- Título -->
 
     <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: #f7f7f7;
-            color: #2D2D2D;
-        }
-
-        .cliente-wrapper {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        .sidebar {
-            width: 245px;
-            background: #2D2D2D;
-            color: #FFFFFF;
-            padding: 28px 20px;
-        }
-
-        .sidebar h2 {
-            color: #D63384;
-            margin-bottom: 30px;
-        }
-
-        .sidebar a {
-            display: block;
-            color: #FFFFFF;
-            text-decoration: none;
-            padding: 12px 14px;
-            border-radius: 12px;
-            margin-bottom: 8px;
-        }
-
-        .sidebar a:hover,
-        .sidebar a.active {
-            background: #D63384;
-        }
-
-        .content {
-            flex: 1;
-            padding: 34px;
-        }
-
-        .page-header {
-            background: linear-gradient(135deg, #D63384, #2D2D2D);
-            color: #FFFFFF;
-            border-radius: 24px;
-            padding: 32px;
-            margin-bottom: 28px;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(260px, 1fr));
-            gap: 22px;
-        }
-
-        .card {
-            background: #FFFFFF;
-            border-radius: 22px;
-            padding: 24px;
-            box-shadow: 0 10px 28px rgba(45, 45, 45, 0.08);
-        }
-
-        .card h3 {
-            color: #D63384;
-            margin-top: 0;
-        }
-
-        .item {
-            background: #fff7fb;
-            border-left: 5px solid #D63384;
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 14px;
-        }
-
-        .item strong {
+.item strong {
             display: block;
             margin-bottom: 6px;
         }
 
-        .badge {
-            display: inline-block;
-            background: #3EB489;
-            color: #FFFFFF;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 13px;
-            margin-top: 8px;
-        }
+        
 
         .empty {
             background: #f4f4f4;
@@ -118,40 +34,13 @@ $sesionesGrupales = $sesionesGrupales ?? []; // Sesiones grupales institucionale
             padding: 18px;
             border-radius: 16px;
         }
-
-        @media (max-width: 1000px) {
-            .cliente-wrapper {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                width: auto;
-            }
-
-            .grid {
-                grid-template-columns: 1fr;
-            }
-        }
     </style>
 </head>
 
-<body>
+<body class="fp-panel">
 <div class="cliente-wrapper">
 
-    <aside class="sidebar">
-        <h2>StayFit</h2>
-        <a href="../../controllers/clienteIns/dashboardController.php">Dashboard</a>
-        <a href="../../controllers/clienteIns/perfilController.php">Perfil</a>
-        <a href="../../controllers/clienteIns/institucionController.php">Institución</a>
-        <a href="../../controllers/clienteIns/planController.php">Mi plan</a>
-        <a href="../../controllers/clienteIns/entrenamientoController.php">Entrenamiento</a>
-        <a href="../../controllers/clienteIns/nutricionController.php">Nutrición</a>
-        <a href="../../controllers/clienteIns/progresoController.php">Progreso</a>
-        <a href="../../controllers/clienteIns/sesionGrupalController.php">Sesiones grupales</a>
-        <a class="active" href="../../controllers/clienteIns/calendarioController.php">Calendario</a>
-        <a href="../../controllers/clienteIns/comunicacionController.php">Comunicación</a>
-        <a href="../../controllers/auth/logouthController.php">Cerrar sesión</a>
-    </aside>
+    <?php require __DIR__ . '/../partials/panel/sidebarClienteIns.php'; ?>
 
     <main class="content">
 

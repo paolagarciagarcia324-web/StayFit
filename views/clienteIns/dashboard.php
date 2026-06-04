@@ -1,275 +1,116 @@
 <?php
 
-if (!function_exists('e')) { // Evita duplicar función
-    function e($valor) { // Limpia salida HTML
-        return htmlspecialchars((string)$valor, ENT_QUOTES, 'UTF-8'); // Retorna texto seguro
+if (!function_exists('e')) {
+    function e($valor) {
+        return htmlspecialchars((string) $valor, ENT_QUOTES, 'UTF-8');
     }
 }
 
-$cliente = $cliente ?? []; // Datos cliente institucional
-$institucion = $institucion ?? []; // Datos institución
-$plan = $plan ?? []; // Plan activo
-$accesos = $accesos ?? []; // Accesos activos
-$progreso = $progreso ?? []; // Último progreso
-$avanceVirtual = $avanceVirtual ?? 0; // Avance contenido virtual
-$notificaciones = $notificaciones ?? []; // Notificaciones
+$cliente = $cliente ?? [];
+$institucion = $institucion ?? [];
+$plan = $plan ?? [];
+$accesos = $accesos ?? [];
+$progreso = $progreso ?? [];
+$avanceVirtual = $avanceVirtual ?? 0;
+$notificaciones = $notificaciones ?? [];
+
+$vistaActiva = 'dashboard';
+$nombreCliente = $cliente['nombre'] ?? $_SESSION['nombre'] ?? 'cliente institucional';
 
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8"> <!-- Codificación -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
-    <title>Dashboard Institucional | StayFit</title> <!-- Título -->
-
-    <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: #f7f7f7;
-            color: #2D2D2D;
-        }
-
-        .cliente-wrapper {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        .sidebar {
-            width: 245px;
-            background: #2D2D2D;
-            color: #FFFFFF;
-            padding: 28px 20px;
-        }
-
-        .sidebar h2 {
-            color: #D63384;
-            margin-bottom: 30px;
-        }
-
-        .sidebar a {
-            display: block;
-            color: #FFFFFF;
-            text-decoration: none;
-            padding: 12px 14px;
-            border-radius: 12px;
-            margin-bottom: 8px;
-        }
-
-        .sidebar a:hover,
-        .sidebar a.active {
-            background: #D63384;
-        }
-
-        .content {
-            flex: 1;
-            padding: 34px;
-        }
-
-        .hero {
-            background: linear-gradient(135deg, #D63384, #2D2D2D);
-            color: #FFFFFF;
-            border-radius: 26px;
-            padding: 34px;
-            margin-bottom: 28px;
-        }
-
-        .hero h1 {
-            margin: 0 0 8px;
-            font-size: 34px;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-            gap: 20px;
-            margin-bottom: 28px;
-        }
-
-        .card {
-            background: #FFFFFF;
-            border-radius: 22px;
-            padding: 24px;
-            box-shadow: 0 10px 28px rgba(45, 45, 45, 0.08);
-        }
-
-        .card h3 {
-            margin-top: 0;
-            color: #D63384;
-        }
-
-        .number {
-            font-size: 32px;
-            font-weight: 800;
-            color: #D63384;
-            margin: 0;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 1.3fr 1fr;
-            gap: 22px;
-        }
-
-        .progress-box {
-            background: #f3f3f3;
-            border-radius: 20px;
-            height: 14px;
-            overflow: hidden;
-            margin-top: 12px;
-        }
-
-        .progress-bar {
-            background: #3EB489;
-            height: 100%;
-            width: <?= e($avanceVirtual) ?>%;
-        }
-
-        .item {
-            padding: 14px 0;
-            border-bottom: 1px solid #eee;
-        }
-
-        .item:last-child {
-            border-bottom: none;
-        }
-
-        .badge {
-            background: #3EB489;
-            color: #FFFFFF;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 13px;
-        }
-
-        .btn {
-            display: inline-block;
-            background: #D63384;
-            color: #FFFFFF;
-            text-decoration: none;
-            padding: 10px 15px;
-            border-radius: 14px;
-            font-weight: 700;
-            margin-top: 12px;
-        }
-
-        .btn-green {
-            background: #3EB489;
-        }
-
-        @media (max-width: 900px) {
-            .cliente-wrapper {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                width: auto;
-            }
-
-            .grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Institucional | FigueFit</title>
+    <link rel="stylesheet" href="../../public/panel.css?v=1">
+    <style>.progress-bar { width: <?= (int) $avanceVirtual ?>%; }</style>
 </head>
+<body class="fp-panel">
 
-<body>
-<div class="cliente-wrapper">
+<div class="fp-layout cliente-wrapper">
 
-    <aside class="sidebar">
-        <h2>StayFit</h2>
-        <a class="active" href="../../controllers/clienteIns/dashboardController.php">Dashboard</a>
-        <a href="../../controllers/clienteIns/perfilController.php">Perfil</a>
-        <a href="../../controllers/clienteIns/institucionController.php">Institución</a>
-        <a href="../../controllers/clienteIns/planController.php">Mi plan</a>
-        <a href="../../controllers/clienteIns/entrenamientoController.php">Entrenamiento</a>
-        <a href="../../controllers/clienteIns/nutricionController.php">Nutrición</a>
-        <a href="../../controllers/clienteIns/progresoController.php">Progreso</a>
-        <a href="../../controllers/clienteIns/sesionGrupalController.php">Sesiones grupales</a>
-        <a href="../../controllers/clienteIns/calendarioController.php">Calendario</a>
-        <a href="../../controllers/clienteIns/comunicacionController.php">Comunicación</a>
-        <a href="../../controllers/auth/logouthController.php">Cerrar sesión</a>
-    </aside>
+    <?php require __DIR__ . '/../partials/panel/sidebarClienteIns.php'; ?>
 
-    <main class="content">
-
-        <section class="hero">
-            <h1>Hola, <?= e($cliente['nombre'] ?? $_SESSION['nombre'] ?? 'cliente institucional') ?></h1>
-            <p>
-                Este es tu panel institucional para consultar tu plan, progreso,
-                sesiones grupales, contenido virtual y comunicación con tu coach.
-            </p>
-        </section>
-
-        <section class="stats">
-
-            <div class="card">
-                <h3>Institución</h3>
-                <p class="number"><?= e($institucion['nombre'] ?? 'Sin vínculo') ?></p>
-                <p><?= e($institucion['estado'] ?? 'Estado no definido') ?></p>
+    <div class="fp-main-area">
+        <header class="fp-topbar topbar">
+            <div>
+                <strong class="fp-topbar-role">Cliente institucional</strong>
+                <p class="fp-topbar-name">Hola, <?= e($nombreCliente) ?></p>
             </div>
+        </header>
 
-            <div class="card">
-                <h3>Plan activo</h3>
-                <p class="number"><?= e($plan['nombre'] ?? 'Sin plan') ?></p>
-                <p><?= e($plan['modalidad'] ?? 'Modalidad no definida') ?></p>
-                <span class="badge"><?= e($plan['estado'] ?? 'pendiente') ?></span>
-            </div>
+        <main class="fp-content content">
 
-            <div class="card">
-                <h3>Progreso reciente</h3>
-                <p class="number"><?= e($progreso['peso'] ?? '0') ?> kg</p>
-                <p><?= e($progreso['fecha'] ?? 'Sin registro reciente') ?></p>
-                <a class="btn" href="../../controllers/clienteIns/progresoController.php">Registrar progreso</a>
-            </div>
+            <section class="fp-hero hero">
+                <span class="fp-hero-tag">Panel institucional</span>
+                <h1>Hola, <span><?= e($nombreCliente) ?></span></h1>
+                <p>Consulta tu plan, progreso, sesiones grupales, contenido virtual y comunicación con tu coach.</p>
+            </section>
 
-            <div class="card">
-                <h3>Avance virtual</h3>
-                <p class="number"><?= e($avanceVirtual) ?>%</p>
-                <div class="progress-box">
-                    <div class="progress-bar"></div>
+            <section class="fp-stats stats">
+                <div class="fp-card card">
+                    <h3>Institución</h3>
+                    <p class="fp-number number"><?= e($institucion['nombre'] ?? 'Sin vínculo') ?></p>
+                    <p><?= e($institucion['estado'] ?? 'Estado no definido') ?></p>
                 </div>
-                <a class="btn btn-green" href="../../controllers/clienteIns/contenidoVirtualController.php">Ver contenido</a>
-            </div>
 
-        </section>
+                <div class="fp-card card">
+                    <h3>Plan activo</h3>
+                    <p class="fp-number number"><?= e($plan['nombre'] ?? 'Sin plan') ?></p>
+                    <p><?= e($plan['modalidad'] ?? 'Modalidad no definida') ?></p>
+                    <span class="fp-badge badge"><?= e($plan['estado'] ?? 'pendiente') ?></span>
+                </div>
 
-        <section class="grid">
+                <div class="fp-card card">
+                    <h3>Progreso reciente</h3>
+                    <p class="fp-number number"><?= e($progreso['peso'] ?? '0') ?> kg</p>
+                    <p><?= e($progreso['fecha'] ?? 'Sin registro reciente') ?></p>
+                    <a class="fp-btn btn" href="../../controllers/clienteIns/progresoController.php">Registrar progreso</a>
+                </div>
 
-            <div class="card">
-                <h3>Accesos habilitados</h3>
-
-                <?php if (empty($accesos)): ?>
-                    <p>No tienes accesos activos todavía.</p>
-                <?php endif; ?>
-
-                <?php foreach ($accesos as $acceso): ?>
-                    <div class="item">
-                        <strong><?= e($acceso['modulo'] ?? 'Módulo') ?></strong>
-                        <p>Estado: <span class="badge"><?= e($acceso['estado'] ?? 'activo') ?></span></p>
+                <div class="fp-card card">
+                    <h3>Avance virtual</h3>
+                    <p class="fp-number number"><?= e($avanceVirtual) ?>%</p>
+                    <div class="fp-progress-box progress-box">
+                        <div class="fp-progress-bar progress-bar"></div>
                     </div>
-                <?php endforeach; ?>
-            </div>
+                    <a class="fp-btn fp-btn-green btn btn-green" href="../../controllers/clienteIns/contenidoVirtualController.php">Ver contenido</a>
+                </div>
+            </section>
 
-            <div class="card">
-                <h3>Notificaciones</h3>
+            <section class="fp-grid grid">
+                <div class="fp-card card">
+                    <h3>Accesos habilitados</h3>
+                    <?php if (empty($accesos)): ?>
+                        <p>No tienes accesos activos todavía.</p>
+                    <?php endif; ?>
+                    <?php foreach ($accesos as $acceso): ?>
+                        <div class="fp-timeline-item item">
+                            <strong><?= e($acceso['modulo'] ?? 'Módulo') ?></strong>
+                            <p>Estado: <span class="fp-badge badge"><?= e($acceso['estado'] ?? 'activo') ?></span></p>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
 
-                <?php if (empty($notificaciones)): ?>
-                    <p>No tienes notificaciones pendientes.</p>
-                <?php endif; ?>
+                <div class="fp-card card">
+                    <h3>Notificaciones</h3>
+                    <?php if (empty($notificaciones)): ?>
+                        <p>No tienes notificaciones pendientes.</p>
+                    <?php endif; ?>
+                    <?php foreach ($notificaciones as $notificacion): ?>
+                        <div class="fp-timeline-item item">
+                            <strong><?= e($notificacion['titulo'] ?? 'Notificación') ?></strong>
+                            <p><?= e($notificacion['mensaje'] ?? '') ?></p>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </section>
 
-                <?php foreach ($notificaciones as $notificacion): ?>
-                    <div class="item">
-                        <strong><?= e($notificacion['titulo'] ?? 'Notificación') ?></strong>
-                        <p><?= e($notificacion['mensaje'] ?? '') ?></p>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-
-        </section>
-
-    </main>
+        </main>
+    </div>
 </div>
+
 </body>
 </html>

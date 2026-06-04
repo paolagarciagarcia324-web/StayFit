@@ -34,32 +34,56 @@ class SolicitudController
 
     public function detalle()
     {
-        $id = $_GET['id'] ?? null; // Obtiene el ID de la solicitud
+        $id = $_GET['id'] ?? null;
 
-        if (!$id) { // Valida si existe el ID
-            header('Location: solicitudController.php'); // Redirige al listado
-            exit; // Detiene la ejecución
+        if (!$id) {
+            header('Location: solicitudController.php');
+            exit;
         }
 
         $solicitudes = $this->solicitudModel->obtenerTodas();
         $solicitud = $this->solicitudModel->obtenerPorId($id);
+        $abrirModal = true;
 
         require_once __DIR__ . '/../../views/admin/solicitudes.php';
     }
 
-    public function marcarRevision()
+    public function detalleFragment()
     {
-        if (isset($_GET['id'])) { // Verifica el ID recibido
+        $id = $_GET['id'] ?? null;
 
-            $id = $_GET['id']; // ID de la solicitud
-
-            $this->solicitudModel->marcarRevision($id); // Marca en revisión
-
-            $this->registrarTrazabilidad('Solicitud marcada en revisión'); // Guarda trazabilidad
+        if (!$id) {
+            http_response_code(404);
+            exit('Solicitud no encontrada.');
         }
 
-        header('Location: solicitudController.php'); // Redirige al listado
-        exit; // Detiene la ejecución
+        $solicitud = $this->solicitudModel->obtenerPorId($id);
+
+        if (!$solicitud) {
+            http_response_code(404);
+            exit('Solicitud no encontrada.');
+        }
+
+        require __DIR__ . '/../../views/admin/partials/solicitudDetalleContenido.php';
+        exit;
+    }
+
+    public function marcarRevision()
+    {
+        if (isset($_GET['id'])) {
+            $id = $_GET['id'];
+
+            try {
+                $this->solicitudModel->marcarRevision($id, $_SESSION['usuario_id'] ?? null);
+                $this->registrarTrazabilidad('Solicitud marcada en revisión');
+                $this->flash('success', 'Solicitud marcada en revisión.');
+            } catch (Throwable $e) {
+                $this->flash('error', 'No se pudo marcar en revisión: ' . $e->getMessage());
+            }
+        }
+
+        header('Location: solicitudController.php');
+        exit;
     }
 
     public function rechazar()

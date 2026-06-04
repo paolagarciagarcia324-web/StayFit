@@ -16,94 +16,11 @@ $planes = $planes ?? []; // Planes disponibles si llegan desde controlador
 <head>
     <meta charset="UTF-8"> <!-- Codificación -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
-    <title>Pagos | StayFit</title> <!-- Título -->
+    <title>Pagos | StayFit</title>
+    <link rel="stylesheet" href="../../public/panel.css?v=1"> <!-- Título -->
 
     <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: #f7f7f7;
-            color: #2D2D2D;
-        }
-
-        .cliente-wrapper {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        .sidebar {
-            width: 245px;
-            background: #2D2D2D;
-            color: #FFFFFF;
-            padding: 28px 20px;
-        }
-
-        .sidebar h2 {
-            color: #D63384;
-            margin-bottom: 30px;
-        }
-
-        .sidebar a {
-            display: block;
-            color: #FFFFFF;
-            text-decoration: none;
-            padding: 12px 14px;
-            border-radius: 12px;
-            margin-bottom: 8px;
-        }
-
-        .sidebar a:hover,
-        .sidebar a.active {
-            background: #D63384;
-        }
-
-        .content {
-            flex: 1;
-            padding: 34px;
-        }
-
-        .page-header {
-            background: linear-gradient(135deg, #D63384, #2D2D2D);
-            color: #FFFFFF;
-            border-radius: 24px;
-            padding: 32px;
-            margin-bottom: 28px;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 360px 1fr;
-            gap: 22px;
-        }
-
-        .card {
-            background: #FFFFFF;
-            border-radius: 22px;
-            padding: 24px;
-            box-shadow: 0 10px 28px rgba(45, 45, 45, 0.08);
-        }
-
-        .card h3 {
-            margin-top: 0;
-            color: #D63384;
-        }
-
-        label {
-            font-weight: 700;
-            font-size: 14px;
-        }
-
-        input,
-        select {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0 15px;
-            border: 1px solid #ddd;
-            border-radius: 14px;
-            box-sizing: border-box;
-        }
-
-        button {
+button {
             width: 100%;
             background: #D63384;
             color: #FFFFFF;
@@ -118,30 +35,13 @@ $planes = $planes ?? []; // Planes disponibles si llegan desde controlador
             background: #b92b70;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+        
 
-        th {
-            text-align: left;
-            padding: 14px;
-            border-bottom: 2px solid #eee;
-        }
+        
 
-        td {
-            padding: 14px;
-            border-bottom: 1px solid #eee;
-        }
+        
 
-        .badge {
-            display: inline-block;
-            background: #3EB489;
-            color: #FFFFFF;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 13px;
-        }
+        
 
         .badge.pendiente {
             background: #D63384;
@@ -153,38 +53,13 @@ $planes = $planes ?? []; // Planes disponibles si llegan desde controlador
             padding: 18px;
             border-radius: 16px;
         }
-
-        @media (max-width: 900px) {
-            .cliente-wrapper {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                width: auto;
-            }
-
-            .grid {
-                grid-template-columns: 1fr;
-            }
-        }
     </style>
 </head>
 
-<body>
+<body class="fp-panel">
 <div class="cliente-wrapper">
 
-    <aside class="sidebar">
-        <h2>StayFit</h2>
-        <a href="../../controllers/cliente/dashboardController.php">Dashboard</a>
-        <a href="../../controllers/cliente/perfilController.php">Perfil</a>
-        <a href="../../controllers/cliente/planController.php">Mi plan</a>
-        <a href="../../controllers/cliente/entrenamientoController.php">Entrenamiento</a>
-        <a href="../../controllers/cliente/nutricionController.php">Nutrición</a>
-        <a href="../../controllers/cliente/progresoController.php">Progreso</a>
-        <a href="../../controllers/cliente/calendarioController.php">Calendario</a>
-        <a class="active" href="../../controllers/cliente/pagoController.php">Pagos</a>
-        <a href="../../controllers/auth/logouthController.php">Cerrar sesión</a>
-    </aside>
+    <?php require __DIR__ . '/../partials/panel/sidebarCliente.php'; ?>
 
     <main class="content">
 

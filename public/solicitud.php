@@ -22,6 +22,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $edad = trim($_POST['edad'] ?? '');
     $identificacion = trim($_POST['identificacion'] ?? '');
     $celular = trim($_POST['celular'] ?? '');
+    $correo = trim($_POST['correo'] ?? '');
+    $password = (string) ($_POST['password'] ?? '');
+    $passwordConfirm = (string) ($_POST['password_confirm'] ?? '');
     $planId = (int) ($_POST['plan_id'] ?? 0);
     $modalidad = trim($_POST['modalidad'] ?? '');
     $tipoCuenta = trim($_POST['tipo_cuenta'] ?? '');
@@ -40,6 +43,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($celular === '') {
         $faltantes[] = 'celular';
+    }
+    if ($correo === '') {
+        $faltantes[] = 'correo electrónico';
+    } elseif (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+        $_SESSION['alert_tipo'] = 'error';
+        $_SESSION['alert'] = 'Ingresa un correo electrónico válido.';
+        header('Location: solicitud.php');
+        exit;
+    }
+    if ($password === '') {
+        $faltantes[] = 'contraseña';
+    } elseif (strlen($password) < 6) {
+        $_SESSION['alert_tipo'] = 'error';
+        $_SESSION['alert'] = 'La contraseña debe tener al menos 6 caracteres.';
+        header('Location: solicitud.php');
+        exit;
+    } elseif ($password !== $passwordConfirm) {
+        $_SESSION['alert_tipo'] = 'error';
+        $_SESSION['alert'] = 'Las contraseñas no coinciden.';
+        header('Location: solicitud.php');
+        exit;
     }
     if ($planId < 1) {
         $faltantes[] = 'plan';
@@ -97,6 +121,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'edad' => $edad,
             'identificacion' => $identificacion,
             'celular' => $celular,
+            'correo' => $correo,
+            'password_hash' => password_hash($password, PASSWORD_DEFAULT),
             'plan_id' => $planId,
             'plan_interes' => $plan['nombre'] ?? (string) $planId,
             'modalidad' => $modalidad,
@@ -108,8 +134,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $pagoModel->crearDesdeSolicitud([
             'solicitud_id' => $solicitudId,
+            'plan_id' => $planId,
             'monto' => $plan['precio'] ?? 0,
             'url_comprobante' => $urlComprobante,
+            'metodo_pago' => $tipoCuenta,
+            'numero_cuenta' => $numeroCuenta,
         ]);
 
         try {
@@ -134,7 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $solicitudModel->registrarTrazabilidad(null, 'Solicitud pública enviada por ' . $nombre);
 
         $_SESSION['alert_tipo'] = 'success';
-        $_SESSION['alert'] = 'Solicitud enviada correctamente. El administrador validará tu pago antes de activar tu usuario.';
+        $_SESSION['alert'] = 'Solicitud enviada correctamente. Cuando el administrador apruebe tu pago, podrás ingresar con tu correo y la contraseña que acabas de crear.';
     } catch (Throwable $e) {
         $_SESSION['alert_tipo'] = 'error';
         $_SESSION['alert'] = 'Error al registrar la solicitud: ' . $e->getMessage();

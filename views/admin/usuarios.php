@@ -1,8 +1,79 @@
 <?php
 
-if (!function_exists('e')) { // Evita duplicar función
-    function e($valor) { // Limpia salida HTML
-        return htmlspecialchars((string)$valor, ENT_QUOTES, 'UTF-8'); // Retorna texto seguro
+if (!function_exists('e')) {
+    function e($valor) {
+        return htmlspecialchars((string) $valor, ENT_QUOTES, 'UTF-8');
+    }
+}
+
+if (!function_exists('usuarioEstadoBadge')) {
+    function usuarioEstadoBadge(?string $estado): array
+    {
+        $estado = strtolower(trim((string) $estado));
+
+        return match ($estado) {
+            'activo' => [
+                'class' => 'fp-badge fp-badge-ok',
+                'label' => 'Activo',
+            ],
+            'inactivo', 'suspendido' => [
+                'class' => 'fp-badge fp-badge-alert',
+                'label' => ucfirst($estado),
+            ],
+            default => [
+                'class' => 'fp-badge fp-badge-pending',
+                'label' => $estado !== '' ? ucfirst($estado) : 'Sin estado',
+            ],
+        };
+    }
+}
+
+if (!function_exists('usuarioEsActivo')) {
+    function usuarioEsActivo(?string $estado): bool
+    {
+        return strtolower(trim((string) $estado)) === 'activo';
+    }
+}
+
+if (!function_exists('usuarioNombreMostrar')) {
+    function usuarioNombreMostrar(array $item): string
+    {
+        $nombre = trim(($item['nombre'] ?? '') . ' ' . ($item['apellido'] ?? ''));
+
+        return $nombre !== '' ? $nombre : 'Sin nombre';
+    }
+}
+
+if (!function_exists('usuarioRolBadge')) {
+    function usuarioRolBadge(?string $rol): array
+    {
+        $rolLower = strtolower(trim((string) $rol));
+
+        if (str_contains($rolLower, 'admin')) {
+            return ['class' => 'fp-badge fp-badge-alert', 'label' => 'Administrador'];
+        }
+
+        if (str_contains($rolLower, 'coach')) {
+            return ['class' => 'fp-badge fp-badge-warn', 'label' => 'Coach'];
+        }
+
+        if (str_contains($rolLower, 'cliente')) {
+            return ['class' => 'fp-badge', 'label' => 'Cliente'];
+        }
+
+        return [
+            'class' => 'fp-tag-inline',
+            'label' => $rol !== '' && $rol !== null ? ucfirst($rol) : 'Sin rol',
+        ];
+    }
+}
+
+if (!function_exists('usuarioEsAdmin')) {
+    function usuarioEsAdmin(?string $rol): bool
+    {
+        $rolLower = strtolower(trim((string) $rol));
+
+        return str_contains($rolLower, 'admin');
     }
 }
 
@@ -11,207 +82,30 @@ $roles = $roles ?? [];
 $flash = $flash ?? null;
 $adminSesionId = (int) ($_SESSION['usuario_id'] ?? 0);
 
-?>
+$totalUsuarios = count($usuarios);
+$totalActivos = count(array_filter($usuarios, fn($u) => usuarioEsActivo($u['estado'] ?? '')));
+$totalAdmins = count(array_filter($usuarios, fn($u) => usuarioEsAdmin($u['rol'] ?? $u['rol_nombre'] ?? '')));
 
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8"> <!-- Codificación -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
-    <title>Usuarios | StayFit</title> <!-- Título -->
-    <link rel="stylesheet" href="../../public/style.css"> <!-- Estilos -->
-
-    <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: #f7f7f7;
-            color: #2D2D2D;
-        }
-
-        .admin-wrapper {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        .sidebar {
-            width: 245px;
-            background: #2D2D2D;
-            color: #FFFFFF;
-            padding: 28px 20px;
-        }
-
-        .sidebar h2 {
-            color: #D63384;
-            margin-bottom: 30px;
-        }
-
-        .sidebar a {
-            display: block;
-            color: #FFFFFF;
-            text-decoration: none;
-            padding: 12px 14px;
-            border-radius: 12px;
-            margin-bottom: 8px;
-        }
-
-        .sidebar a:hover,
-        .sidebar a.active {
-            background: #D63384;
-        }
-
-        .content {
-            flex: 1;
-            padding: 34px;
-        }
-
-        .page-header {
-            background: linear-gradient(135deg, #2D2D2D, #D63384);
-            color: #FFFFFF;
-            border-radius: 22px;
-            padding: 30px;
-            margin-bottom: 28px;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 360px 1fr;
-            gap: 22px;
-        }
-
-        .card {
-            background: #FFFFFF;
-            border-radius: 20px;
-            padding: 24px;
-            box-shadow: 0 10px 28px rgba(45, 45, 45, 0.08);
-        }
-
-        .card h3 {
-            color: #D63384;
-            margin-top: 0;
-        }
-
-        label {
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        input,
-        select {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0 15px;
-            border: 1px solid #ddd;
-            border-radius: 12px;
-        }
-
-        button,
-        .btn {
-            background: #D63384;
-            color: #FFFFFF;
-            border: none;
-            padding: 9px 13px;
-            border-radius: 12px;
-            text-decoration: none;
-            cursor: pointer;
-            font-weight: 700;
-        }
-
-        .btn-green {
-            background: #3EB489;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            text-align: left;
-            padding: 14px;
-            border-bottom: 2px solid #eee;
-        }
-
-        td {
-            padding: 14px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .badge {
-            background: #3EB489;
-            color: #FFFFFF;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 13px;
-        }
-
-        .badge.off {
-            background: #D63384;
-        }
-
-        .alert-success {
-            background: #e8f8f1;
-            color: #1d6b4f;
-            border: 1px solid #3EB489;
-            padding: 14px 18px;
-            border-radius: 14px;
-            margin-bottom: 22px;
-        }
-
-        .alert-error {
-            background: #fde8f0;
-            color: #8b2252;
-            border: 1px solid #D63384;
-            padding: 14px 18px;
-            border-radius: 14px;
-            margin-bottom: 22px;
-        }
-
-        .btn-danger {
-            background: #8b2252;
-        }
-
-        .acciones-usuario {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        @media (max-width: 1000px) {
-            .admin-wrapper {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                width: auto;
-            }
-
-            .grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuarios | FigueFit</title>
+    <link rel="stylesheet" href="../../public/panel.css?v=12">
 </head>
-
-<body>
+<body class="fp-panel">
 <div class="admin-wrapper">
 
-    <aside class="sidebar">
-        <h2>StayFit</h2>
-        <a href="../../controllers/admin/dashboardController.php">Dashboard</a>
-        <a class="active" href="../../controllers/admin/usuarioController.php">Usuarios</a>
-        <a href="../../controllers/admin/clienteController.php">Clientes</a>
-        <a href="../../controllers/admin/coachController.php">Coaches</a>
-        <a href="../../controllers/admin/notificacionController.php">Notificaciones</a>
-        <?php require_once __DIR__ . '/../partials/cerrarSesion.php'; ?>
-
-    </aside>
+    <?php require __DIR__ . '/../partials/panel/sidebarAdmin.php'; ?>
 
     <main class="content">
 
         <section class="page-header">
+            <span class="fp-hero-tag">Control de accesos</span>
             <h1>Usuarios</h1>
-            <p>Administra credenciales, roles y estados de acceso al sistema StayFit.</p>
+            <p>Administra credenciales, roles y estados de acceso al sistema FigueFit.</p>
         </section>
 
         <?php if (!empty($flash['mensaje'])): ?>
@@ -220,92 +114,170 @@ $adminSesionId = (int) ($_SESSION['usuario_id'] ?? 0);
             </div>
         <?php endif; ?>
 
-        <section class="grid">
+        <section class="fp-stats-premium">
+            <article class="fp-stat-premium fp-stat-premium--fuchsia">
+                <div class="fp-stat-premium-head">
+                    <div class="fp-stat-premium-icon" aria-hidden="true">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="8" r="3.5" stroke="currentColor" stroke-width="1.8"/>
+                            <path d="M5 20c0-3.3 2.7-5.5 7-5.5s7 2.2 7 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="fp-stat-premium-value"><?= e((string) $totalUsuarios) ?></p>
+                <p class="fp-stat-premium-label">Usuarios registrados</p>
+            </article>
 
-            <div class="card">
-                <h3>Crear usuario</h3>
+            <article class="fp-stat-premium fp-stat-premium--mint">
+                <div class="fp-stat-premium-head">
+                    <div class="fp-stat-premium-icon" aria-hidden="true">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                            <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="fp-stat-premium-value"><?= e((string) $totalActivos) ?></p>
+                <p class="fp-stat-premium-label">Cuentas activas</p>
+            </article>
 
-                <form action="../../controllers/admin/usuarioController.php?accion=guardar" method="POST">
-                    <label>Nombre</label>
-                    <input type="text" name="nombre" required>
+            <article class="fp-stat-premium fp-stat-premium--warn">
+                <div class="fp-stat-premium-head">
+                    <div class="fp-stat-premium-icon" aria-hidden="true">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 3l7 4v5c0 4-3 7-7 9-4-2-7-5-7-9V7l7-4z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="fp-stat-premium-value"><?= e((string) $totalAdmins) ?></p>
+                <p class="fp-stat-premium-label">Administradores</p>
+            </article>
+        </section>
 
-                    <label>Correo</label>
-                    <input type="email" name="correo" required>
+        <section class="card fp-panel-unified">
+            <div class="fp-panel-unified-head">
+                <h3>Gestión de usuarios</h3>
+            </div>
 
-                    <label>Contraseña</label>
-                    <input type="password" name="password" required>
+            <div class="fp-panel-form-block">
+                <form class="fp-form-premium" action="../../controllers/admin/usuarioController.php?accion=guardar" method="POST" autocomplete="off">
+                    <div class="fp-form-grid">
+                        <div class="fp-field">
+                            <label for="usr_nombre">Nombre</label>
+                            <input type="text" id="usr_nombre" name="nombre" placeholder="Nombre completo" required autocomplete="name">
+                        </div>
 
-                    <label>Rol</label>
-                    <select name="rol_id" required>
-                        <option value="">Seleccione rol</option>
+                        <div class="fp-field">
+                            <label for="usr_correo">Correo</label>
+                            <input type="email" id="usr_correo" name="correo" placeholder="usuario@correo.com" required autocomplete="off">
+                        </div>
 
-                        <?php foreach ($roles as $rol): ?>
-                            <option value="<?= e($rol['id'] ?? '') ?>">
-                                <?= e($rol['nombre'] ?? 'Rol') ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+                        <div class="fp-field">
+                            <label for="usr_password">Contraseña</label>
+                            <input type="password" id="usr_password" name="password" minlength="6" placeholder="Mínimo 6 caracteres" required autocomplete="new-password">
+                        </div>
 
-                    <button type="submit">Guardar usuario</button>
+                        <div class="fp-field">
+                            <label for="usr_rol">Rol</label>
+                            <select id="usr_rol" name="rol_id" required>
+                                <option value="">Seleccione rol</option>
+                                <?php foreach ($roles as $rol): ?>
+                                    <option value="<?= e($rol['id'] ?? $rol['id_rol'] ?? '') ?>">
+                                        <?= e($rol['nombre'] ?? 'Rol') ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="fp-form-submit" style="max-width:220px;">Guardar usuario</button>
                 </form>
             </div>
 
-            <div class="card">
-                <h3>Listado de usuarios</h3>
+            <div class="fp-panel-list-block">
+                <h4>Listado de usuarios</h4>
 
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Usuario</th>
-                            <th>Correo</th>
-                            <th>Rol</th>
-                            <th>Estado</th>
-                            <th>Acción</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        <?php if (empty($usuarios)): ?>
+                <div class="fp-table-wrap">
+                    <table class="fp-table-premium fp-table-fluid">
+                        <thead>
                             <tr>
-                                <td colspan="5">No hay usuarios registrados.</td>
+                                <th class="col-cliente">Usuario</th>
+                                <th class="col-contacto">Correo</th>
+                                <th style="width:16%;">Rol</th>
+                                <th class="col-estado">Estado</th>
+                                <th class="col-acciones">Acciones</th>
                             </tr>
-                        <?php endif; ?>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($usuarios)): ?>
+                                <tr class="fp-empty-row">
+                                    <td colspan="5">No hay usuarios registrados todavía.</td>
+                                </tr>
+                            <?php endif; ?>
 
-                        <?php foreach ($usuarios as $item): ?>
-                            <tr>
-                                <td><?= e($item['nombre'] ?? '') ?></td>
-                                <td><?= e($item['correo'] ?? '') ?></td>
-                                <td><?= e($item['rol'] ?? $item['rol_nombre'] ?? 'Sin rol') ?></td>
+                            <?php foreach ($usuarios as $item): ?>
+                                <?php
+                                $estadoBadge = usuarioEstadoBadge($item['estado'] ?? '');
+                                $rolBadge = usuarioRolBadge($item['rol'] ?? $item['rol_nombre'] ?? '');
+                                $userId = (int) ($item['id'] ?? $item['id_usuario'] ?? 0);
+                                $activo = usuarioEsActivo($item['estado'] ?? '');
+                                $esYo = $userId === $adminSesionId;
+                                ?>
+                                <tr>
+                                    <td>
+                                        <div class="fp-cell-stack">
+                                            <strong><?= e(usuarioNombreMostrar($item)) ?></strong>
+                                            <?php if ($esYo): ?>
+                                                <span class="fp-cell-highlight">Tu sesión actual</span>
+                                            <?php elseif (!empty($item['telefono'])): ?>
+                                                <span><?= e($item['telefono']) ?></span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </td>
 
-                                <td>
-                                    <span class="badge <?= (($item['estado'] ?? '') === 'activo') ? '' : 'off' ?>">
-                                        <?= e($item['estado'] ?? 'sin estado') ?>
-                                    </span>
-                                </td>
+                                    <td>
+                                        <span class="fp-cell-highlight" style="font-size:13px;"><?= e($item['correo'] ?? '—') ?></span>
+                                    </td>
 
-                                <td>
-                                    <div class="acciones-usuario">
-                                        <?php if (($item['estado'] ?? '') === 'activo'): ?>
-                                            <a class="btn" href="../../controllers/admin/usuarioController.php?accion=cambiarEstado&id=<?= e($item['id'] ?? $item['id_usuario'] ?? '') ?>&estado=inactivo">Inactivar</a>
-                                        <?php else: ?>
-                                            <a class="btn btn-green" href="../../controllers/admin/usuarioController.php?accion=cambiarEstado&id=<?= e($item['id'] ?? $item['id_usuario'] ?? '') ?>&estado=activo">Activar</a>
-                                        <?php endif; ?>
+                                    <td>
+                                        <span class="<?= e($rolBadge['class']) ?>"><?= e($rolBadge['label']) ?></span>
+                                    </td>
 
-                                        <?php if ((int) ($item['id'] ?? $item['id_usuario'] ?? 0) !== $adminSesionId): ?>
-                                            <a class="btn btn-danger"
-                                               href="../../controllers/admin/usuarioController.php?accion=eliminar&id=<?= e($item['id'] ?? $item['id_usuario'] ?? '') ?>"
-                                               onclick="return confirm('¿Eliminar este usuario de forma permanente?');">
-                                                Eliminar
-                                            </a>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                                    <td>
+                                        <span class="<?= e($estadoBadge['class']) ?>"><?= e($estadoBadge['label']) ?></span>
+                                    </td>
+
+                                    <td>
+                                        <div class="fp-row-actions">
+                                            <?php if ($activo): ?>
+                                                <a class="btn fp-btn-sm fp-btn-outline"
+                                                   href="../../controllers/admin/usuarioController.php?accion=cambiarEstado&id=<?= e($userId) ?>&estado=inactivo"
+                                                   style="border-color:rgba(255,47,160,0.35)!important;color:var(--fp-fuchsia)!important;">
+                                                    Inactivar
+                                                </a>
+                                            <?php else: ?>
+                                                <a class="btn fp-btn-sm btn-green"
+                                                   href="../../controllers/admin/usuarioController.php?accion=cambiarEstado&id=<?= e($userId) ?>&estado=activo">
+                                                    Activar
+                                                </a>
+                                            <?php endif; ?>
+
+                                            <?php if (!$esYo): ?>
+                                                <a class="btn fp-btn-sm fp-btn-outline"
+                                                   href="../../controllers/admin/usuarioController.php?accion=eliminar&id=<?= e($userId) ?>"
+                                                   onclick="return confirm('¿Eliminar este usuario de forma permanente?');"
+                                                   style="border-color:rgba(255,47,160,0.5)!important;color:#ff6bb5!important;">
+                                                    Eliminar
+                                                </a>
+                                            <?php endif; ?>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-
         </section>
 
     </main>

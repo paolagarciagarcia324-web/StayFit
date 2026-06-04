@@ -22,99 +22,11 @@ $esDetalle = !empty($cliente);
     <title><?= $esDetalle ? 'Detalle cliente' : 'Mis clientas' ?> | StayFit Coach</title>
 
     <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: #f7f7f7;
-            color: #2D2D2D;
-        }
+th, 
 
-        .coach-wrapper {
-            display: flex;
-            min-height: 100vh;
-        }
+        
 
-        .sidebar {
-            width: 245px;
-            background: #2D2D2D;
-            color: #FFFFFF;
-            padding: 28px 20px;
-        }
-
-        .sidebar h2 {
-            color: #D63384;
-            margin-bottom: 30px;
-        }
-
-        .sidebar a {
-            display: block;
-            color: #FFFFFF;
-            text-decoration: none;
-            padding: 12px 14px;
-            border-radius: 12px;
-            margin-bottom: 8px;
-        }
-
-        .sidebar a:hover,
-        .sidebar a.active {
-            background: #D63384;
-        }
-
-        .content {
-            flex: 1;
-            padding: 34px;
-        }
-
-        .page-header {
-            background: linear-gradient(135deg, #D63384, #2D2D2D);
-            color: #FFFFFF;
-            border-radius: 24px;
-            padding: 32px;
-            margin-bottom: 28px;
-        }
-
-        .card {
-            background: #FFFFFF;
-            border-radius: 22px;
-            padding: 24px;
-            box-shadow: 0 10px 28px rgba(45, 45, 45, 0.08);
-            margin-bottom: 22px;
-        }
-
-        .card h3 {
-            margin-top: 0;
-            color: #D63384;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            padding: 14px;
-            border-bottom: 1px solid #eee;
-            text-align: left;
-        }
-
-        .badge {
-            display: inline-block;
-            background: #3EB489;
-            color: #FFFFFF;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 13px;
-        }
-
-        .btn {
-            display: inline-block;
-            background: #D63384;
-            color: #FFFFFF;
-            text-decoration: none;
-            padding: 10px 15px;
-            border-radius: 14px;
-            font-weight: 700;
-        }
+        
 
         .btn-secondary {
             background: #2D2D2D;
@@ -126,38 +38,13 @@ $esDetalle = !empty($cliente);
             padding: 18px;
             border-radius: 16px;
         }
-
-        .item {
-            padding: 12px 0;
-            border-bottom: 1px solid #eee;
-        }
-
-        @media (max-width: 900px) {
-            .coach-wrapper {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                width: auto;
-            }
-        }
     </style>
 </head>
 
-<body>
+<body class="fp-panel">
 <div class="coach-wrapper">
 
-    <aside class="sidebar">
-        <h2>StayFit</h2>
-        <a href="../../controllers/coach/dashboardController.php">Dashboard</a>
-        <a class="active" href="../../controllers/coach/clientesController.php">Clientes</a>
-        <a href="../../controllers/coach/agendaController.php">Agenda</a>
-        <a href="../../controllers/coach/entrenamientoController.php">Entrenamientos</a>
-        <a href="../../controllers/coach/nutricionController.php">Nutrición</a>
-        <a href="../../controllers/coach/progresoController.php">Progreso</a>
-        <a href="../../controllers/coach/comunicacionController.php">Comunicación</a>
-        <a href="../../controllers/auth/logouthController.php">Cerrar sesión</a>
-    </aside>
+    <?php require __DIR__ . '/../partials/panel/sidebarCoach.php'; ?>
 
     <main class="content">
 

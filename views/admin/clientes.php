@@ -7,373 +7,322 @@ if (session_status() === PHP_SESSION_NONE) {
 $alert = $_SESSION['alert'] ?? null;
 unset($_SESSION['alert']);
 
-if (!function_exists('e')) { // Evita repetir la función
-    function e($valor) { // Limpia texto para imprimir
-        return htmlspecialchars((string)$valor, ENT_QUOTES, 'UTF-8'); // Retorna texto seguro
+if (!function_exists('e')) {
+    function e($valor) {
+        return htmlspecialchars((string) $valor, ENT_QUOTES, 'UTF-8');
     }
 }
 
-$clientes = $clientes ?? []; // Lista de clientes
-$cliente = $cliente ?? null; // Detalle de cliente
-$pagos = $pagos ?? []; // Pagos del cliente
-$plan = $plan ?? null; // Plan activo
-$coach = $coach ?? null; // Coach asignado
-?>
+if (!function_exists('clienteEstadoBadge')) {
+    function clienteEstadoBadge(?string $estado): array
+    {
+        $estado = strtolower(trim((string) $estado));
 
+        return match ($estado) {
+            'activo' => [
+                'class' => 'fp-badge fp-badge-ok',
+                'label' => 'Activo',
+            ],
+            'inactivo', 'suspendido' => [
+                'class' => 'fp-badge fp-badge-alert',
+                'label' => ucfirst($estado),
+            ],
+            default => [
+                'class' => 'fp-badge fp-badge-pending',
+                'label' => $estado !== '' ? ucfirst($estado) : 'Sin estado',
+            ],
+        };
+    }
+}
+
+if (!function_exists('clienteEsActivo')) {
+    function clienteEsActivo(?string $estado): bool
+    {
+        return strtolower(trim((string) $estado)) === 'activo';
+    }
+}
+
+if (!function_exists('clienteTipoLabel')) {
+    function clienteTipoLabel(?string $tipo): string
+    {
+        $tipo = strtolower(trim((string) $tipo));
+
+        return match ($tipo) {
+            'institucional' => 'Institucional',
+            'individual' => 'Individual',
+            default => $tipo !== '' ? ucfirst($tipo) : 'Individual',
+        };
+    }
+}
+
+$clientes = $clientes ?? [];
+$cliente = $cliente ?? null;
+$pagos = $pagos ?? [];
+$plan = $plan ?? null;
+$coach = $coach ?? null;
+
+$totalClientes = count($clientes);
+$totalActivos = count(array_filter($clientes, fn($c) => clienteEsActivo($c['estado'] ?? '')));
+$totalInstitucionales = count(array_filter(
+    $clientes,
+    fn($c) => strtolower(trim((string) ($c['tipo_cliente'] ?? ''))) === 'institucional'
+));
+
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8"> <!-- Codificación -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
-    <title>Clientes | StayFit</title> <!-- Título -->
-    <link rel="stylesheet" href="../../public/style.css"> <!-- Estilos generales -->
-
-    <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: #f7f7f7;
-            color: #2D2D2D;
-        }
-
-        .admin-wrapper {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        .sidebar {
-            width: 245px;
-            background: #2D2D2D;
-            color: #FFFFFF;
-            padding: 28px 20px;
-        }
-
-        .sidebar h2 {
-            color: #D63384;
-            margin-bottom: 30px;
-        }
-
-        .sidebar a {
-            display: block;
-            color: #FFFFFF;
-            text-decoration: none;
-            padding: 12px 14px;
-            border-radius: 12px;
-            margin-bottom: 8px;
-        }
-
-        .sidebar a:hover,
-        .sidebar a.active {
-            background: #D63384;
-        }
-
-        .content {
-            flex: 1;
-            padding: 34px;
-        }
-
-        .page-header {
-            background: linear-gradient(135deg, #2D2D2D, #D63384);
-            color: #FFFFFF;
-            border-radius: 22px;
-            padding: 30px;
-            margin-bottom: 28px;
-        }
-
-        .page-header h1 {
-            margin: 0 0 8px;
-            font-size: 32px;
-        }
-
-        .alert-box {
-            padding: 14px 18px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border-left: 4px solid #D63384;
-            background: #fff0f6;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(180px, 1fr));
-            gap: 18px;
-            margin-bottom: 26px;
-        }
-
-        .stat-card {
-            background: #FFFFFF;
-            border-radius: 18px;
-            padding: 20px;
-            box-shadow: 0 10px 28px rgba(45, 45, 45, 0.08);
-        }
-
-        .stat-card span {
-            color: #D63384;
-            font-size: 28px;
-            font-weight: 800;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 360px 1fr;
-            gap: 22px;
-        }
-
-        .card {
-            background: #FFFFFF;
-            border-radius: 20px;
-            padding: 24px;
-            box-shadow: 0 10px 28px rgba(45, 45, 45, 0.08);
-        }
-
-        .card h3 {
-            margin-top: 0;
-            color: #D63384;
-        }
-
-        label {
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        input,
-        select {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0 15px;
-            border: 1px solid #ddd;
-            border-radius: 12px;
-        }
-
-        button,
-        .btn {
-            display: inline-block;
-            background: #D63384;
-            color: #FFFFFF;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 12px;
-            cursor: pointer;
-            text-decoration: none;
-            font-weight: 700;
-        }
-
-        .btn-green {
-            background: #3EB489;
-        }
-
-        .btn-dark {
-            background: #2D2D2D;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            text-align: left;
-            padding: 14px;
-            border-bottom: 2px solid #f0f0f0;
-        }
-
-        td {
-            padding: 14px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            color: #FFFFFF;
-            background: #3EB489;
-            font-size: 13px;
-        }
-
-        .badge.off {
-            background: #D63384;
-        }
-
-        @media (max-width: 1000px) {
-            .admin-wrapper {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                width: auto;
-            }
-
-            .grid,
-            .stats {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clientes | FigueFit</title>
+    <link rel="stylesheet" href="../../public/panel.css?v=6">
 </head>
-
-<body>
+<body class="fp-panel">
 <div class="admin-wrapper">
 
-    <aside class="sidebar">
-        <h2>StayFit</h2>
-        <a href="../../controllers/admin/dashboardController.php">Dashboard</a>
-        <a class="active" href="../../controllers/admin/clienteController.php">Clientes</a>
-        <a href="../../controllers/admin/coachController.php">Coaches</a>
-        <a href="../../controllers/admin/asignacionController.php">Asignaciones</a>
-        <a href="../../controllers/admin/planController.php">Planes</a>
-        <a href="../../controllers/admin/pagoController.php">Pagos</a>
-        <a href="../../controllers/admin/solicitudController.php">Solicitudes</a>
-        <?php require_once __DIR__ . '/../partials/cerrarSesion.php'; ?>
-
-    </aside>
+    <?php require __DIR__ . '/../partials/panel/sidebarAdmin.php'; ?>
 
     <main class="content">
 
         <section class="page-header">
+            <span class="fp-hero-tag">Gestión de membresías</span>
             <h1>Clientes</h1>
             <p>Gestiona clientas fijas, clientes aprobados, modalidad, estado y trazabilidad del servicio.</p>
         </section>
 
         <?php if ($alert): ?>
-            <div class="alert-box">
-                <strong><?= e($alert['title'] ?? 'Aviso') ?></strong><br>
+            <div class="<?= ($alert['icon'] ?? '') === 'success' ? 'alert-success' : 'alert-error' ?>">
+                <strong><?= e($alert['title'] ?? 'Aviso') ?></strong>
                 <?= e($alert['text'] ?? '') ?>
             </div>
         <?php endif; ?>
 
-        <section class="stats">
-            <div class="stat-card">
-                <span><?= count($clientes) ?></span>
-                <p>Total clientes</p>
-            </div>
+        <section class="fp-stats-premium">
+            <article class="fp-stat-premium fp-stat-premium--fuchsia">
+                <div class="fp-stat-premium-head">
+                    <div class="fp-stat-premium-icon" aria-hidden="true">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                            <circle cx="9" cy="8" r="3.5" stroke="currentColor" stroke-width="1.8"/>
+                            <path d="M4 20c0-3.3 2.2-5.5 5-5.5s5 2.2 5 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                            <path d="M16 7h5M18.5 4.5V9.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="fp-stat-premium-value"><?= e((string) $totalClientes) ?></p>
+                <p class="fp-stat-premium-label">Total clientes registrados</p>
+            </article>
 
-            <div class="stat-card">
-                <span>
-                    <?= count(array_filter($clientes, fn($c) => ($c['estado'] ?? '') === 'activo')) ?>
-                </span>
-                <p>Clientes activos</p>
-            </div>
+            <article class="fp-stat-premium fp-stat-premium--mint">
+                <div class="fp-stat-premium-head">
+                    <div class="fp-stat-premium-icon" aria-hidden="true">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                            <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="fp-stat-premium-value"><?= e((string) $totalActivos) ?></p>
+                <p class="fp-stat-premium-label">Clientes activos en la plataforma</p>
+            </article>
 
-            <div class="stat-card">
-                <span>
-                    <?= count(array_filter($clientes, fn($c) => ($c['tipo_cliente'] ?? '') === 'institucional')) ?>
-                </span>
-                <p>Institucionales</p>
-            </div>
+            <article class="fp-stat-premium fp-stat-premium--warn">
+                <div class="fp-stat-premium-head">
+                    <div class="fp-stat-premium-icon" aria-hidden="true">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                            <rect x="4" y="5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                            <path d="M8 10h8M8 14h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="fp-stat-premium-value"><?= e((string) $totalInstitucionales) ?></p>
+                <p class="fp-stat-premium-label">Clientes institucionales</p>
+            </article>
         </section>
 
-        <section class="grid">
+        <section class="card fp-clientes-unified">
+            <div class="fp-clientes-unified-head">
+                <h3>Gestión de clientes</h3>
+            </div>
 
-            <div class="card">
-                <h3>Registrar clienta fija</h3>
+            <div class="fp-clientes-form-block">
+                <form class="fp-form-premium" action="../../controllers/admin/clienteController.php?accion=guardarClienteFijo" method="POST">
+                    <div class="fp-form-grid">
+                        <div class="fp-field">
+                            <label for="nombre">Nombre</label>
+                            <input type="text" id="nombre" name="nombre" placeholder="María" required>
+                        </div>
 
-                <form action="../../controllers/admin/clienteController.php?accion=guardarClienteFijo" method="POST">
-                    <label>Nombre</label>
-                    <input type="text" name="nombre" required>
+                        <div class="fp-field">
+                            <label for="apellido">Apellido</label>
+                            <input type="text" id="apellido" name="apellido" placeholder="García" required>
+                        </div>
 
-                    <label>Apellido</label>
-                    <input type="text" name="apellido" required>
+                        <div class="fp-field">
+                            <label for="identificacion">Identificación</label>
+                            <input type="text" id="identificacion" name="identificacion" placeholder="Documento" required>
+                        </div>
 
-                    <label>Correo</label>
-                    <input type="email" name="correo" required>
+                        <div class="fp-field">
+                            <label for="edad">Edad</label>
+                            <input type="number" id="edad" name="edad" min="12" placeholder="25" required>
+                        </div>
 
-                    <label>Identificación</label>
-                    <input type="text" name="identificacion" required>
+                        <div class="fp-field">
+                            <label for="correo">Correo</label>
+                            <input type="email" id="correo" name="correo" placeholder="cliente@correo.com" required>
+                        </div>
 
-                    <label>Edad</label>
-                    <input type="number" name="edad" min="12" required>
+                        <div class="fp-field">
+                            <label for="celular">Celular</label>
+                            <input type="text" id="celular" name="celular" placeholder="300 123 4567" required>
+                        </div>
 
-                    <label>Celular</label>
-                    <input type="text" name="celular" required>
+                        <div class="fp-field">
+                            <label for="tipo_cliente">Tipo</label>
+                            <select id="tipo_cliente" name="tipo_cliente" required>
+                                <option value="individual">Individual</option>
+                                <option value="institucional">Institucional</option>
+                            </select>
+                        </div>
 
-                    <label>Contraseña de acceso</label>
-                    <input type="password" name="contrasena" minlength="6" placeholder="Si se deja vacío, se usa la identificación">
-                    <small style="display:block;margin:-6px 0 14px;color:#666;">La clienta usará esta contraseña para iniciar sesión.</small>
+                        <div class="fp-field">
+                            <label for="contrasena">Contraseña</label>
+                            <input type="password" id="contrasena" name="contrasena" minlength="6" placeholder="Opcional" autocomplete="new-password">
+                        </div>
+                    </div>
 
-                    <label>Tipo de cliente</label>
-                    <select name="tipo_cliente" required>
-                        <option value="individual">Individual</option>
-                        <option value="institucional">Institucional</option>
-                    </select>
-
-                    <button type="submit">Guardar cliente</button>
+                    <button type="submit" class="fp-form-submit" style="max-width:220px;margin-top:6px;">Registrar clienta</button>
+                    <span class="fp-field-hint" style="display:block;margin-top:8px;">Si no defines contraseña, se usará el número de identificación.</span>
                 </form>
             </div>
 
-            <div class="card">
-                <h3>Listado de clientes</h3>
+            <div class="fp-clientes-list-block">
+                <h4>Listado de clientes</h4>
 
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Cliente</th>
-                            <th>Contacto</th>
-                            <th>Tipo</th>
-                            <th>Estado</th>
-                            <th>Acción</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        <?php if (empty($clientes)): ?>
+                <div class="fp-table-wrap">
+                    <table class="fp-table-premium fp-table-fluid">
+                        <thead>
                             <tr>
-                                <td colspan="5">No hay clientes registrados.</td>
+                                <th class="col-cliente">Cliente</th>
+                                <th class="col-contacto">Contacto</th>
+                                <th class="col-tipo">Tipo</th>
+                                <th class="col-estado">Estado</th>
+                                <th class="col-acciones">Acciones</th>
                             </tr>
-                        <?php endif; ?>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($clientes)): ?>
+                                <tr class="fp-empty-row">
+                                    <td colspan="5">No hay clientes registrados todavía.</td>
+                                </tr>
+                            <?php endif; ?>
 
-                        <?php foreach ($clientes as $item): ?>
-                            <tr>
-                                <td>
-                                    <strong><?= e($item['nombre'] ?? 'Sin nombre') ?></strong><br>
-                                    <small><?= e($item['identificacion'] ?? 'Sin identificación') ?></small>
-                                    <?php if (!empty($item['edad'])): ?>
-                                        <br><small>Edad: <?= e($item['edad']) ?></small>
-                                    <?php endif; ?>
-                                </td>
+                            <?php foreach ($clientes as $item): ?>
+                                <?php
+                                $estadoBadge = clienteEstadoBadge($item['estado'] ?? '');
+                                $clienteId = (int) ($item['id'] ?? 0);
+                                $activo = clienteEsActivo($item['estado'] ?? '');
+                                ?>
+                                <tr>
+                                    <td>
+                                        <div class="fp-cell-stack">
+                                            <strong><?= e($item['nombre'] ?? 'Sin nombre') ?></strong>
+                                            <span>ID <?= e($item['identificacion'] ?? '—') ?></span>
+                                            <?php if (!empty($item['edad'])): ?>
+                                                <span class="fp-cell-highlight"><?= e($item['edad']) ?> años</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </td>
 
-                                <td>
-                                    <?= e($item['correo'] ?? 'Sin correo') ?><br>
-                                    <small><?= e($item['celular'] ?? $item['telefono'] ?? 'Sin celular') ?></small>
-                                </td>
+                                    <td>
+                                        <div class="fp-cell-stack">
+                                            <span class="fp-cell-highlight"><?= e($item['correo'] ?? 'Sin correo') ?></span>
+                                            <span><?= e($item['celular'] ?? $item['telefono'] ?? '—') ?></span>
+                                        </div>
+                                    </td>
 
-                                <td><?= e($item['tipo_cliente'] ?? 'individual') ?></td>
+                                    <td>
+                                        <span class="fp-tag-inline"><?= e(clienteTipoLabel($item['tipo_cliente'] ?? 'individual')) ?></span>
+                                    </td>
 
-                                <td>
-                                    <span class="badge <?= (($item['estado'] ?? '') === 'activo') ? '' : 'off' ?>">
-                                        <?= e($item['estado'] ?? 'sin estado') ?>
-                                    </span>
-                                </td>
+                                    <td>
+                                        <span class="<?= e($estadoBadge['class']) ?>"><?= e($estadoBadge['label']) ?></span>
+                                    </td>
 
-                                <td>
-                                    <a class="btn btn-dark" href="../../controllers/admin/clienteController.php?accion=detalle&id=<?= e($item['id'] ?? '') ?>">
-                                        Ver
-                                    </a>
+                                    <td>
+                                        <div class="fp-row-actions">
+                                            <a class="btn fp-btn-sm fp-btn-outline"
+                                               href="../../controllers/admin/clienteController.php?accion=detalle&id=<?= e($clienteId) ?>">
+                                                Ver
+                                            </a>
 
-                                    <?php if (($item['estado'] ?? '') === 'activo'): ?>
-                                        <a class="btn" href="../../controllers/admin/clienteController.php?accion=cambiarEstado&id=<?= e($item['id'] ?? '') ?>&estado=inactivo">
-                                            Inactivar
-                                        </a>
-                                    <?php else: ?>
-                                        <a class="btn btn-green" href="../../controllers/admin/clienteController.php?accion=cambiarEstado&id=<?= e($item['id'] ?? '') ?>&estado=activo">
-                                            Activar
-                                        </a>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                                            <?php if ($activo): ?>
+                                                <a class="btn fp-btn-sm fp-btn-outline"
+                                                   href="../../controllers/admin/clienteController.php?accion=cambiarEstado&id=<?= e($clienteId) ?>&estado=inactivo"
+                                                   style="border-color:rgba(255,47,160,0.35)!important;color:var(--fp-fuchsia)!important;">
+                                                    Inactivar
+                                                </a>
+                                            <?php else: ?>
+                                                <a class="btn fp-btn-sm btn-green"
+                                                   href="../../controllers/admin/clienteController.php?accion=cambiarEstado&id=<?= e($clienteId) ?>&estado=activo">
+                                                    Activar
+                                                </a>
+                                            <?php endif; ?>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-
         </section>
 
         <?php if ($cliente): ?>
             <section class="card" style="margin-top: 24px;">
                 <h3>Detalle del cliente</h3>
-                <p><strong>Nombre:</strong> <?= e($cliente['nombre'] ?? '') ?></p>
-                <p><strong>Plan activo:</strong> <?= e($plan['nombre'] ?? 'Sin plan activo') ?></p>
-                <p><strong>Coach asignado:</strong> <?= e($coach['nombre'] ?? 'Sin coach asignado') ?></p>
-                <p><strong>Pagos registrados:</strong> <?= count($pagos) ?></p>
+
+                <dl class="fp-cliente-detail">
+                    <div class="fp-cliente-detail-item">
+                        <dt>Nombre completo</dt>
+                        <dd><?= e($cliente['nombre'] ?? '—') ?></dd>
+                    </div>
+                    <div class="fp-cliente-detail-item">
+                        <dt>Correo</dt>
+                        <dd><?= e($cliente['correo'] ?? '—') ?></dd>
+                    </div>
+                    <div class="fp-cliente-detail-item">
+                        <dt>Identificación</dt>
+                        <dd><?= e($cliente['identificacion'] ?? '—') ?></dd>
+                    </div>
+                    <div class="fp-cliente-detail-item">
+                        <dt>Estado</dt>
+                        <dd>
+                            <?php $detBadge = clienteEstadoBadge($cliente['estado'] ?? ''); ?>
+                            <span class="<?= e($detBadge['class']) ?>"><?= e($detBadge['label']) ?></span>
+                        </dd>
+                    </div>
+                    <div class="fp-cliente-detail-item">
+                        <dt>Plan activo</dt>
+                        <dd><?= e($plan['nombre'] ?? 'Sin plan activo') ?></dd>
+                    </div>
+                    <div class="fp-cliente-detail-item">
+                        <dt>Coach asignado</dt>
+                        <dd><?= e($coach['nombre'] ?? 'Sin coach asignado') ?></dd>
+                    </div>
+                    <div class="fp-cliente-detail-item">
+                        <dt>Pagos registrados</dt>
+                        <dd><?= e((string) count($pagos)) ?></dd>
+                    </div>
+                    <div class="fp-cliente-detail-item">
+                        <dt>Tipo</dt>
+                        <dd><?= e(clienteTipoLabel($cliente['tipo_cliente'] ?? 'individual')) ?></dd>
+                    </div>
+                </dl>
+
+                <div class="fp-row-actions" style="margin-top:8px;max-width:none;">
+                    <a class="btn fp-btn-outline" href="../../controllers/admin/clienteController.php">Volver al listado</a>
+                </div>
             </section>
         <?php endif; ?>
 

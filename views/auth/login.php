@@ -301,6 +301,13 @@ function e($valor)
         /* Campos */
         .form-group { margin-bottom: 20px; }
 
+        .form-hint {
+            margin-top: 8px;
+            font-size: 12px;
+            line-height: 1.45;
+            color: var(--text-muted);
+        }
+
         .label-row {
             display: flex;
             align-items: center;
@@ -568,7 +575,7 @@ function e($valor)
                     </div>
                 <?php endif; ?>
 
-                <form action="../../controller/auth/loginController.php" method="POST">
+                <form action="../../controllers/auth/loginController.php" method="POST">
 
                     <div class="form-group">
                         <label for="correo">Correo electrónico</label>
@@ -601,6 +608,7 @@ function e($valor)
                                 required
                             >
                         </div>
+                        <p class="form-hint">Si te inscribiste antes de crear contraseña, usa tu número de identificación como contraseña.</p>
                     </div>
 
                     <div class="check-row">
