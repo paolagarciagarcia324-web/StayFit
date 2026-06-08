@@ -1,97 +1,178 @@
 <?php
 
-require_once __DIR__ . '/../../config/database.php'; // Importa la conexión
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../config/schemaHelper.php';
 
 class AgendaModel
 {
-    private $db; // Conexión a la base de datos
+    private $db;
+    private SchemaHelper $schema;
 
     public function __construct()
     {
-        $database = new Database(); // Crea instancia de conexión
-        $this->db = $database->conectar(); // Abre conexión
+        $this->db = (new Database())->conectar();
+        $this->schema = new SchemaHelper($this->db);
+    }
+
+    private function usaEsquemaNuevo(): bool
+    {
+        return $this->schema->tablaExiste('sesiones');
     }
 
     public function obtenerPorCliente($clienteId)
     {
-        $sql = "SELECT a.*
-                FROM agenda a
-                INNER JOIN sesion s ON s.id_coach = a.id_coach
-                INNER JOIN sesion_participante sp ON sp.id_sesion = s.id_sesion
-                INNER JOIN plan_cliente pc ON pc.id_plan_cliente = sp.id_plan_cliente
-                WHERE pc.id_cliente = :cliente_id
-                AND a.fecha_hora_inicio >= NOW()
-                ORDER BY a.fecha_hora_inicio ASC"; // Agenda del cliente
+        if (!$this->usaEsquemaNuevo()) {
+            $sql = "SELECT a.*, a.fecha_hora_inicio,
+                           DATE_FORMAT(a.fecha_hora_inicio, '%Y-%m-%d') AS fecha,
+                           DATE_FORMAT(a.fecha_hora_inicio, '%H:%i') AS hora,
+                           a.descripcion AS titulo
+                    FROM agenda a
+                    INNER JOIN sesion s ON s.id_coach = a.id_coach
+                    INNER JOIN sesion_participante sp ON sp.id_sesion = s.id_sesion
+                    INNER JOIN plan_cliente pc ON pc.id_plan_cliente = sp.id_plan_cliente
+                    WHERE pc.id_cliente = :cliente_id
+                    AND a.fecha_hora_inicio >= NOW()
+                    ORDER BY a.fecha_hora_inicio ASC";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':cliente_id', $clienteId);
+            $stmt->execute();
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':cliente_id', $clienteId); // Asigna cliente
-        $stmt->execute(); // Ejecuta consulta
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna registros
+        $sql = "SELECT s.titulo, s.descripcion, s.fecha_inicio AS fecha_hora_inicio,
+                       DATE_FORMAT(s.fecha_inicio, '%Y-%m-%d') AS fecha,
+                       DATE_FORMAT(s.fecha_inicio, '%H:%i') AS hora,
+                       s.estado_sesion AS estado, 'sesion' AS tipo
+                FROM sesiones s
+                LEFT JOIN sesion_participantes sp ON sp.id_sesion = s.id_sesion AND sp.id_cliente = :cliente_id2
+                WHERE (s.id_cliente = :cliente_id OR sp.id_cliente = :cliente_id3)
+                  AND s.fecha_inicio >= NOW()
+                  AND s.estado_sesion = 'PROGRAMADA'
+                UNION ALL
+                SELECT e.titulo, e.descripcion, e.fecha_inicio AS fecha_hora_inicio,
+                       DATE_FORMAT(e.fecha_inicio, '%Y-%m-%d') AS fecha,
+                       DATE_FORMAT(e.fecha_inicio, '%H:%i') AS hora,
+                       e.estado_evento AS estado, 'evento' AS tipo
+                FROM eventos e
+                INNER JOIN evento_participantes ep ON ep.id_evento = e.id_evento AND ep.id_cliente = :cliente_id4
+                WHERE e.fecha_inicio >= NOW()
+                  AND e.estado_evento = 'PUBLICADO'
+                ORDER BY fecha_hora_inicio ASC";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':cliente_id', $clienteId);
+        $stmt->bindParam(':cliente_id2', $clienteId);
+        $stmt->bindParam(':cliente_id3', $clienteId);
+        $stmt->bindParam(':cliente_id4', $clienteId);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function obtenerPorCoach($coachId)
     {
-        $sql = "SELECT * FROM agenda WHERE id_coach = :coach_id ORDER BY fecha_hora_inicio ASC"; // Consulta agenda coach
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':coach_id', $coachId); // Asigna coach
-        $stmt->execute(); // Ejecuta consulta
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "SELECT s.*, s.titulo, s.fecha_inicio AS fecha_hora_inicio,
+                           DATE_FORMAT(s.fecha_inicio, '%Y-%m-%d') AS fecha,
+                           DATE_FORMAT(s.fecha_inicio, '%H:%i') AS hora
+                    FROM sesiones s
+                    WHERE s.id_coach = :coach_id
+                    ORDER BY s.fecha_inicio ASC";
+        } else {
+            $sql = 'SELECT * FROM agenda WHERE id_coach = :coach_id ORDER BY fecha_hora_inicio ASC';
+        }
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna registros
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':coach_id', $coachId);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function obtenerDisponiblesPorCoach($coachId)
     {
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "SELECT s.*, s.titulo, s.fecha_inicio AS fecha_hora_inicio
+                    FROM sesiones s
+                    WHERE s.id_coach = :coach_id
+                    AND s.estado_sesion = 'PROGRAMADA'
+                    AND s.fecha_inicio >= NOW()
+                    ORDER BY s.fecha_inicio ASC";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':coach_id', $coachId);
+            $stmt->execute();
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+
         $sql = "SELECT * FROM agenda
                 WHERE id_coach = :coach_id
                 AND disponible = 1
                 AND fecha_hora_inicio >= NOW()
-                ORDER BY fecha_hora_inicio ASC"; // Slots disponibles
+                ORDER BY fecha_hora_inicio ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':coach_id', $coachId);
+        $stmt->execute();
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':coach_id', $coachId); // Asigna coach
-        $stmt->execute(); // Ejecuta consulta
-
-        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna registros
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function crear($datos)
     {
-        $sql = "INSERT INTO agenda 
-                (id_coach, fecha_hora_inicio, fecha_hora_fin, disponible, descripcion)
-                VALUES
-                (:id_coach, :fecha_hora_inicio, :fecha_hora_fin, :disponible, :descripcion)"; // Inserta agenda
+        if ($this->usaEsquemaNuevo()) {
+            $sql = 'INSERT INTO sesiones
+                    (id_coach, titulo, descripcion, fecha_inicio, fecha_fin, estado_sesion, modalidad)
+                    VALUES
+                    (:id_coach, :titulo, :descripcion, :fecha_inicio, :fecha_fin, :estado, :modalidad)';
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':id_coach', $datos['id_coach']);
+            $stmt->bindValue(':titulo', $datos['descripcion'] ?? $datos['titulo'] ?? 'Sesión');
+            $stmt->bindValue(':descripcion', $datos['descripcion'] ?? null);
+            $stmt->bindParam(':fecha_inicio', $datos['fecha_hora_inicio']);
+            $stmt->bindParam(':fecha_fin', $datos['fecha_hora_fin']);
+            $stmt->bindValue(':estado', 'PROGRAMADA');
+            $stmt->bindValue(':modalidad', 'VIRTUAL');
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':id_coach', $datos['id_coach']); // Coach relacionado
-        $stmt->bindParam(':fecha_hora_inicio', $datos['fecha_hora_inicio']); // Inicio
-        $stmt->bindParam(':fecha_hora_fin', $datos['fecha_hora_fin']); // Fin
-        $stmt->bindValue(':disponible', $datos['disponible'] ?? 1); // Disponible
-        $stmt->bindValue(':descripcion', $datos['descripcion'] ?? null); // Descripción
+            return $stmt->execute();
+        }
 
-        return $stmt->execute(); // Ejecuta registro
+        $sql = 'INSERT INTO agenda (id_coach, fecha_hora_inicio, fecha_hora_fin, disponible, descripcion)
+                VALUES (:id_coach, :fecha_hora_inicio, :fecha_hora_fin, :disponible, :descripcion)';
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id_coach', $datos['id_coach']);
+        $stmt->bindParam(':fecha_hora_inicio', $datos['fecha_hora_inicio']);
+        $stmt->bindParam(':fecha_hora_fin', $datos['fecha_hora_fin']);
+        $stmt->bindValue(':disponible', $datos['disponible'] ?? 1);
+        $stmt->bindValue(':descripcion', $datos['descripcion'] ?? null);
+
+        return $stmt->execute();
     }
 
     public function cambiarDisponibilidad($id, $disponible)
     {
-        $sql = "UPDATE agenda SET disponible = :disponible WHERE id_agenda = :id"; // Actualiza disponibilidad
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':disponible', $disponible); // Nuevo valor
-        $stmt->bindParam(':id', $id); // ID agenda
+        if ($this->usaEsquemaNuevo()) {
+            $estado = $disponible ? 'PROGRAMADA' : 'CANCELADA';
+            $sql = 'UPDATE sesiones SET estado_sesion = :estado WHERE id_sesion = :id';
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':estado', $estado);
+        } else {
+            $sql = 'UPDATE agenda SET disponible = :disponible WHERE id_agenda = :id';
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':disponible', $disponible);
+        }
 
-        return $stmt->execute(); // Ejecuta actualización
+        $stmt->bindParam(':id', $id);
+
+        return $stmt->execute();
     }
 
     public function registrarTrazabilidad($usuarioId, $accion)
     {
-        $sql = "INSERT INTO bitacora_busqueda (id_usuario, modulo, accion, fecha_hora)
-                VALUES (:usuario_id, 'Agenda', :accion, NOW())"; // Inserta historial
+        require_once __DIR__ . '/../../config/helpers.php';
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':usuario_id', $usuarioId); // Usuario responsable
-        $stmt->bindParam(':accion', $accion); // Acción realizada
-
-        return $stmt->execute(); // Guarda trazabilidad
+        return registrarBitacora($this->db, $usuarioId ? (int) $usuarioId : null, 'Agenda', $accion);
     }
 }
 

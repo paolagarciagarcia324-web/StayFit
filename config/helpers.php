@@ -47,11 +47,31 @@ function contrasenaYaHasheada($valor)
 
 function registrarBitacora(PDO $db, ?int $usuarioId, string $modulo, string $accion): bool
 {
+    static $usaBitacoraSistema = null;
+
+    if ($usaBitacoraSistema === null) {
+        try {
+            $usaBitacoraSistema = (bool) $db->query("SHOW TABLES LIKE 'bitacora_sistema'")->fetch(PDO::FETCH_NUM);
+        } catch (PDOException $e) {
+            $usaBitacoraSistema = false;
+        }
+    }
+
     try {
-        $stmt = $db->prepare(
-            'INSERT INTO bitacora_busqueda (id_usuario, modulo, accion, fecha_hora)
-             VALUES (:usuario_id, :modulo, :accion, NOW())'
-        );
+        if ($usaBitacoraSistema) {
+            $stmt = $db->prepare(
+                'INSERT INTO bitacora_sistema (id_user, modulo, accion, descripcion, creado_en)
+                 VALUES (:usuario_id, :modulo, :accion, :descripcion, NOW())'
+            );
+            $stmt->bindValue(':accion', mb_substr($accion, 0, 120), PDO::PARAM_STR);
+            $stmt->bindValue(':descripcion', $accion, PDO::PARAM_STR);
+        } else {
+            $stmt = $db->prepare(
+                'INSERT INTO bitacora_busqueda (id_usuario, modulo, accion, fecha_hora)
+                 VALUES (:usuario_id, :modulo, :accion, NOW())'
+            );
+            $stmt->bindValue(':accion', $accion, PDO::PARAM_STR);
+        }
 
         if ($usuarioId !== null) {
             $stmt->bindValue(':usuario_id', $usuarioId, PDO::PARAM_INT);
@@ -59,8 +79,7 @@ function registrarBitacora(PDO $db, ?int $usuarioId, string $modulo, string $acc
             $stmt->bindValue(':usuario_id', null, PDO::PARAM_NULL);
         }
 
-        $stmt->bindValue(':modulo', $modulo, PDO::PARAM_STR);
-        $stmt->bindValue(':accion', $accion, PDO::PARAM_STR);
+        $stmt->bindValue(':modulo', mb_substr($modulo, 0, 80), PDO::PARAM_STR);
 
         return $stmt->execute();
     } catch (PDOException $e) {
@@ -91,6 +110,36 @@ function rutaBaseProyecto(): string
     }
 
     return $base;
+}
+
+function baseUrl(): string
+{
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $base = rutaBaseProyecto();
+
+    return rtrim($scheme . '://' . $host . $base, '/');
+}
+
+function urlRegistroInstitucion(?string $token = null): string
+{
+    return baseUrl() . '/public/registro-institucion.php' . ($token !== null && $token !== '' ? '?token=' . urlencode($token) : '');
+}
+
+function urlRegistroInstitucionForm(?string $token = null): string
+{
+    $ruta = rutaBaseProyecto() . '/public/registro-institucion.php';
+
+    if ($token !== null && $token !== '') {
+        $ruta .= '?token=' . urlencode($token);
+    }
+
+    return $ruta;
+}
+
+function urlDashboardClienteInstitucional(): string
+{
+    return rutaBaseProyecto() . '/controllers/clienteIns/dashboardController.php';
 }
 
 function rutaFisicaComprobante(?string $rutaRelativa): ?string

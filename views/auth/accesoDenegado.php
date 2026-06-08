@@ -94,7 +94,7 @@ $rol = $_SESSION['rol'] ?? 'sin rol'; // Obtiene rol actual
         </p>
 
         <a class="btn" href="../../views/auth/login.php">Volver al login</a>
-        <a class="btn btn-dark" href="../../controller/auth/logouthController.php">Cerrar sesión</a>
+        <a class="btn btn-dark" href="../../controllers/auth/logouthController.php">Cerrar sesión</a>
     </section>
 
 </body>

@@ -63,11 +63,11 @@ class ClienteInsDashboardController
 
     private function validarClienteInstitucional()
     {
-        $rol = strtolower($_SESSION['rol'] ?? ''); // Obtiene rol
+        require_once __DIR__ . '/../../config/roles.php';
 
-        if ($rol !== 'clienteins' && $rol !== 'cliente_institucional') { // Valida rol
-            header('Location: ../../views/auth/accesoDenegado.php'); // Redirige
-            exit; // Detiene ejecución
+        if (!esClienteInstitucional()) {
+            header('Location: ../../views/auth/accesoDenegado.php');
+            exit;
         }
     }
 }

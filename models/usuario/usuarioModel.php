@@ -7,10 +7,31 @@ class UsuarioModel
 {
     private $db; // Conexión BD
 
-    public function __construct()
+    public function __construct(?PDO $db = null)
     {
+        if ($db instanceof PDO) {
+            $this->db = $db;
+            return;
+        }
+
         $database = new Database(); // Instancia conexión
         $this->db = $database->conectar(); // Abre conexión
+    }
+
+    private function usaEsquemaNuevo()
+    {
+        static $usaNuevo = null;
+
+        if ($usaNuevo !== null) {
+            return $usaNuevo;
+        }
+
+        $tablaUser = $this->db->query("SHOW TABLES LIKE 'user'")->fetch();
+        $tablaClientes = $this->db->query("SHOW TABLES LIKE 'clientes'")->fetch();
+
+        $usaNuevo = (bool) ($tablaUser && $tablaClientes);
+
+        return $usaNuevo;
     }
 
     private function normalizarUsuario($usuario)
@@ -20,10 +41,17 @@ class UsuarioModel
         }
 
         $usuario['id'] = $usuario['id_usuario'] ?? $usuario['id'] ?? null; // ID unificado
+        $usuario['id_usuario'] = $usuario['id_usuario'] ?? $usuario['id_user'] ?? $usuario['id'] ?? null;
+        $usuario['nombre'] = $usuario['nombre'] ?? $usuario['nombres'] ?? '';
+        $usuario['apellido'] = $usuario['apellido'] ?? $usuario['apellidos'] ?? '';
         $usuario['password'] = $usuario['hash_contrasena'] ?? $usuario['password'] ?? $usuario['password_hash'] ?? ''; // Hash unificado
 
         if (isset($usuario['estado'])) { // Normaliza estado
             $usuario['estado'] = strtolower($usuario['estado']); // Minúsculas para comparar
+        }
+
+        if (!empty($usuario['rol_codigo'])) {
+            $usuario['rol'] = $usuario['rol_codigo'];
         }
 
         return $usuario; // Retorna usuario normalizado
@@ -31,20 +59,53 @@ class UsuarioModel
 
     public function obtenerTodos()
     {
-        $sql = "SELECT u.*, r.nombre AS rol
-                FROM users u
-                LEFT JOIN users_roles ur ON ur.id_usuario = u.id_usuario
-                LEFT JOIN rol r ON r.id_rol = ur.id_rol
-                ORDER BY u.id_usuario DESC"; // Consulta usuarios
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "SELECT u.id_user AS id_usuario, u.nombres AS nombre, u.apellidos AS apellido,
+                           u.documento_identidad, u.correo, u.telefono, u.password_hash AS hash_contrasena,
+                           u.estado, r.codigo AS rol_codigo, r.nombre AS rol
+                    FROM user u
+                    LEFT JOIN user_roles ur ON ur.id_user = u.id_user
+                    LEFT JOIN roles r ON r.id_rol = ur.id_rol
+                    ORDER BY u.id_user DESC";
+        } else {
+            $sql = "SELECT u.*, r.nombre AS rol
+                    FROM users u
+                    LEFT JOIN users_roles ur ON ur.id_usuario = u.id_usuario
+                    LEFT JOIN rol r ON r.id_rol = ur.id_rol
+                    ORDER BY u.id_usuario DESC";
+        }
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->execute(); // Ejecuta consulta
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna lista
+        $lista = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($lista as &$usuario) {
+            $usuario = $this->normalizarUsuario($usuario);
+        }
+
+        return $lista;
     }
 
     public function obtenerPorId($id)
     {
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "SELECT u.id_user AS id_usuario, u.nombres AS nombre, u.apellidos AS apellido,
+                           u.documento_identidad, u.correo, u.telefono, u.password_hash AS hash_contrasena,
+                           u.estado, r.codigo AS rol_codigo, r.nombre AS rol
+                    FROM user u
+                    LEFT JOIN user_roles ur ON ur.id_user = u.id_user
+                    LEFT JOIN roles r ON r.id_rol = ur.id_rol
+                    WHERE u.id_user = :id
+                    LIMIT 1";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+
+            return $this->normalizarUsuario($stmt->fetch(PDO::FETCH_ASSOC));
+        }
+
         $sql = "SELECT u.*, r.nombre AS rol
                 FROM users u
                 LEFT JOIN users_roles ur ON ur.id_usuario = u.id_usuario
@@ -61,6 +122,23 @@ class UsuarioModel
 
     public function obtenerPorCorreo($correo)
     {
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "SELECT u.id_user AS id_usuario, u.nombres AS nombre, u.apellidos AS apellido,
+                           u.documento_identidad, u.correo, u.telefono, u.password_hash AS hash_contrasena,
+                           u.estado, r.codigo AS rol_codigo, r.nombre AS rol
+                    FROM user u
+                    LEFT JOIN user_roles ur ON ur.id_user = u.id_user
+                    LEFT JOIN roles r ON r.id_rol = ur.id_rol
+                    WHERE u.correo = :correo
+                    LIMIT 1";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':correo', $correo);
+            $stmt->execute();
+
+            return $this->normalizarUsuario($stmt->fetch(PDO::FETCH_ASSOC));
+        }
+
         $sql = "SELECT u.*, r.nombre AS rol
                 FROM users u
                 LEFT JOIN users_roles ur ON ur.id_usuario = u.id_usuario
@@ -81,6 +159,23 @@ class UsuarioModel
             return false;
         }
 
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "SELECT u.id_user AS id_usuario, u.nombres AS nombre, u.apellidos AS apellido,
+                           u.documento_identidad, u.correo, u.telefono, u.password_hash AS hash_contrasena,
+                           u.estado, r.codigo AS rol_codigo, r.nombre AS rol
+                    FROM user u
+                    LEFT JOIN user_roles ur ON ur.id_user = u.id_user
+                    LEFT JOIN roles r ON r.id_rol = ur.id_rol
+                    WHERE u.documento_identidad = :documento
+                    LIMIT 1";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':documento', $documento);
+            $stmt->execute();
+
+            return $this->normalizarUsuario($stmt->fetch(PDO::FETCH_ASSOC));
+        }
+
         $sql = "SELECT u.*, r.nombre AS rol
                 FROM users u
                 LEFT JOIN users_roles ur ON ur.id_usuario = u.id_usuario
@@ -97,6 +192,22 @@ class UsuarioModel
 
     public function activarDesdeSolicitud($usuarioId, array $datos)
     {
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "UPDATE user
+                    SET nombres = :nombre, apellidos = :apellido, telefono = :telefono,
+                        documento_identidad = :documento_identidad, estado = 'ACTIVO'
+                    WHERE id_user = :id";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':nombre', $datos['nombre']);
+            $stmt->bindValue(':apellido', $datos['apellido'] ?? '');
+            $stmt->bindValue(':telefono', $datos['telefono'] ?? null);
+            $stmt->bindValue(':documento_identidad', $datos['documento_identidad'] ?? null);
+            $stmt->bindParam(':id', $usuarioId);
+
+            return $stmt->execute();
+        }
+
         $sql = "UPDATE users
                 SET nombre = :nombre, apellido = :apellido, telefono = :telefono,
                     documento_identidad = :documento_identidad, estado = 'ACTIVO'
@@ -112,12 +223,62 @@ class UsuarioModel
         return $stmt->execute();
     }
 
+    public function actualizarBasico($datos)
+    {
+        require_once __DIR__ . '/../../config/helpers.php';
+
+        $id = $datos['id'] ?? $datos['id_usuario'] ?? null;
+        if (!$id) {
+            return false;
+        }
+
+        $partes = dividirNombreCompleto($datos['nombre'] ?? '');
+        $correo = trim((string) ($datos['correo'] ?? ''));
+
+        if ($this->usaEsquemaNuevo()) {
+            $sql = 'UPDATE user
+                    SET nombres = :nombre, apellidos = :apellido, correo = :correo
+                    WHERE id_user = :id';
+        } else {
+            $sql = 'UPDATE users
+                    SET nombre = :nombre, apellido = :apellido, correo = :correo
+                    WHERE id_usuario = :id';
+        }
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':nombre', $partes['nombre']);
+        $stmt->bindValue(':apellido', $partes['apellido']);
+        $stmt->bindValue(':correo', $correo);
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+
+        return $stmt->execute();
+    }
+
     public function crear($datos)
     {
         $passwordPlano = $datos['password'] ?? '';
         $passwordHash = contrasenaYaHasheada($passwordPlano)
             ? $passwordPlano
             : password_hash($passwordPlano, PASSWORD_DEFAULT);
+
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "INSERT INTO user
+                    (nombres, apellidos, documento_identidad, correo, telefono, password_hash, estado)
+                    VALUES
+                    (:nombre, :apellido, :documento_identidad, :correo, :telefono, :password_hash, :estado)";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':nombre', $datos['nombre']);
+            $stmt->bindValue(':apellido', $datos['apellido'] ?? '');
+            $stmt->bindValue(':documento_identidad', $datos['documento_identidad'] ?? null);
+            $stmt->bindParam(':correo', $datos['correo']);
+            $stmt->bindValue(':telefono', $datos['telefono'] ?? null);
+            $stmt->bindParam(':password_hash', $passwordHash);
+            $stmt->bindValue(':estado', strtoupper($datos['estado'] ?? 'ACTIVO'));
+            $stmt->execute();
+
+            return $this->db->lastInsertId();
+        }
 
         $sql = "INSERT INTO users 
                 (nombre, apellido, correo, hash_contrasena, estado, origen_registro, telefono, documento_identidad, fecha_registro)
@@ -141,6 +302,15 @@ class UsuarioModel
 
     public function asignarRol($usuarioId, $rolId)
     {
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "INSERT IGNORE INTO user_roles (id_user, id_rol) VALUES (:id_user, :id_rol)";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':id_user', $usuarioId);
+            $stmt->bindParam(':id_rol', $rolId);
+
+            return $stmt->execute();
+        }
+
         $sql = "INSERT IGNORE INTO users_roles (id_usuario, id_rol) VALUES (:id_usuario, :id_rol)"; // Asigna rol
         $stmt = $this->db->prepare($sql); // Prepara consulta
         $stmt->bindParam(':id_usuario', $usuarioId); // Usuario
@@ -164,9 +334,33 @@ class UsuarioModel
         return $stmt->execute(); // Ejecuta actualización
     }
 
+    public function establecerPasswordHash($id, $passwordHash)
+    {
+        if ($this->usaEsquemaNuevo()) {
+            $sql = 'UPDATE user SET password_hash = :password_hash WHERE id_user = :id';
+        } else {
+            $sql = 'UPDATE users SET hash_contrasena = :password_hash WHERE id_usuario = :id';
+        }
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':password_hash', $passwordHash);
+        $stmt->bindParam(':id', $id);
+
+        return $stmt->execute();
+    }
+
     public function actualizarPassword($id, $password)
     {
         $passwordHash = password_hash($password, PASSWORD_DEFAULT); // Encripta nueva contraseña
+
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "UPDATE user SET password_hash = :password_hash WHERE id_user = :id";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':password_hash', $passwordHash);
+            $stmt->bindParam(':id', $id);
+
+            return $stmt->execute();
+        }
 
         $sql = "UPDATE users SET hash_contrasena = :hash_contrasena WHERE id_usuario = :id"; // Actualiza contraseña
         $stmt = $this->db->prepare($sql); // Prepara consulta
@@ -184,7 +378,17 @@ class UsuarioModel
             return false; // No existe
         }
 
-        $hash = $usuario['password'] ?? $usuario['hash_contrasena'] ?? '';
+        $hash = $usuario['password'] ?? $usuario['hash_contrasena'] ?? $usuario['password_hash'] ?? '';
+
+        if (!password_verify($password, $hash)) {
+            $infoHash = password_get_info($hash);
+
+            if (($infoHash['algo'] ?? 0) === 0 && $hash !== '' && hash_equals($hash, $password)) {
+                $this->actualizarPassword($usuario['id'] ?? $usuario['id_usuario'], $password);
+
+                return $this->obtenerPorId($usuario['id'] ?? $usuario['id_usuario']);
+            }
+        }
 
         if (!password_verify($password, $hash)) {
             return false;
@@ -195,28 +399,48 @@ class UsuarioModel
 
     public function obtenerPorRol($rolNombre)
     {
-        $sql = "SELECT u.*, r.nombre AS rol
-                FROM users u
-                INNER JOIN users_roles ur ON ur.id_usuario = u.id_usuario
-                INNER JOIN rol r ON r.id_rol = ur.id_rol
-                WHERE r.nombre = :rol
-                ORDER BY u.nombre ASC"; // Usuarios por rol
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "SELECT u.id_user AS id_usuario, u.nombres AS nombre, u.apellidos AS apellido,
+                           u.correo, u.estado, r.nombre AS rol
+                    FROM user u
+                    INNER JOIN user_roles ur ON ur.id_user = u.id_user
+                    INNER JOIN roles r ON r.id_rol = ur.id_rol
+                    WHERE r.nombre = :rol OR r.codigo = :rol_codigo
+                    ORDER BY u.nombres ASC";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':rol', $rolNombre);
+            $stmt->bindValue(':rol_codigo', strtoupper($rolNombre));
+        } else {
+            $sql = "SELECT u.*, r.nombre AS rol
+                    FROM users u
+                    INNER JOIN users_roles ur ON ur.id_usuario = u.id_usuario
+                    INNER JOIN rol r ON r.id_rol = ur.id_rol
+                    WHERE r.nombre = :rol
+                    ORDER BY u.nombre ASC";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':rol', $rolNombre);
+        }
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':rol', $rolNombre); // Nombre del rol
-        $stmt->execute(); // Ejecuta consulta
+        $stmt->execute();
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna usuarios
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function cambiarEstado($id, $estado)
     {
-        $sql = "UPDATE users SET estado = :estado WHERE id_usuario = :id"; // Cambia estado
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':estado', $estado); // Estado nuevo
-        $stmt->bindParam(':id', $id); // ID usuario
+        $estado = strtoupper($estado);
 
-        return $stmt->execute(); // Ejecuta cambio
+        if ($this->usaEsquemaNuevo()) {
+            $sql = 'UPDATE user SET estado = :estado WHERE id_user = :id';
+        } else {
+            $sql = 'UPDATE users SET estado = :estado WHERE id_usuario = :id';
+        }
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':estado', $estado);
+        $stmt->bindParam(':id', $id);
+
+        return $stmt->execute();
     }
 
     public function eliminar($id)
@@ -296,17 +520,28 @@ class UsuarioModel
 
     public function contarPorRol($rolNombre)
     {
-        $sql = "SELECT COUNT(*) AS total
-                FROM users u
-                INNER JOIN users_roles ur ON ur.id_usuario = u.id_usuario
-                INNER JOIN rol r ON r.id_rol = ur.id_rol
-                WHERE r.nombre = :rol"; // Cuenta por rol
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "SELECT COUNT(*) AS total
+                    FROM user u
+                    INNER JOIN user_roles ur ON ur.id_user = u.id_user
+                    INNER JOIN roles r ON r.id_rol = ur.id_rol
+                    WHERE r.nombre = :rol OR r.codigo = :rol_codigo";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':rol', $rolNombre);
+            $stmt->bindValue(':rol_codigo', strtoupper($rolNombre));
+        } else {
+            $sql = "SELECT COUNT(*) AS total
+                    FROM users u
+                    INNER JOIN users_roles ur ON ur.id_usuario = u.id_usuario
+                    INNER JOIN rol r ON r.id_rol = ur.id_rol
+                    WHERE r.nombre = :rol";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':rol', $rolNombre);
+        }
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':rol', $rolNombre); // Rol
-        $stmt->execute(); // Ejecuta consulta
+        $stmt->execute();
 
-        return $stmt->fetch(PDO::FETCH_ASSOC); // Retorna total
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function registrarTrazabilidad($usuarioId, $accion)

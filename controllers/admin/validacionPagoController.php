@@ -33,9 +33,10 @@ class ValidacionPagoController
 
     public function index()
     {
-        $pagosPendientes = $this->pagoModel->obtenerPendientes(); // Obtiene pagos pendientes
+        $pagos = $this->pagoModel->obtenerTodos();
+        $pendientes = $this->pagoModel->obtenerPendientes();
 
-        require_once __DIR__ . '/../../views/admin/pagos.php'; // Carga la vista
+        require_once __DIR__ . '/../../views/admin/pagos.php';
     }
 
     public function aprobar()
@@ -55,13 +56,19 @@ class ValidacionPagoController
         }
 
         try {
-            if (strtoupper($solicitud['estado'] ?? '') === 'APROBADA') {
+            if (in_array(strtolower($solicitud['estado'] ?? ''), ['aprobada', 'validada'], true)) {
                 throw new RuntimeException('Esta solicitud ya fue aprobada.');
             }
 
             $usuarioId = $this->crearUsuarioCliente($solicitud);
             $this->crearCliente($usuarioId, $solicitud);
-            $clienteId = $usuarioId;
+
+            $cliente = $this->clienteModel->obtenerPorUsuario($usuarioId);
+            if (!$cliente || empty($cliente['id'])) {
+                throw new RuntimeException('No se pudo registrar el cliente en el sistema.');
+            }
+
+            $clienteId = (int) $cliente['id'];
 
             $planClienteId = $this->clienteModel->crearPlanClienteDesdeSolicitud($clienteId, $solicitud);
 
@@ -84,10 +91,10 @@ class ValidacionPagoController
             }
 
             $this->pagoModel->aprobarPorSolicitud($solicitudId);
-            $this->solicitudModel->cambiarEstado($solicitudId, 'APROBADA');
+            $this->solicitudModel->aprobar($solicitudId, $_SESSION['usuario_id'] ?? null);
             $this->registrarTrazabilidad('Pago aprobado y cliente activado');
 
-            $_SESSION['flash'] = ['tipo' => 'success', 'mensaje' => 'Solicitud aprobada y cliente activado correctamente.'];
+            $_SESSION['flash'] = ['tipo' => 'success', 'mensaje' => 'Solicitud aprobada. El cliente puede ingresar con su correo y la contraseña que definió en la solicitud (o su número de identificación si no creó una).'];
         } catch (Throwable $e) {
             $_SESSION['flash'] = ['tipo' => 'error', 'mensaje' => 'No se pudo aprobar: ' . $e->getMessage()];
         }
@@ -145,16 +152,19 @@ class ValidacionPagoController
                 'telefono' => $solicitud['celular'] ?? null,
                 'documento_identidad' => $identificacion,
             ]);
+            $this->aplicarPasswordDesdeSolicitud($usuarioId, $solicitud);
             $this->usuarioModel->asignarRol($usuarioId, 3);
 
             return $usuarioId;
         }
 
+        $passwordRegistro = $this->solicitudModel->resolverPasswordPlanoRegistro($solicitud);
+
         $datos = [
             'nombre' => $partes['nombre'],
             'apellido' => $partes['apellido'],
             'correo' => $correo,
-            'password' => $identificacion,
+            'password' => $passwordRegistro,
             'telefono' => $solicitud['celular'] ?? null,
             'documento_identidad' => $identificacion,
             'origen_registro' => 'ADMINISTRATIVO',
@@ -177,6 +187,22 @@ class ValidacionPagoController
         ];
 
         return $this->clienteModel->crearDesdeSolicitud($datos);
+    }
+
+    private function aplicarPasswordDesdeSolicitud($usuarioId, array $solicitud)
+    {
+        $passwordHash = $this->solicitudModel->resolverPasswordHashRegistro($solicitud);
+
+        if ($passwordHash) {
+            $this->usuarioModel->establecerPasswordHash($usuarioId, $passwordHash);
+
+            return;
+        }
+
+        $identificacion = trim($solicitud['identificacion'] ?? $solicitud['documento_identidad'] ?? '');
+        if ($identificacion !== '') {
+            $this->usuarioModel->actualizarPassword($usuarioId, $identificacion);
+        }
     }
 
     private function activarAccesos($clienteId, $solicitud, $planClienteId)

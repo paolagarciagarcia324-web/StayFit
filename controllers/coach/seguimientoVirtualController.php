@@ -32,10 +32,11 @@ class CoachSeguimientoVirtualController
         $coachId = $this->obtenerCoachId(); // Obtiene coach actual
 
         $clientes = $this->clienteModel->obtenerVirtualesPorCoach($coachId); // Clientes virtuales con seguimiento
-        $avanceVirtual = $this->progresoVideoModel->obtenerPorCoach($coachId); // Avance de videos
+        $avanceVirtual = $this->progresoVideoModel->obtenerResumenPorCoach($coachId); // Avance global por clienta
+        $avancePorVideo = $this->progresoVideoModel->obtenerPorCoach($coachId); // Detalle por video
         $progresos = $this->progresoModel->obtenerPorCoach($coachId); // Progreso físico
 
-        require_once __DIR__ . '/../../views/coach/progreso.php'; // Carga vista existente
+        require_once __DIR__ . '/../../views/coach/seguimientoVirtual.php';
     }
 
     public function detalle()
@@ -52,7 +53,7 @@ class CoachSeguimientoVirtualController
         $avance = $this->progresoVideoModel->obtenerAvanceCliente($clienteId); // Obtiene avance
         $progreso = $this->progresoModel->obtenerPorCliente($clienteId); // Obtiene progreso físico
 
-        require_once __DIR__ . '/../../views/coach/progreso.php'; // Carga vista existente
+        require_once __DIR__ . '/../../views/coach/seguimientoVirtual.php';
     }
 
     public function observacion()

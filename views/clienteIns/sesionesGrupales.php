@@ -15,61 +15,11 @@ $sesionesGrupales = $sesionesGrupales ?? []; // Sesiones grupales asignadas
 <head>
     <meta charset="UTF-8"> <!-- Codificación -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
-    <title>Sesiones Grupales | StayFit</title> <!-- Título -->
+    <title>Sesiones Grupales | StayFit</title>
+    <link rel="stylesheet" href="../../public/panel.css?v=1"> <!-- Título -->
 
     <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: #f7f7f7;
-            color: #2D2D2D;
-        }
-
-        .cliente-wrapper {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        .sidebar {
-            width: 245px;
-            background: #2D2D2D;
-            color: #FFFFFF;
-            padding: 28px 20px;
-        }
-
-        .sidebar h2 {
-            color: #D63384;
-            margin-bottom: 30px;
-        }
-
-        .sidebar a {
-            display: block;
-            color: #FFFFFF;
-            text-decoration: none;
-            padding: 12px 14px;
-            border-radius: 12px;
-            margin-bottom: 8px;
-        }
-
-        .sidebar a:hover,
-        .sidebar a.active {
-            background: #D63384;
-        }
-
-        .content {
-            flex: 1;
-            padding: 34px;
-        }
-
-        .page-header {
-            background: linear-gradient(135deg, #D63384, #2D2D2D);
-            color: #FFFFFF;
-            border-radius: 24px;
-            padding: 32px;
-            margin-bottom: 28px;
-        }
-
-        .session-grid {
+.session-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 22px;
@@ -95,30 +45,11 @@ $sesionesGrupales = $sesionesGrupales ?? []; // Sesiones grupales asignadas
             margin: 12px 0;
         }
 
-        .badge {
-            display: inline-block;
-            background: #3EB489;
-            color: #FFFFFF;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 13px;
-            margin-top: 8px;
-        }
+        
 
-        .btn {
-            display: inline-block;
-            background: #D63384;
-            color: #FFFFFF;
-            text-decoration: none;
-            padding: 11px 16px;
-            border-radius: 14px;
-            font-weight: 800;
-            margin-top: 12px;
-        }
+        
 
-        .btn-green {
-            background: #3EB489;
-        }
+        
 
         .empty {
             background: #FFFFFF;
@@ -127,35 +58,13 @@ $sesionesGrupales = $sesionesGrupales ?? []; // Sesiones grupales asignadas
             color: #777;
             box-shadow: 0 10px 28px rgba(45, 45, 45, 0.08);
         }
-
-        @media (max-width: 900px) {
-            .cliente-wrapper {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                width: auto;
-            }
-        }
     </style>
 </head>
 
-<body>
+<body class="fp-panel">
 <div class="cliente-wrapper">
 
-    <aside class="sidebar">
-        <h2>StayFit</h2>
-        <a href="../../controller/clienteIns/dashboardController.php">Dashboard</a>
-        <a href="../../controller/clienteIns/perfilController.php">Perfil</a>
-        <a href="../../controller/clienteIns/institucionController.php">Institución</a>
-        <a href="../../controller/clienteIns/planController.php">Mi plan</a>
-        <a href="../../controller/clienteIns/entrenamientoController.php">Entrenamiento</a>
-        <a href="../../controller/clienteIns/nutricionController.php">Nutrición</a>
-        <a href="../../controller/clienteIns/progresoController.php">Progreso</a>
-        <a class="active" href="../../controller/clienteIns/sesionGrupalController.php">Sesiones grupales</a>
-        <a href="../../controller/clienteIns/calendarioController.php">Calendario</a>
-        <a href="../../controller/auth/logouthController.php">Cerrar sesión</a>
-    </aside>
+    <?php require __DIR__ . '/../partials/panel/sidebarClienteIns.php'; ?>
 
     <main class="content">
 
@@ -195,7 +104,7 @@ $sesionesGrupales = $sesionesGrupales ?? []; // Sesiones grupales asignadas
 
                     <br>
 
-                    <a class="btn btn-green" href="../../controller/clienteIns/sesionGrupalController.php?accion=confirmarAsistencia&id=<?= e($sesion['id'] ?? '') ?>">
+                    <a class="btn btn-green" href="../../controllers/clienteIns/sesionGrupalController.php?accion=confirmarAsistencia&id=<?= e($sesion['id'] ?? '') ?>">
                         Confirmar asistencia
                     </a>
                 </article>

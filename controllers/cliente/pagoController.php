@@ -1,14 +1,16 @@
 <?php
 
-require_once __DIR__ . '/../../models/cliente/clienteModel.php'; // Importa cliente
-require_once __DIR__ . '/../../models/pago/pagoModel.php'; // Importa pagos
-require_once __DIR__ . '/../../models/pago/comprobanteModel.php'; // Importa comprobantes
+require_once __DIR__ . '/../../models/cliente/clienteModel.php';
+require_once __DIR__ . '/../../models/pago/pagoModel.php';
+require_once __DIR__ . '/../../models/pago/comprobanteModel.php';
+require_once __DIR__ . '/../../models/plan/planModel.php';
 
 class ClientePagoController
 {
-    private $clienteModel; // Modelo cliente
-    private $pagoModel; // Modelo pagos
-    private $comprobanteModel; // Modelo comprobantes
+    private $clienteModel;
+    private $pagoModel;
+    private $comprobanteModel;
+    private $planModel;
 
     public function __construct()
     {
@@ -16,18 +18,21 @@ class ClientePagoController
 
         $this->validarCliente(); // Valida acceso cliente
 
-        $this->clienteModel = new ClienteModel(); // Instancia cliente
-        $this->pagoModel = new PagoModel(); // Instancia pagos
-        $this->comprobanteModel = new ComprobanteModel(); // Instancia comprobantes
+        $this->clienteModel = new ClienteModel();
+        $this->pagoModel = new PagoModel();
+        $this->comprobanteModel = new ComprobanteModel();
+        $this->planModel = new PlanModel();
     }
 
     public function index()
     {
-        $clienteId = $this->obtenerClienteId(); // Obtiene cliente actual
+        $clienteId = $this->obtenerClienteId();
 
-        $pagos = $this->pagoModel->obtenerPorCliente($clienteId); // Obtiene pagos
+        $pagos = $this->pagoModel->obtenerPorCliente($clienteId);
+        $planes = $this->planModel->obtenerActivos();
+        $planActivo = $this->planModel->obtenerPlanActivoCliente($clienteId);
 
-        require_once __DIR__ . '/../../views/cliente/pagos.php'; // Carga vista
+        require_once __DIR__ . '/../../views/cliente/pagos.php';
     }
 
     public function registrar()

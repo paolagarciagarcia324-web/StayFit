@@ -1,261 +1,214 @@
 <?php
 
-if (!function_exists('e')) { // Evita duplicar función
-    function e($valor) { // Limpia salida HTML
-        return htmlspecialchars((string)$valor, ENT_QUOTES, 'UTF-8'); // Retorna texto seguro
+if (!function_exists('e')) {
+    function e($valor) {
+        return htmlspecialchars((string) $valor, ENT_QUOTES, 'UTF-8');
     }
 }
 
-$datos = $datos ?? []; // Datos del dashboard
+$datos = $datos ?? [];
 
-$clientesActivos = $datos['clientesActivos'] ?? 0; // Clientes activos
-$solicitudesPendientes = $datos['solicitudesPendientes'] ?? 0; // Solicitudes pendientes
-$pagosPendientes = $datos['pagosPendientes'] ?? 0; // Pagos pendientes
-$planesVirtuales = $datos['planesVirtuales'] ?? 0; // Planes virtuales
-$accesosVencidos = $datos['accesosVencidos'] ?? 0; // Accesos vencidos
+$clientesActivos       = $datos['clientesActivos'] ?? 0;
+$solicitudesPendientes = $datos['solicitudesPendientes'] ?? 0;
+$pagosPendientes       = $datos['pagosPendientes'] ?? 0;
+$planesVirtuales       = $datos['planesVirtuales'] ?? 0;
+$accesosVencidos       = $datos['accesosVencidos'] ?? 0;
+
+$vistaActiva = 'dashboard';
+$nombreUsuario = $_SESSION['nombre'] ?? 'Administrador';
+
+$iniciales = '';
+$partesNombre = preg_split('/\s+/', trim($nombreUsuario));
+if (!empty($partesNombre[0])) {
+    $iniciales .= strtoupper(substr($partesNombre[0], 0, 1));
+}
+if (isset($partesNombre[1])) {
+    $iniciales .= strtoupper(substr($partesNombre[1], 0, 1));
+}
+if ($iniciales === '') {
+    $iniciales = 'A';
+}
+
+$dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+$meses = ['', 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+$fechaHoy = $dias[(int) date('w')] . ', ' . date('j') . ' de ' . $meses[(int) date('n')] . ' ' . date('Y');
+
+require_once __DIR__ . '/../partials/panel/dashIcons.php';
+
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8"> <!-- Codificación -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
-    <title>Dashboard Admin | StayFit</title> <!-- Título -->
-    <link rel="stylesheet" href="../../public/style.css"> <!-- Estilos generales -->
-
-    <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: #f7f7f7;
-            color: #2D2D2D;
-        }
-
-        .admin-wrapper {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        .sidebar {
-            width: 245px;
-            background: #2D2D2D;
-            color: #FFFFFF;
-            padding: 28px 20px;
-        }
-
-        .sidebar h2 {
-            color: #D63384;
-            margin-bottom: 30px;
-        }
-
-        .sidebar a {
-            display: block;
-            color: #FFFFFF;
-            text-decoration: none;
-            padding: 12px 14px;
-            border-radius: 12px;
-            margin-bottom: 8px;
-        }
-
-        .sidebar a:hover,
-        .sidebar a.active {
-            background: #D63384;
-        }
-
-        .content {
-            flex: 1;
-            padding: 34px;
-        }
-
-        .hero {
-            background: linear-gradient(135deg, #2D2D2D, #D63384);
-            color: #FFFFFF;
-            border-radius: 24px;
-            padding: 34px;
-            margin-bottom: 28px;
-        }
-
-        .hero h1 {
-            margin: 0 0 8px;
-            font-size: 34px;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-            gap: 20px;
-            margin-bottom: 28px;
-        }
-
-        .stat-card {
-            background: #FFFFFF;
-            border-radius: 20px;
-            padding: 24px;
-            box-shadow: 0 10px 28px rgba(45, 45, 45, 0.08);
-        }
-
-        .stat-card small {
-            color: #777;
-            font-weight: 600;
-        }
-
-        .stat-card h2 {
-            margin: 10px 0;
-            color: #D63384;
-            font-size: 34px;
-        }
-
-        .stat-card p {
-            margin: 0;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 1.4fr 1fr;
-            gap: 22px;
-        }
-
-        .card {
-            background: #FFFFFF;
-            border-radius: 20px;
-            padding: 24px;
-            box-shadow: 0 10px 28px rgba(45, 45, 45, 0.08);
-        }
-
-        .card h3 {
-            color: #D63384;
-            margin-top: 0;
-        }
-
-        .timeline-item {
-            padding: 14px 0;
-            border-bottom: 1px solid #eee;
-        }
-
-        .timeline-item strong {
-            color: #2D2D2D;
-        }
-
-        .badge {
-            background: #3EB489;
-            color: #FFFFFF;
-            padding: 7px 12px;
-            border-radius: 18px;
-            font-size: 13px;
-        }
-
-        .badge-alert {
-            background: #D63384;
-        }
-
-        @media (max-width: 900px) {
-            .admin-wrapper {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                width: auto;
-            }
-
-            .grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin | FigueFit</title>
+    <link rel="stylesheet" href="../../public/panel.css?v=1">
+    <link rel="stylesheet" href="../../public/dashboard-admin.css?v=2">
 </head>
+<body class="fp-panel fp-dashboard-premium">
 
-<body>
-<div class="admin-wrapper">
+<div class="fp-layout admin-wrapper">
 
-    <aside class="sidebar">
-        <h2>StayFit</h2>
-        <a class="active" href="../../controller/admin/dashboardController.php">Dashboard</a>
-        <a href="../../controller/admin/solicitudController.php">Solicitudes</a>
-        <a href="../../controller/admin/pagoController.php">Pagos</a>
-        <a href="../../controller/admin/clienteController.php">Clientes</a>
-        <a href="../../controller/admin/coachController.php">Coaches</a>
-        <a href="../../controller/admin/asignacionController.php">Asignaciones</a>
-        <a href="../../controller/admin/planController.php">Planes</a>
-        <a href="../../controller/admin/contenidoVirtualController.php">Contenido virtual</a>
-        <a href="../../controller/admin/institucionController.php">Instituciones</a>
-        <a href="../../controller/admin/notificacionController.php">Notificaciones</a>
-        <?php require_once __DIR__ . '/../partials/cerrarSesion.php'; ?>
+    <?php require __DIR__ . '/../partials/panel/sidebarAdmin.php'; ?>
 
-    </aside>
-
-    <main class="content">
-
-        <section class="hero">
-            <h1>Panel Administrativo</h1>
-            <p>Control general de StayFit: clientes, pagos, accesos, modalidad virtual y trazabilidad.</p>
-        </section>
-
-        <section class="stats">
-            <div class="stat-card">
-                <small>Clientes activos</small>
-                <h2><?= e($clientesActivos) ?></h2>
-                <p>Clientas con acceso habilitado.</p>
-            </div>
-
-            <div class="stat-card">
-                <small>Solicitudes pendientes</small>
-                <h2><?= e($solicitudesPendientes) ?></h2>
-                <p>Personas esperando validación.</p>
-            </div>
-
-            <div class="stat-card">
-                <small>Pagos por validar</small>
-                <h2><?= e($pagosPendientes) ?></h2>
-                <p>Comprobantes pendientes.</p>
-            </div>
-
-            <div class="stat-card">
-                <small>Planes virtuales activos</small>
-                <h2><?= e($planesVirtuales) ?></h2>
-                <p>Clientes con contenido pregrabado.</p>
-            </div>
-
-            <div class="stat-card">
-                <small>Accesos vencidos</small>
-                <h2><?= e($accesosVencidos) ?></h2>
-                <p>Clientes que requieren revisión.</p>
-            </div>
-        </section>
-
-        <section class="grid">
-            <div class="card">
-                <h3>Trazabilidad operativa</h3>
-
-                <div class="timeline-item">
-                    <strong>Solicitud recibida</strong>
-                    <p>El usuario interesado llena el formulario público y queda pendiente.</p>
-                    <span class="badge">Pendiente</span>
-                </div>
-
-                <div class="timeline-item">
-                    <strong>Validación de pago</strong>
-                    <p>El administrador revisa el comprobante y aprueba o rechaza.</p>
-                    <span class="badge badge-alert">Clave</span>
-                </div>
-
-                <div class="timeline-item">
-                    <strong>Activación del cliente</strong>
-                    <p>Al aprobarse el pago, se habilita el plan, coach o contenido virtual.</p>
-                    <span class="badge">Activo</span>
+    <div class="fp-main-area">
+        <header class="fp-topbar topbar">
+            <div class="fp-dash-topbar-inner">
+                <div class="fp-dash-greeting">
+                    <div class="fp-dash-avatar" aria-hidden="true"><?= e($iniciales) ?></div>
+                    <div>
+                        <strong class="fp-topbar-role">Administrador</strong>
+                        <p class="fp-topbar-name">Hola, <?= e($nombreUsuario) ?></p>
+                    </div>
                 </div>
             </div>
+        </header>
 
-            <div class="card">
-                <h3>Acciones rápidas</h3>
-                <p><a href="../../controller/admin/solicitudController.php">Revisar solicitudes pendientes</a></p>
-                <p><a href="../../controller/admin/pagoController.php">Validar pagos</a></p>
-                <p><a href="../../controller/admin/clienteController.php">Gestionar clientes</a></p>
-                <p><a href="../../controller/admin/asignacionController.php">Asignar coach o videos</a></p>
-                <p><a href="../../controller/admin/planController.php">Administrar planes</a></p>
-            </div>
-        </section>
+        <main class="fp-content content">
 
-    </main>
+            <section class="fp-dash-hero">
+                <div class="fp-dash-hero-glow fp-dash-hero-glow--1"></div>
+                <div class="fp-dash-hero-glow fp-dash-hero-glow--2"></div>
+                <div class="fp-dash-hero-grid"></div>
+
+                <div class="fp-dash-hero-body">
+                    <div>
+                        <span class="fp-dash-hero-tag">Panel de control</span>
+                        <h1>Panel <em>Administrativo</em></h1>
+                        <p class="fp-dash-hero-desc">
+                            Control general de FigueFit: clientes, pagos, accesos, modalidad virtual y trazabilidad operativa en un solo lugar.
+                        </p>
+                    </div>
+                    <div class="fp-dash-hero-meta">
+                        <time datetime="<?= date('Y-m-d') ?>"><?= e($fechaHoy) ?></time>
+                        <strong>Sistema operativo</strong>
+                    </div>
+                </div>
+            </section>
+
+            <section class="fp-dash-kpis">
+                <article class="fp-dash-kpi">
+                    <div class="fp-dash-kpi-head">
+                        <span class="fp-dash-kpi-icon" aria-hidden="true"><?= dashIcon('users') ?></span>
+                    </div>
+                    <span class="fp-dash-kpi-label">Clientes activos</span>
+                    <p class="fp-dash-kpi-value"><?= e($clientesActivos) ?></p>
+                    <p class="fp-dash-kpi-foot">Clientes con acceso habilitado</p>
+                </article>
+
+                <article class="fp-dash-kpi fp-dash-kpi--amber">
+                    <div class="fp-dash-kpi-head">
+                        <span class="fp-dash-kpi-icon" aria-hidden="true"><?= dashIcon('clipboard') ?></span>
+                    </div>
+                    <span class="fp-dash-kpi-label">Solicitudes pendientes</span>
+                    <p class="fp-dash-kpi-value"><?= e($solicitudesPendientes) ?></p>
+                    <p class="fp-dash-kpi-foot">Personas esperando validación</p>
+                </article>
+
+                <article class="fp-dash-kpi fp-dash-kpi--purple">
+                    <div class="fp-dash-kpi-head">
+                        <span class="fp-dash-kpi-icon" aria-hidden="true"><?= dashIcon('card') ?></span>
+                    </div>
+                    <span class="fp-dash-kpi-label">Pagos por validar</span>
+                    <p class="fp-dash-kpi-value"><?= e($pagosPendientes) ?></p>
+                    <p class="fp-dash-kpi-foot">Comprobantes pendientes</p>
+                </article>
+
+                <article class="fp-dash-kpi fp-dash-kpi--mint">
+                    <div class="fp-dash-kpi-head">
+                        <span class="fp-dash-kpi-icon" aria-hidden="true"><?= dashIcon('play') ?></span>
+                    </div>
+                    <span class="fp-dash-kpi-label">Planes virtuales</span>
+                    <p class="fp-dash-kpi-value"><?= e($planesVirtuales) ?></p>
+                    <p class="fp-dash-kpi-foot">Contenido pregrabado activo</p>
+                </article>
+
+                <article class="fp-dash-kpi fp-dash-kpi--alert">
+                    <div class="fp-dash-kpi-head">
+                        <span class="fp-dash-kpi-icon" aria-hidden="true"><?= dashIcon('alert') ?></span>
+                    </div>
+                    <span class="fp-dash-kpi-label">Accesos vencidos</span>
+                    <p class="fp-dash-kpi-value"><?= e($accesosVencidos) ?></p>
+                    <p class="fp-dash-kpi-foot">Requieren revisión inmediata</p>
+                </article>
+            </section>
+
+            <section class="fp-dash-grid">
+                <div class="fp-dash-panel">
+                    <div class="fp-dash-panel-head">
+                        <span class="fp-dash-panel-bar"></span>
+                        <h3>Trazabilidad operativa</h3>
+                    </div>
+
+                    <div class="fp-dash-steps">
+                        <div class="fp-dash-step fp-dash-step--done">
+                            <div class="fp-dash-step-num">1</div>
+                            <div class="fp-dash-step-body">
+                                <strong>Solicitud recibida</strong>
+                                <p>El usuario interesado llena el formulario público y queda pendiente de revisión.</p>
+                                <span class="fp-dash-badge fp-dash-badge--mint">Pendiente</span>
+                            </div>
+                        </div>
+
+                        <div class="fp-dash-step fp-dash-step--active">
+                            <div class="fp-dash-step-num">2</div>
+                            <div class="fp-dash-step-body">
+                                <strong>Validación de pago</strong>
+                                <p>El administrador revisa el comprobante y aprueba o rechaza la solicitud.</p>
+                                <span class="fp-dash-badge fp-dash-badge--pink">Clave</span>
+                            </div>
+                        </div>
+
+                        <div class="fp-dash-step">
+                            <div class="fp-dash-step-num">3</div>
+                            <div class="fp-dash-step-body">
+                                <strong>Activación del cliente</strong>
+                                <p>Al aprobarse el pago, se habilita el plan, coach o contenido virtual.</p>
+                                <span class="fp-dash-badge fp-dash-badge--mint">Activo</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="fp-dash-panel">
+                    <div class="fp-dash-panel-head">
+                        <span class="fp-dash-panel-bar"></span>
+                        <h3>Acciones rápidas</h3>
+                    </div>
+
+                    <div class="fp-dash-actions">
+                        <a class="fp-dash-action" href="../../controllers/admin/solicitudController.php">
+                            <span class="fp-dash-action-icon" aria-hidden="true"><?= dashIcon('inbox') ?></span>
+                            <span class="fp-dash-action-text">Revisar solicitudes pendientes</span>
+                            <span class="fp-dash-action-arrow" aria-hidden="true"><?= dashIcon('arrow') ?></span>
+                        </a>
+                        <a class="fp-dash-action" href="../../controllers/admin/pagoController.php">
+                            <span class="fp-dash-action-icon" aria-hidden="true"><?= dashIcon('check') ?></span>
+                            <span class="fp-dash-action-text">Validar pagos</span>
+                            <span class="fp-dash-action-arrow" aria-hidden="true"><?= dashIcon('arrow') ?></span>
+                        </a>
+                        <a class="fp-dash-action" href="../../controllers/admin/clienteController.php">
+                            <span class="fp-dash-action-icon" aria-hidden="true"><?= dashIcon('user') ?></span>
+                            <span class="fp-dash-action-text">Gestionar clientes</span>
+                            <span class="fp-dash-action-arrow" aria-hidden="true"><?= dashIcon('arrow') ?></span>
+                        </a>
+                        <a class="fp-dash-action" href="../../controllers/admin/asignacionController.php">
+                            <span class="fp-dash-action-icon" aria-hidden="true"><?= dashIcon('link') ?></span>
+                            <span class="fp-dash-action-text">Asignar coach o videos</span>
+                            <span class="fp-dash-action-arrow" aria-hidden="true"><?= dashIcon('arrow') ?></span>
+                        </a>
+                        <a class="fp-dash-action" href="../../controllers/admin/planController.php">
+                            <span class="fp-dash-action-icon" aria-hidden="true"><?= dashIcon('package') ?></span>
+                            <span class="fp-dash-action-text">Administrar planes</span>
+                            <span class="fp-dash-action-arrow" aria-hidden="true"><?= dashIcon('arrow') ?></span>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
 </div>
+
 </body>
 </html>

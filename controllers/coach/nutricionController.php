@@ -1,113 +1,156 @@
 <?php
 
-require_once __DIR__ . '/../../models/coach/coachModel.php'; // Importa coach
-require_once __DIR__ . '/../../models/cliente/clienteModel.php'; // Importa clientes
-require_once __DIR__ . '/../../models/nutricion/planNutricionalModel.php'; // Importa planes nutricionales
-require_once __DIR__ . '/../../models/nutricion/comidaModel.php'; // Importa comidas
+require_once __DIR__ . '/../../models/coach/coachModel.php';
+require_once __DIR__ . '/../../models/cliente/clienteModel.php';
+require_once __DIR__ . '/../../models/nutricion/planNutricionalModel.php';
+require_once __DIR__ . '/../../models/nutricion/comidaModel.php';
 
 class CoachNutricionController
 {
-    private $coachModel; // Modelo coach
-    private $clienteModel; // Modelo cliente
-    private $planNutricionalModel; // Modelo nutrición
-    private $comidaModel; // Modelo comida
+    private $coachModel;
+    private $clienteModel;
+    private $planNutricionalModel;
+    private $comidaModel;
 
     public function __construct()
     {
-        session_start(); // Inicia sesión
+        session_start();
 
-        $this->validarCoach(); // Valida acceso coach
+        $this->validarCoach();
 
-        $this->coachModel = new CoachModel(); // Instancia coach
-        $this->clienteModel = new ClienteModel(); // Instancia cliente
-        $this->planNutricionalModel = new PlanNutricionalModel(); // Instancia plan nutricional
-        $this->comidaModel = new ComidaModel(); // Instancia comida
+        $this->coachModel = new CoachModel();
+        $this->clienteModel = new ClienteModel();
+        $this->planNutricionalModel = new PlanNutricionalModel();
+        $this->comidaModel = new ComidaModel();
     }
 
     public function index()
     {
-        $coachId = $this->obtenerCoachId(); // Obtiene coach actual
+        $coachId = $this->obtenerCoachId();
 
-        $clientes = $this->clienteModel->obtenerPorCoach($coachId); // Obtiene clientes
-        $planesNutricionales = $this->planNutricionalModel->obtenerPorCoach($coachId); // Obtiene planes
-        $comidas = $this->comidaModel->obtenerPorCoach($coachId); // Obtiene comidas
+        $clientes = $this->clienteModel->obtenerPorCoach($coachId);
+        $planesNutricionales = $this->planNutricionalModel->obtenerPorCoach($coachId);
+        $comidas = $this->comidaModel->obtenerPorCoach($coachId);
+        $flash = $_SESSION['flash'] ?? null;
+        unset($_SESSION['flash']);
 
-        require_once __DIR__ . '/../../views/coach/nutricion.php'; // Carga vista
+        require_once __DIR__ . '/../../views/coach/nutricion.php';
     }
 
     public function crearPlan()
     {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Valida formulario
-
-            $datos = [
-                'coach_id' => $this->obtenerCoachId(), // ID coach
-                'cliente_id' => $_POST['cliente_id'], // ID cliente
-                'nombre' => trim($_POST['nombre']), // Nombre del plan
-                'descripcion' => trim($_POST['descripcion']), // Descripción
-                'objetivo' => trim($_POST['objetivo']), // Objetivo nutricional
-                'estado' => 'activo' // Estado inicial
-            ];
-
-            $this->planNutricionalModel->crear($datos); // Crea plan nutricional
-
-            $this->planNutricionalModel->registrarTrazabilidad($_SESSION['usuario_id'], 'Plan nutricional creado por coach'); // Registra historial
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: nutricionController.php');
+            exit;
         }
 
-        header('Location: nutricionController.php'); // Redirige
-        exit; // Detiene ejecución
+        $coachId = $this->obtenerCoachId();
+        $clienteId = (int) ($_POST['cliente_id'] ?? 0);
+        $nombre = trim($_POST['nombre'] ?? '');
+        $descripcion = trim($_POST['descripcion'] ?? '');
+        $objetivo = trim($_POST['objetivo'] ?? '');
+
+        if ($clienteId < 1 || $nombre === '' || $objetivo === '') {
+            $_SESSION['flash'] = ['tipo' => 'error', 'mensaje' => 'Completa cliente, nombre y objetivo nutricional.'];
+            header('Location: nutricionController.php');
+            exit;
+        }
+
+        if (!$this->clientePerteneceAlCoach($clienteId, $coachId)) {
+            $_SESSION['flash'] = ['tipo' => 'error', 'mensaje' => 'La clienta seleccionada no está asignada a tu perfil de coach.'];
+            header('Location: nutricionController.php');
+            exit;
+        }
+
+        try {
+            $planId = $this->planNutricionalModel->crear([
+                'coach_id' => $coachId,
+                'id_coach' => $coachId,
+                'cliente_id' => $clienteId,
+                'nombre' => $nombre,
+                'descripcion' => $descripcion,
+                'objetivo' => $objetivo,
+                'estado' => 'ACTIVO',
+            ]);
+
+            if (!$planId) {
+                throw new RuntimeException('No se pudo guardar el plan en la base de datos.');
+            }
+
+            $this->planNutricionalModel->registrarTrazabilidad(
+                $_SESSION['usuario_id'] ?? null,
+                'Plan nutricional creado por coach'
+            );
+
+            $_SESSION['flash'] = ['tipo' => 'success', 'mensaje' => 'Plan nutricional creado correctamente.'];
+        } catch (Throwable $e) {
+            $_SESSION['flash'] = ['tipo' => 'error', 'mensaje' => 'Error al crear el plan: ' . $e->getMessage()];
+        }
+
+        header('Location: nutricionController.php');
+        exit;
     }
 
     public function actualizarPlan()
     {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Valida formulario
-
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $datos = [
-                'id' => $_POST['id'], // ID del plan
-                'nombre' => trim($_POST['nombre']), // Nombre
-                'descripcion' => trim($_POST['descripcion']), // Descripción
-                'objetivo' => trim($_POST['objetivo']), // Objetivo
-                'estado' => $_POST['estado'] // Estado
+                'id' => $_POST['id'],
+                'nombre' => trim($_POST['nombre']),
+                'descripcion' => trim($_POST['descripcion'] ?? ''),
+                'objetivo' => trim($_POST['objetivo']),
+                'estado' => $_POST['estado'],
             ];
 
-            $this->planNutricionalModel->actualizar($datos); // Actualiza plan
-
-            $this->planNutricionalModel->registrarTrazabilidad($_SESSION['usuario_id'], 'Plan nutricional actualizado'); // Registra historial
+            $this->planNutricionalModel->actualizar($datos);
+            $this->planNutricionalModel->registrarTrazabilidad($_SESSION['usuario_id'] ?? null, 'Plan nutricional actualizado');
+            $_SESSION['flash'] = ['tipo' => 'success', 'mensaje' => 'Plan actualizado correctamente.'];
         }
 
-        header('Location: nutricionController.php'); // Redirige
-        exit; // Detiene ejecución
+        header('Location: nutricionController.php');
+        exit;
+    }
+
+    private function clientePerteneceAlCoach(int $clienteId, int $coachId): bool
+    {
+        foreach ($this->clienteModel->obtenerPorCoach($coachId) as $cliente) {
+            if ((int) ($cliente['id'] ?? $cliente['id_cliente'] ?? 0) === $clienteId) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function obtenerCoachId()
     {
-        if (isset($_SESSION['coach_id'])) { // Verifica sesión
-            return $_SESSION['coach_id']; // Retorna coach
+        if (isset($_SESSION['coach_id'])) {
+            return (int) $_SESSION['coach_id'];
         }
 
-        $coach = $this->coachModel->obtenerPorUsuario($_SESSION['usuario_id']); // Busca coach
+        $coach = $this->coachModel->obtenerPorUsuario($_SESSION['usuario_id']);
+        $_SESSION['coach_id'] = $coach['id'];
 
-        $_SESSION['coach_id'] = $coach['id']; // Guarda coach
-
-        return $coach['id']; // Retorna ID
+        return (int) $coach['id'];
     }
 
     private function validarCoach()
     {
-        if (strtolower($_SESSION['rol'] ?? '') !== 'coach') { // Valida rol
-            header('Location: ../../views/auth/accesoDenegado.php'); // Redirige
-            exit; // Detiene ejecución
+        if (strtolower($_SESSION['rol'] ?? '') !== 'coach') {
+            header('Location: ../../views/auth/accesoDenegado.php');
+            exit;
         }
     }
 }
 
-$controller = new CoachNutricionController(); // Crea controlador
+$controller = new CoachNutricionController();
 
-$accion = $_GET['accion'] ?? 'index'; // Acción por defecto
+$accion = $_GET['accion'] ?? 'index';
 
-if (method_exists($controller, $accion)) { // Verifica acción
-    $controller->$accion(); // Ejecuta acción
+if (method_exists($controller, $accion)) {
+    $controller->$accion();
 } else {
-    $controller->index(); // Ejecuta inicio
+    $controller->index();
 }
 
 ?>

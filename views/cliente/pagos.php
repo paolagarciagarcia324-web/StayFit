@@ -1,278 +1,322 @@
 <?php
 
-if (!function_exists('e')) { // Evita duplicar función
-    function e($valor) { // Limpia salida HTML
-        return htmlspecialchars((string)$valor, ENT_QUOTES, 'UTF-8'); // Retorna texto seguro
+if (!function_exists('e')) {
+    function e($valor) {
+        return htmlspecialchars((string) $valor, ENT_QUOTES, 'UTF-8');
     }
 }
 
-$pagos = $pagos ?? []; // Historial de pagos
-$planes = $planes ?? []; // Planes disponibles si llegan desde controlador
+if (!function_exists('pagoEstadoBadgeCliente')) {
+    function pagoEstadoBadgeCliente(?string $estado): array
+    {
+        $estado = strtolower(trim((string) $estado));
+
+        return match ($estado) {
+            'validado', 'aprobado', 'pagado' => [
+                'class' => 'fp-badge fp-badge-ok',
+                'label' => $estado === 'validado' ? 'Validado' : ucfirst($estado),
+            ],
+            'rechazado', 'cancelado' => [
+                'class' => 'fp-badge fp-badge-alert',
+                'label' => ucfirst($estado),
+            ],
+            default => [
+                'class' => 'fp-badge fp-badge-pending',
+                'label' => 'Pendiente',
+            ],
+        };
+    }
+}
+
+if (!function_exists('pagoEsAprobadoCliente')) {
+    function pagoEsAprobadoCliente(?string $estado): bool
+    {
+        return in_array(strtolower(trim((string) $estado)), ['validado', 'aprobado', 'pagado'], true);
+    }
+}
+
+if (!function_exists('formatearMontoCliente')) {
+    function formatearMontoCliente($monto): string
+    {
+        return '$' . number_format((float) $monto, 0, ',', '.');
+    }
+}
+
+if (!function_exists('formatearFechaPagoCliente')) {
+    function formatearFechaPagoCliente(?string $fecha): array
+    {
+        if (!$fecha) {
+            return ['fecha' => '—', 'hora' => ''];
+        }
+
+        $ts = strtotime($fecha);
+        if ($ts === false) {
+            return ['fecha' => (string) $fecha, 'hora' => ''];
+        }
+
+        $meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+        return [
+            'fecha' => date('d', $ts) . ' ' . $meses[(int) date('n', $ts) - 1] . ' ' . date('Y', $ts),
+            'hora' => date('H:i', $ts),
+        ];
+    }
+}
+
+$pagos = $pagos ?? [];
+$planes = $planes ?? [];
+$planActivo = $planActivo ?? null;
+$nombreTopbar = $_SESSION['nombre'] ?? 'Cliente';
+
+$planSeleccionado = $planActivo['id_plan'] ?? $planActivo['id'] ?? '';
+
+$totalPagos = count($pagos);
+$totalPendientes = 0;
+$totalAprobados = 0;
+$totalMontoValidado = 0.0;
+
+foreach ($pagos as $p) {
+    $estado = strtolower((string) ($p['estado'] ?? 'pendiente'));
+    if ($estado === 'pendiente') {
+        $totalPendientes++;
+    }
+    if (pagoEsAprobadoCliente($estado)) {
+        $totalAprobados++;
+        $totalMontoValidado += (float) ($p['monto'] ?? 0);
+    }
+}
 
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8"> <!-- Codificación -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
-    <title>Pagos | StayFit</title> <!-- Título -->
-
-    <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: #f7f7f7;
-            color: #2D2D2D;
-        }
-
-        .cliente-wrapper {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        .sidebar {
-            width: 245px;
-            background: #2D2D2D;
-            color: #FFFFFF;
-            padding: 28px 20px;
-        }
-
-        .sidebar h2 {
-            color: #D63384;
-            margin-bottom: 30px;
-        }
-
-        .sidebar a {
-            display: block;
-            color: #FFFFFF;
-            text-decoration: none;
-            padding: 12px 14px;
-            border-radius: 12px;
-            margin-bottom: 8px;
-        }
-
-        .sidebar a:hover,
-        .sidebar a.active {
-            background: #D63384;
-        }
-
-        .content {
-            flex: 1;
-            padding: 34px;
-        }
-
-        .page-header {
-            background: linear-gradient(135deg, #D63384, #2D2D2D);
-            color: #FFFFFF;
-            border-radius: 24px;
-            padding: 32px;
-            margin-bottom: 28px;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 360px 1fr;
-            gap: 22px;
-        }
-
-        .card {
-            background: #FFFFFF;
-            border-radius: 22px;
-            padding: 24px;
-            box-shadow: 0 10px 28px rgba(45, 45, 45, 0.08);
-        }
-
-        .card h3 {
-            margin-top: 0;
-            color: #D63384;
-        }
-
-        label {
-            font-weight: 700;
-            font-size: 14px;
-        }
-
-        input,
-        select {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0 15px;
-            border: 1px solid #ddd;
-            border-radius: 14px;
-            box-sizing: border-box;
-        }
-
-        button {
-            width: 100%;
-            background: #D63384;
-            color: #FFFFFF;
-            border: none;
-            padding: 13px;
-            border-radius: 14px;
-            font-weight: 800;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background: #b92b70;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            text-align: left;
-            padding: 14px;
-            border-bottom: 2px solid #eee;
-        }
-
-        td {
-            padding: 14px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .badge {
-            display: inline-block;
-            background: #3EB489;
-            color: #FFFFFF;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 13px;
-        }
-
-        .badge.pendiente {
-            background: #D63384;
-        }
-
-        .empty {
-            color: #777;
-            background: #f4f4f4;
-            padding: 18px;
-            border-radius: 16px;
-        }
-
-        @media (max-width: 900px) {
-            .cliente-wrapper {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                width: auto;
-            }
-
-            .grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagos | FigueFit</title>
+    <link rel="stylesheet" href="../../public/panel.css?v=17">
 </head>
+<body class="fp-panel">
 
-<body>
-<div class="cliente-wrapper">
+<div class="fp-layout cliente-wrapper">
 
-    <aside class="sidebar">
-        <h2>StayFit</h2>
-        <a href="../../controller/cliente/dashboardController.php">Dashboard</a>
-        <a href="../../controller/cliente/perfilController.php">Perfil</a>
-        <a href="../../controller/cliente/planController.php">Mi plan</a>
-        <a href="../../controller/cliente/entrenamientoController.php">Entrenamiento</a>
-        <a href="../../controller/cliente/nutricionController.php">Nutrición</a>
-        <a href="../../controller/cliente/progresoController.php">Progreso</a>
-        <a href="../../controller/cliente/calendarioController.php">Calendario</a>
-        <a class="active" href="../../controller/cliente/pagoController.php">Pagos</a>
-        <a href="../../controller/auth/logouthController.php">Cerrar sesión</a>
-    </aside>
+    <?php require __DIR__ . '/../partials/panel/sidebarCliente.php'; ?>
 
-    <main class="content">
+    <div class="fp-main-area">
+        <header class="fp-topbar topbar">
+            <div>
+                <strong class="fp-topbar-role">Cliente individual</strong>
+                <p class="fp-topbar-name">Hola, <?= e($nombreTopbar) ?></p>
+            </div>
+            <a class="logout" href="../../controllers/auth/logouthController.php">Cerrar sesión</a>
+        </header>
 
-        <section class="page-header">
-            <h1>Pagos</h1>
-            <p>Consulta tu historial, envía comprobantes y mantén activo tu acceso a StayFit.</p>
-        </section>
+        <main class="fp-content content">
 
-        <section class="grid">
+            <section class="fp-hero hero page-header">
+                <span class="fp-hero-tag">Tu membresía</span>
+                <h1><span>Pagos</span></h1>
+                <p>Consulta tu historial, envía comprobantes y mantén activo tu acceso a FigueFit.</p>
+            </section>
 
-            <div class="card">
-                <h3>Enviar nuevo pago</h3>
+            <section class="fp-stats-premium">
+                <article class="fp-stat-premium fp-stat-premium--fuchsia">
+                    <div class="fp-stat-premium-head">
+                        <div class="fp-stat-premium-icon" aria-hidden="true">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                                <rect x="3" y="6" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                                <path d="M3 10h18M7 15h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="fp-stat-premium-value"><?= e((string) $totalPagos) ?></p>
+                    <p class="fp-stat-premium-label">Pagos registrados</p>
+                </article>
 
-                <form action="../../controller/cliente/pagoController.php?accion=registrar" method="POST" enctype="multipart/form-data">
-                    <label>Plan</label>
+                <article class="fp-stat-premium fp-stat-premium--warn">
+                    <div class="fp-stat-premium-head">
+                        <div class="fp-stat-premium-icon" aria-hidden="true">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+                                <path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="fp-stat-premium-value"><?= e((string) $totalPendientes) ?></p>
+                    <p class="fp-stat-premium-label">En revisión</p>
+                </article>
 
-                    <?php if (!empty($planes)): ?>
-                        <select name="plan_id" required>
-                            <option value="">Seleccione un plan</option>
-                            <?php foreach ($planes as $plan): ?>
-                                <option value="<?= e($plan['id'] ?? '') ?>">
-                                    <?= e($plan['nombre'] ?? 'Plan') ?> - $<?= e($plan['precio'] ?? '0') ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    <?php else: ?>
-                        <input type="number" name="plan_id" placeholder="ID del plan" required>
-                    <?php endif; ?>
+                <article class="fp-stat-premium fp-stat-premium--mint">
+                    <div class="fp-stat-premium-head">
+                        <div class="fp-stat-premium-icon" aria-hidden="true">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                                <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="fp-stat-premium-value"><?= e(formatearMontoCliente($totalMontoValidado)) ?></p>
+                    <p class="fp-stat-premium-label"><?= e((string) $totalAprobados) ?> pago(s) validado(s)</p>
+                </article>
+            </section>
 
-                    <label>Monto pagado</label>
-                    <input type="number" name="monto" min="0" required>
+            <div class="fp-pagos-grid">
+                <article class="fp-card card fp-pagos-card">
+                    <div class="fp-pagos-card-head fp-pagos-card-head--fuchsia">
+                        <h3>Enviar nuevo pago</h3>
+                        <p>Sube tu comprobante para que el equipo valide tu acceso al plan.</p>
+                    </div>
+                    <div class="fp-pagos-card-body">
+                        <div class="fp-pagos-tip">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+                                <path d="M12 10v6M12 7h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                            </svg>
+                            <p>Aceptamos transferencia, Nequi y Daviplata. El estado quedará <strong>pendiente</strong> hasta que un administrador lo valide.</p>
+                        </div>
 
-                    <label>Tipo de cuenta</label>
-                    <select name="tipo_cuenta" required>
-                        <option value="">Seleccione una opción</option>
-                        <option value="ahorros">Ahorros</option>
-                        <option value="corriente">Corriente</option>
-                        <option value="nequi">Nequi</option>
-                        <option value="daviplata">Daviplata</option>
-                    </select>
+                        <form class="fp-form-premium fp-pagos-form" action="../../controllers/cliente/pagoController.php?accion=registrar" method="POST" enctype="multipart/form-data">
+                            <div class="fp-form-grid">
+                                <div class="fp-field fp-field--full">
+                                    <label for="pago-plan">Plan</label>
+                                    <?php if (!empty($planes)): ?>
+                                        <select id="pago-plan" name="plan_id" required>
+                                            <option value="">Seleccione un plan</option>
+                                            <?php foreach ($planes as $plan): ?>
+                                                <?php $planId = $plan['id'] ?? $plan['id_plan'] ?? ''; ?>
+                                                <option value="<?= e($planId) ?>" <?= (string) $planSeleccionado === (string) $planId ? 'selected' : '' ?>>
+                                                    <?= e($plan['nombre'] ?? 'Plan') ?> · <?= e(formatearMontoCliente($plan['precio'] ?? 0)) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    <?php else: ?>
+                                        <input type="number" id="pago-plan" name="plan_id" placeholder="ID del plan" value="<?= e((string) $planSeleccionado) ?>" required>
+                                        <span class="fp-field-hint">Ingresa el ID del plan asignado por tu coach.</span>
+                                    <?php endif; ?>
+                                </div>
 
-                    <label>Número de cuenta</label>
-                    <input type="text" name="numero_cuenta" required>
+                                <div class="fp-field">
+                                    <label for="pago-monto">Monto pagado</label>
+                                    <input type="number" id="pago-monto" name="monto" min="0" step="100" placeholder="Ej: 90000" required>
+                                </div>
 
-                    <label>Comprobante</label>
-                    <input type="file" name="comprobante" accept="image/*,.pdf" required>
+                                <div class="fp-field">
+                                    <label for="pago-tipo">Tipo de cuenta</label>
+                                    <select id="pago-tipo" name="tipo_cuenta" required>
+                                        <option value="">Seleccione una opción</option>
+                                        <option value="ahorros">Ahorros</option>
+                                        <option value="corriente">Corriente</option>
+                                        <option value="nequi">Nequi</option>
+                                        <option value="daviplata">Daviplata</option>
+                                    </select>
+                                </div>
 
-                    <button type="submit">Enviar comprobante</button>
-                </form>
+                                <div class="fp-field fp-field--full">
+                                    <label for="pago-numero">Número de cuenta / celular</label>
+                                    <input type="text" id="pago-numero" name="numero_cuenta" placeholder="Ej: 3001234567" required>
+                                </div>
+
+                                <div class="fp-field fp-field--full">
+                                    <label for="pago-comprobante">Comprobante</label>
+                                    <div class="fp-progreso-file">
+                                        <input type="file" id="pago-comprobante" name="comprobante" accept="image/*,.pdf" required>
+                                        <label for="pago-comprobante" class="fp-progreso-file-label">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="1.8"/>
+                                                <path d="M14 2v6h6M8 13h8M8 17h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                            </svg>
+                                            <span>Adjuntar comprobante</span>
+                                            <small>Imagen o PDF · obligatorio</small>
+                                        </label>
+                                        <span class="fp-progreso-file-name" data-file-name></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="fp-form-submit fp-pagos-submit">Enviar comprobante</button>
+                        </form>
+                    </div>
+                </article>
+
+                <article class="fp-card card fp-pagos-card">
+                    <div class="fp-pagos-card-head fp-pagos-card-head--mint">
+                        <h3>Historial de pagos</h3>
+                        <p>Todos tus comprobantes enviados y su estado de validación.</p>
+                    </div>
+                    <div class="fp-pagos-card-body">
+                        <?php if (empty($pagos)): ?>
+                            <div class="fp-pagos-empty">
+                                <div class="fp-pagos-empty-icon" aria-hidden="true">
+                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                                        <rect x="3" y="6" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                                        <path d="M3 10h18" stroke="currentColor" stroke-width="1.8"/>
+                                    </svg>
+                                </div>
+                                <strong>Sin pagos registrados</strong>
+                                <p>Cuando envíes tu primer comprobante, aparecerá aquí con su estado.</p>
+                            </div>
+                        <?php else: ?>
+                            <div class="fp-table-wrap">
+                                <table class="fp-table-premium fp-table-pagos">
+                                    <thead>
+                                        <tr>
+                                            <th>Plan</th>
+                                            <th>Monto</th>
+                                            <th>Estado</th>
+                                            <th>Fecha</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($pagos as $pago): ?>
+                                            <?php
+                                            $badge = pagoEstadoBadgeCliente($pago['estado'] ?? 'pendiente');
+                                            $fechaParts = formatearFechaPagoCliente($pago['fecha'] ?? '');
+                                            ?>
+                                            <tr>
+                                                <td>
+                                                    <div class="fp-cell-stack">
+                                                        <strong><?= e($pago['plan'] ?? $pago['plan_id'] ?? 'Plan') ?></strong>
+                                                        <?php if (!empty($pago['metodo_pago'])): ?>
+                                                            <span class="fp-tag-inline"><?= e(strtolower((string) $pago['metodo_pago'])) ?></span>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="fp-pagos-monto"><?= e(formatearMontoCliente($pago['monto'] ?? 0)) ?></span>
+                                                </td>
+                                                <td>
+                                                    <span class="<?= e($badge['class']) ?>"><?= e($badge['label']) ?></span>
+                                                </td>
+                                                <td>
+                                                    <div class="fp-cell-stack">
+                                                        <strong><?= e($fechaParts['fecha']) ?></strong>
+                                                        <?php if ($fechaParts['hora'] !== ''): ?>
+                                                            <span><?= e($fechaParts['hora']) ?></span>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </article>
             </div>
 
-            <div class="card">
-                <h3>Historial de pagos</h3>
-
-                <?php if (empty($pagos)): ?>
-                    <div class="empty">No tienes pagos registrados todavía.</div>
-                <?php else: ?>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Plan</th>
-                                <th>Monto</th>
-                                <th>Estado</th>
-                                <th>Fecha</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            <?php foreach ($pagos as $pago): ?>
-                                <tr>
-                                    <td><?= e($pago['plan'] ?? $pago['plan_id'] ?? 'Plan') ?></td>
-                                    <td>$<?= e($pago['monto'] ?? '0') ?></td>
-                                    <td>
-                                        <span class="badge <?= (($pago['estado'] ?? '') === 'pendiente') ? 'pendiente' : '' ?>">
-                                            <?= e($pago['estado'] ?? 'pendiente') ?>
-                                        </span>
-                                    </td>
-                                    <td><?= e($pago['fecha'] ?? '') ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                <?php endif; ?>
-            </div>
-
-        </section>
-
-    </main>
+        </main>
+    </div>
 </div>
+
+<script>
+(function () {
+    var input = document.getElementById('pago-comprobante');
+    var nameEl = document.querySelector('[data-file-name]');
+    if (!input || !nameEl) return;
+    input.addEventListener('change', function () {
+        var file = input.files && input.files[0];
+        nameEl.textContent = file ? file.name : '';
+    });
+})();
+</script>
 </body>
 </html>

@@ -1,65 +1,96 @@
 <?php
 
-require_once __DIR__ . '/../../config/database.php'; // Importa conexión
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../config/schemaHelper.php';
+require_once __DIR__ . '/../../config/helpers.php';
 
 class RolModel
 {
-    private $db; // Conexión BD
+    private $db;
+    private SchemaHelper $schema;
 
     public function __construct()
     {
-        $database = new Database(); // Instancia conexión
-        $this->db = $database->conectar(); // Abre conexión
+        $database = new Database();
+        $this->db = $database->conectar();
+        $this->schema = new SchemaHelper($this->db);
+    }
+
+    private function usaEsquemaNuevo(): bool
+    {
+        return $this->schema->tablaExiste('roles');
+    }
+
+    private function tabla(): string
+    {
+        return $this->usaEsquemaNuevo() ? 'roles' : 'rol';
+    }
+
+    private function normalizarFila(array $fila): array
+    {
+        $fila['activo'] = $this->usaEsquemaNuevo()
+            ? (strtoupper($fila['estado'] ?? 'ACTIVO') === 'ACTIVO' ? 1 : 0)
+            : (int) ($fila['activo'] ?? 1);
+
+        return $fila;
     }
 
     public function obtenerTodos()
     {
-        $sql = "SELECT * FROM rol ORDER BY id_rol ASC"; // Consulta roles
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->execute(); // Ejecuta consulta
+        $tabla = $this->tabla();
+        $sql = "SELECT * FROM {$tabla} ORDER BY id_rol ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna lista
+        return array_map([$this, 'normalizarFila'], $stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
     public function obtenerActivos()
     {
-        $sql = "SELECT * FROM rol WHERE activo = 1 ORDER BY nombre ASC"; // Roles activos
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->execute(); // Ejecuta consulta
+        $tabla = $this->tabla();
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna activos
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "SELECT * FROM {$tabla} WHERE estado = 'ACTIVO' ORDER BY nombre ASC";
+        } else {
+            $sql = "SELECT * FROM {$tabla} WHERE activo = 1 ORDER BY nombre ASC";
+        }
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+
+        return array_map([$this, 'normalizarFila'], $stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
     public function obtenerPorId($id)
     {
-        $sql = "SELECT * FROM rol WHERE id_rol = :id LIMIT 1"; // Busca rol
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':id', $id); // Asigna ID
-        $stmt->execute(); // Ejecuta consulta
+        $tabla = $this->tabla();
+        $sql = "SELECT * FROM {$tabla} WHERE id_rol = :id LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
 
-        return $stmt->fetch(PDO::FETCH_ASSOC); // Retorna rol
+        $fila = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $fila ? $this->normalizarFila($fila) : null;
     }
 
     public function obtenerPorNombre($nombre)
     {
-        $sql = "SELECT * FROM rol WHERE nombre = :nombre LIMIT 1"; // Busca por nombre
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':nombre', $nombre); // Asigna nombre
-        $stmt->execute(); // Ejecuta consulta
+        $tabla = $this->tabla();
+        $sql = "SELECT * FROM {$tabla} WHERE nombre = :nombre OR codigo = :codigo LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':nombre', $nombre);
+        $stmt->bindValue(':codigo', strtoupper($nombre));
+        $stmt->execute();
 
-        return $stmt->fetch(PDO::FETCH_ASSOC); // Retorna rol
+        $fila = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $fila ? $this->normalizarFila($fila) : null;
     }
 
     public function registrarTrazabilidad($usuarioId, $accion)
     {
-        $sql = "INSERT INTO bitacora_busqueda (id_usuario, modulo, accion, fecha_hora)
-                VALUES (:usuario_id, 'Roles', :accion, NOW())"; // Guarda historial
-
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':usuario_id', $usuarioId); // Usuario responsable
-        $stmt->bindParam(':accion', $accion); // Acción realizada
-
-        return $stmt->execute(); // Ejecuta registro
+        return registrarBitacora($this->db, $usuarioId ? (int) $usuarioId : null, 'Roles', $accion);
     }
 }
 

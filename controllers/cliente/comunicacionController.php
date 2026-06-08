@@ -24,7 +24,8 @@ class ClienteComunicacionController
     public function index()
     {
         $clienteId = $this->obtenerClienteId();
-        $coachId = $this->clienteModel->obtenerIdCoachAsignado($clienteId);
+        $coach = $this->clienteModel->obtenerCoachAsignado($clienteId);
+        $coachId = $coach ? (int) ($coach['id_coach'] ?? 0) : 0;
         $flash = $_SESSION['flash'] ?? null;
         unset($_SESSION['flash']);
 

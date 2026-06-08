@@ -1,16 +1,14 @@
 <?php
 
-session_start(); // Inicia sesión
+session_start();
 
-require_once __DIR__ . '/../models/plan/planModel.php'; // Modelo de planes
-require_once __DIR__ . '/../models/contenidoVirtual/programaVirtualModel.php'; // Modelo programas virtuales
+require_once __DIR__ . '/../models/plan/planModel.php';
 
-$planModel = new PlanModel(); // Instancia planes
-$programaModel = new ProgramaVirtualModel(); // Instancia programas
+$planModel = new PlanModel();
+$planesPublicos = $planModel->obtenerActivos();
+usort($planesPublicos, static function ($a, $b) {
+    return (int) ($b['id_plan'] ?? 0) <=> (int) ($a['id_plan'] ?? 0);
+});
+$totalPlanesPublicos = count($planesPublicos);
 
-$planes = $planModel->obtenerActivos(); // Obtiene planes activos
-$programas = $programaModel->obtenerActivos(); // Obtiene programas activos
-
-require_once __DIR__ . '/../views/public/planes.php'; // Carga vista de planes
-
-?>
+require_once __DIR__ . '/../views/public/planes.php';

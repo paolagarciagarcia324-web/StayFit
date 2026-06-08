@@ -34,9 +34,9 @@ class ClienteDashboardController
     {
         $clienteId = $this->obtenerClienteId(); // Obtiene cliente actual
 
-        $cliente = $this->clienteModel->obtenerPorId($clienteId); // Datos del cliente
-        $plan = $this->planModel->obtenerPlanActivoCliente($clienteId); // Plan activo
-        $coach = $this->clienteModel->obtenerCoachAsignado($clienteId); // Coach asignado
+        $cliente = $this->intentar(fn() => $this->clienteModel->obtenerPorId($clienteId), null); // Datos del cliente
+        $plan = $this->intentar(fn() => $this->planModel->obtenerPlanActivoCliente($clienteId), null); // Plan activo
+        $coach = $this->intentar(fn() => $this->clienteModel->obtenerCoachAsignado($clienteId), null); // Coach asignado
         if (!$coach && $plan && !empty($plan['coach_nombre'])) {
             $coach = [
                 'nombre_completo' => $plan['coach_nombre'],
@@ -44,12 +44,21 @@ class ClienteDashboardController
                 'especialidad' => $plan['coach_especialidad'] ?? '',
             ];
         }
-        $accesos = $this->accesoModel->obtenerPorCliente($clienteId); // Accesos activos
-        $progreso = $this->progresoModel->obtenerUltimoPorCliente($clienteId); // Último progreso
-        $avanceVirtual = $this->progresoVideoModel->obtenerAvanceCliente($clienteId); // Avance virtual
-        $notificaciones = $this->notificacionModel->obtenerPorUsuario($_SESSION['usuario_id']); // Alertas
+        $accesos = $this->intentar(fn() => $this->accesoModel->obtenerPorCliente($clienteId), []); // Accesos activos
+        $progreso = $this->intentar(fn() => $this->progresoModel->obtenerUltimoPorCliente($clienteId), null); // Último progreso
+        $avanceVirtual = $this->intentar(fn() => $this->progresoVideoModel->obtenerAvanceCliente($clienteId), 0); // Avance virtual
+        $notificaciones = $this->intentar(fn() => $this->notificacionModel->obtenerPorUsuario($_SESSION['usuario_id']), []); // Alertas
 
         require_once __DIR__ . '/../../views/cliente/dashboard.php'; // Carga vista
+    }
+
+    private function intentar(callable $callback, $default)
+    {
+        try {
+            return $callback();
+        } catch (Throwable $e) {
+            return $default;
+        }
     }
 
     private function obtenerClienteId()

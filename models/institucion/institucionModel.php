@@ -1,134 +1,230 @@
 <?php
 
-require_once __DIR__ . '/../../config/database.php'; // Importa conexión
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../config/schemaHelper.php';
 
 class InstitutionModel
 {
-    private $db; // Conexión BD
+    private $db;
+    private SchemaHelper $schema;
 
     public function __construct()
     {
-        $database = new Database(); // Instancia conexión
-        $this->db = $database->conectar(); // Abre conexión
+        $database = new Database();
+        $this->db = $database->conectar();
+        $this->schema = new SchemaHelper($this->db);
+    }
+
+    private function usaEsquemaNuevo(): bool
+    {
+        return $this->schema->tablaExiste('instituciones');
+    }
+
+    private function tabla(): string
+    {
+        return $this->usaEsquemaNuevo() ? 'instituciones' : 'institucion';
+    }
+
+    private function esEstadoActivo($estado): bool
+    {
+        $valor = strtolower(trim((string) $estado));
+
+        return in_array($valor, ['activo', 'activa', '1', 'true'], true);
+    }
+
+    private function estadoParaDb($estado): string
+    {
+        if ($this->usaEsquemaNuevo()) {
+            return $this->esEstadoActivo($estado) ? 'ACTIVA' : 'INACTIVA';
+        }
+
+        return $this->esEstadoActivo($estado) ? '1' : '0';
     }
 
     private function normalizarFila($fila)
     {
-        if (!$fila) { // Sin datos
-            return false; // Retorna falso
+        if (!$fila) {
+            return false;
         }
 
-        $fila['id'] = $fila['id_institucion'] ?? $fila['id'] ?? null; // ID para vistas
-        $fila['correo'] = $fila['correo_contacto'] ?? $fila['correo'] ?? ''; // Correo
-        $fila['estado'] = ($fila['activo'] ?? 1) ? 'activo' : 'inactivo'; // Estado legible
+        $fila['id'] = $fila['id_institucion'] ?? $fila['id'] ?? null;
+        $fila['correo'] = $fila['correo_contacto'] ?? $fila['correo'] ?? '';
+        $fila['telefono'] = $fila['telefono_contacto'] ?? $fila['telefono'] ?? '';
 
-        return $fila; // Fila normalizada
+        if ($this->usaEsquemaNuevo()) {
+            $fila['estado'] = $this->esEstadoActivo($fila['estado'] ?? 'ACTIVA') ? 'activo' : 'inactivo';
+        } else {
+            $fila['estado'] = ($fila['activo'] ?? 1) ? 'activo' : 'inactivo';
+        }
+
+        return $fila;
     }
 
     public function obtenerTodos()
     {
-        $sql = "SELECT * FROM institucion ORDER BY id_institucion DESC"; // Instituciones
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->execute(); // Ejecuta consulta
+        $tabla = $this->tabla();
+        $sql = "SELECT * FROM {$tabla} ORDER BY id_institucion DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
 
-        $lista = []; // Lista final
-
-        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) { // Recorre
-            $lista[] = $this->normalizarFila($fila); // Normaliza
+        $lista = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
+            $lista[] = $this->normalizarFila($fila);
         }
 
-        return $lista; // Retorna lista
+        return $lista;
     }
 
     public function obtenerActivas()
     {
-        $sql = "SELECT * FROM institucion WHERE activo = 1 ORDER BY nombre ASC"; // Activas
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->execute(); // Ejecuta consulta
+        $tabla = $this->tabla();
 
-        $lista = []; // Lista final
-
-        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) { // Recorre
-            $lista[] = $this->normalizarFila($fila); // Normaliza
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "SELECT * FROM {$tabla} WHERE estado = 'ACTIVA' ORDER BY nombre ASC";
+        } else {
+            $sql = "SELECT * FROM {$tabla} WHERE activo = 1 ORDER BY nombre ASC";
         }
 
-        return $lista; // Retorna activas
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+
+        $lista = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
+            $lista[] = $this->normalizarFila($fila);
+        }
+
+        return $lista;
     }
 
     public function obtenerPorId($id)
     {
-        $sql = "SELECT * FROM institucion WHERE id_institucion = :id LIMIT 1"; // Busca
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':id', $id); // ID
-        $stmt->execute(); // Ejecuta consulta
+        $tabla = $this->tabla();
+        $sql = "SELECT * FROM {$tabla} WHERE id_institucion = :id LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
 
-        return $this->normalizarFila($stmt->fetch(PDO::FETCH_ASSOC)); // Retorna institución
+        return $this->normalizarFila($stmt->fetch(PDO::FETCH_ASSOC));
+    }
+
+    public function obtenerPorCliente($clienteId)
+    {
+        if (!$clienteId) {
+            return false;
+        }
+
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "SELECT i.*
+                    FROM instituciones i
+                    INNER JOIN clientes c ON c.id_institucion = i.id_institucion
+                    WHERE c.id_cliente = :cliente_id
+                    LIMIT 1";
+        } else {
+            $sql = "SELECT i.*
+                    FROM institucion i
+                    INNER JOIN cliente_institucional ci ON ci.id_institucion = i.id_institucion
+                    WHERE ci.id_cliente = :cliente_id
+                    LIMIT 1";
+        }
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':cliente_id', $clienteId);
+        $stmt->execute();
+
+        return $this->normalizarFila($stmt->fetch(PDO::FETCH_ASSOC));
     }
 
     public function crear($datos)
     {
-        $sql = "INSERT INTO institucion 
-                (nombre, nit, telefono, correo_contacto, direccion, activo)
-                VALUES
-                (:nombre, :nit, :telefono, :correo, :direccion, :activo)"; // Crea
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "INSERT INTO instituciones
+                    (nombre, nit, telefono_contacto, correo_contacto, direccion, estado, creado_en)
+                    VALUES
+                    (:nombre, :nit, :telefono, :correo, :direccion, :estado, NOW())";
+            $estado = $this->estadoParaDb($datos['estado'] ?? 'activo');
+        } else {
+            $sql = "INSERT INTO institucion (nombre, nit, telefono, correo_contacto, direccion, activo)
+                    VALUES (:nombre, :nit, :telefono, :correo, :direccion, :activo)";
+            $estado = (int) $this->estadoParaDb($datos['estado'] ?? 'activo');
+        }
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':nombre', $datos['nombre']); // Nombre
-        $stmt->bindValue(':nit', $datos['nit'] ?? null); // NIT
-        $stmt->bindValue(':telefono', $datos['telefono'] ?? null); // Teléfono
-        $stmt->bindValue(':correo', $datos['correo'] ?? $datos['correo_contacto'] ?? null); // Correo
-        $stmt->bindValue(':direccion', $datos['direccion'] ?? null); // Dirección
-        $stmt->bindValue(':activo', ($datos['estado'] ?? 'activo') === 'activo' ? 1 : 0); // Activo
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':nombre', $datos['nombre']);
+        $stmt->bindValue(':nit', $datos['nit'] ?? null);
+        $stmt->bindValue(':telefono', $datos['telefono'] ?? null);
+        $stmt->bindValue(':correo', $datos['correo'] ?? $datos['correo_contacto'] ?? null);
+        $stmt->bindValue(':direccion', $datos['direccion'] ?? null);
 
-        return $stmt->execute(); // Ejecuta registro
+        if ($this->usaEsquemaNuevo()) {
+            $stmt->bindParam(':estado', $estado);
+        } else {
+            $stmt->bindParam(':activo', $estado, PDO::PARAM_INT);
+        }
+
+        if (!$stmt->execute()) {
+            return false;
+        }
+
+        return (int) $this->db->lastInsertId();
     }
 
     public function actualizar($datos)
     {
-        $id = $datos['id'] ?? $datos['id_institucion']; // ID institución
+        $id = $datos['id'] ?? $datos['id_institucion'];
 
-        $sql = "UPDATE institucion 
-                SET nombre = :nombre, nit = :nit, telefono = :telefono,
-                    correo_contacto = :correo, direccion = :direccion, activo = :activo
-                WHERE id_institucion = :id"; // Actualiza
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "UPDATE instituciones
+                    SET nombre = :nombre, nit = :nit, telefono_contacto = :telefono,
+                        correo_contacto = :correo, direccion = :direccion, estado = :estado
+                    WHERE id_institucion = :id";
+            $estado = $this->estadoParaDb($datos['estado'] ?? 'activo');
+        } else {
+            $sql = "UPDATE institucion
+                    SET nombre = :nombre, nit = :nit, telefono = :telefono,
+                        correo_contacto = :correo, direccion = :direccion, activo = :estado
+                    WHERE id_institucion = :id";
+            $estado = (int) $this->estadoParaDb($datos['estado'] ?? 'activo');
+        }
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':nombre', $datos['nombre']); // Nombre
-        $stmt->bindValue(':nit', $datos['nit'] ?? null); // NIT
-        $stmt->bindValue(':telefono', $datos['telefono'] ?? null); // Teléfono
-        $stmt->bindValue(':correo', $datos['correo'] ?? null); // Correo
-        $stmt->bindValue(':direccion', $datos['direccion'] ?? null); // Dirección
-        $stmt->bindValue(':activo', ($datos['estado'] ?? 'activo') === 'activo' ? 1 : 0); // Activo
-        $stmt->bindParam(':id', $id); // ID
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':nombre', $datos['nombre']);
+        $stmt->bindValue(':nit', $datos['nit'] ?? null);
+        $stmt->bindValue(':telefono', $datos['telefono'] ?? null);
+        $stmt->bindValue(':correo', $datos['correo'] ?? null);
+        $stmt->bindValue(':direccion', $datos['direccion'] ?? null);
+        $stmt->bindParam(':estado', $estado);
+        $stmt->bindParam(':id', $id);
 
-        return $stmt->execute(); // Ejecuta actualización
+        return $stmt->execute();
     }
 
     public function cambiarEstado($id, $estado)
     {
-        $activo = ($estado === 'activo') ? 1 : 0; // Convierte estado
+        if ($this->usaEsquemaNuevo()) {
+            $valor = $this->estadoParaDb($estado);
+            $sql = 'UPDATE instituciones SET estado = :estado WHERE id_institucion = :id';
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':estado', $valor);
+        } else {
+            $valor = ($estado === 'activo') ? 1 : 0;
+            $sql = 'UPDATE institucion SET activo = :activo WHERE id_institucion = :id';
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':activo', $valor, PDO::PARAM_INT);
+        }
 
-        $sql = "UPDATE institucion SET activo = :activo WHERE id_institucion = :id"; // Cambia
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':activo', $activo, PDO::PARAM_INT); // Activo
-        $stmt->bindParam(':id', $id); // ID
+        $stmt->bindParam(':id', $id);
 
-        return $stmt->execute(); // Ejecuta cambio
+        return $stmt->execute();
     }
 
     public function registrarTrazabilidad($usuarioId, $accion)
     {
-        $sql = "INSERT INTO bitacora_busqueda (id_usuario, modulo, accion, fecha_hora)
-                VALUES (:usuario_id, 'Instituciones', :accion, NOW())"; // Historial
+        require_once __DIR__ . '/../../config/helpers.php';
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindValue(':usuario_id', $usuarioId); // Usuario
-        $stmt->bindParam(':accion', $accion); // Acción
-
-        return $stmt->execute(); // Ejecuta registro
+        return registrarBitacora($this->db, $usuarioId ? (int) $usuarioId : null, 'Instituciones', $accion);
     }
 }
 
-class_alias('InstitutionModel', 'InstitucionModel'); // Alias compatible
+class_alias('InstitutionModel', 'InstitucionModel');
 
 ?>

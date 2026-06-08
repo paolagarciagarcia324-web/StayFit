@@ -1,8 +1,8 @@
 <?php
 
-if (!function_exists('e')) { // Evita duplicar función
-    function e($valor) { // Limpia salida HTML
-        return htmlspecialchars((string)$valor, ENT_QUOTES, 'UTF-8'); // Retorna texto seguro
+if (!function_exists('e')) {
+    function e($valor) {
+        return htmlspecialchars((string) $valor, ENT_QUOTES, 'UTF-8');
     }
 }
 
@@ -13,288 +13,258 @@ $alertTipo = $_SESSION['alert_tipo'] ?? 'error';
 unset($_SESSION['alert'], $_SESSION['alert_tipo']);
 
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8"> <!-- Codificación -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
-    <title>Solicitud | StayFit</title> <!-- Título -->
-
-    <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: #f7f7f7;
-            color: #2D2D2D;
-        }
-
-        .navbar {
-            padding: 18px 8%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #FFFFFF;
-            box-shadow: 0 6px 20px rgba(45, 45, 45, 0.06);
-        }
-
-        .brand {
-            color: #D63384;
-            font-size: 28px;
-            font-weight: 900;
-            text-decoration: none;
-        }
-
-        .nav a {
-            color: #2D2D2D;
-            text-decoration: none;
-            margin-left: 18px;
-            font-weight: 700;
-        }
-
-        .nav .btn {
-            background: #D63384;
-            color: #FFFFFF;
-            padding: 10px 16px;
-            border-radius: 14px;
-        }
-
-        .page {
-            min-height: calc(100vh - 80px);
-            display: grid;
-            grid-template-columns: 0.9fr 1.1fr;
-        }
-
-        .info {
-            background: linear-gradient(135deg, #D63384, #2D2D2D);
-            color: #FFFFFF;
-            padding: 70px 8%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .info h1 {
-            font-size: 42px;
-            margin: 0 0 16px;
-        }
-
-        .info p {
-            line-height: 1.7;
-            font-size: 17px;
-        }
-
-        .form-area {
-            padding: 55px 8%;
-        }
-
-        .form-card {
-            background: #FFFFFF;
-            padding: 32px;
-            border-radius: 26px;
-            box-shadow: 0 12px 32px rgba(45, 45, 45, 0.10);
-        }
-
-        .form-card h2 {
-            color: #D63384;
-            margin-top: 0;
-        }
-
-        label {
-            font-weight: 700;
-            font-size: 14px;
-        }
-
-        input,
-        select {
-            width: 100%;
-            padding: 13px;
-            margin: 8px 0 16px;
-            border: 1px solid #ddd;
-            border-radius: 14px;
-            box-sizing: border-box;
-        }
-
-        button {
-            width: 100%;
-            background: #D63384;
-            color: #FFFFFF;
-            border: none;
-            padding: 14px;
-            border-radius: 14px;
-            font-weight: 900;
-            cursor: pointer;
-            font-size: 15px;
-        }
-
-        button:hover {
-            background: #b92b70;
-        }
-
-        .alert-error {
-            background: #fff1f7;
-            border-left: 5px solid #D63384;
-            padding: 14px;
-            border-radius: 14px;
-            margin-bottom: 18px;
-            color: #8b2252;
-        }
-
-        .alert-success {
-            background: #e8f8f1;
-            border-left: 5px solid #3EB489;
-            padding: 14px;
-            border-radius: 14px;
-            margin-bottom: 18px;
-            color: #1d6b4f;
-        }
-
-        .note {
-            background: #f6fffb;
-            border-left: 5px solid #3EB489;
-            padding: 16px;
-            border-radius: 16px;
-            margin-bottom: 20px;
-            color: #2D2D2D;
-        }
-
-        @media (max-width: 900px) {
-            .navbar {
-                flex-direction: column;
-                gap: 16px;
-            }
-
-            .page {
-                grid-template-columns: 1fr;
-            }
-
-            .info h1 {
-                font-size: 34px;
-            }
-
-            .nav a {
-                margin: 6px;
-                display: inline-block;
-            }
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitud de ingreso | FigueFit</title>
+    <link rel="stylesheet" href="solicitud.css?v=2">
 </head>
+<body class="sol-page">
 
-<body>
+<header class="sol-topbar">
+    <a href="index.php" class="sol-brand">
+        <img src="../img/Logo.png" alt="FigueFit">
+        Figue<em>Fit</em>
+    </a>
 
-<header class="navbar">
-    <a class="brand" href="index.php">StayFit</a>
-
-    <nav class="nav">
+    <nav class="sol-topnav">
         <a href="index.php">Inicio</a>
         <a href="planPublico.php">Planes</a>
-        <a href="solicitud.php">Inscripción</a>
-        <a class="btn" href="../views/auth/login.php">Ingresar</a>
+        <a href="solicitud.php" class="is-active">Inscripción</a>
+        <a href="../views/auth/login.php" class="sol-btn-login">Ingresar</a>
     </nav>
 </header>
 
-<main class="page">
+<div class="sol-shell">
+    <div class="sol-wrapper">
 
-    <section class="info">
-        <h1>Solicitud de ingreso</h1>
-        <p>
-            Completa tus datos y adjunta el comprobante de pago.
-            Tu usuario solo será activado cuando el administrador valide el pago.
-        </p>
-    </section>
+        <aside class="sol-visual" aria-hidden="true"></aside>
 
-    <section class="form-area">
-        <div class="form-card">
-            <h2>Formulario de inscripción</h2>
+        <section class="sol-panel">
+            <header class="sol-form-head">
+                <h2>Formulario de inscripción</h2>
+                <p>Los campos marcados son obligatorios. Revisa que el plan y el monto coincidan con tu comprobante.</p>
+            </header>
 
-            <div class="note">
-                Después de enviar esta solicitud quedarás en estado <strong>pendiente</strong>.
+            <div class="sol-note">
+                <span class="sol-note-icon" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/>
+                        <path d="M12 10v6M12 7h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <span>Después de enviar quedarás en estado <strong>pendiente</strong> hasta que el administrador valide tu pago.</span>
             </div>
 
             <?php if ($alert): ?>
-                <div class="<?= ($alertTipo ?? '') === 'success' ? 'alert-success' : 'alert-error' ?>">
+                <div class="sol-alert sol-alert--<?= ($alertTipo ?? '') === 'success' ? 'success' : 'error' ?>">
                     <?= e($alert) ?>
                 </div>
             <?php endif; ?>
 
-            <form action="solicitud.php" method="POST" enctype="multipart/form-data">
+            <form action="solicitud.php" method="POST" enctype="multipart/form-data" id="formSolicitud">
 
-                <label>Nombre completo</label>
-                <input type="text" name="nombre" required>
+                <div class="sol-section">
+                    <div class="sol-section-head">
+                        <span class="sol-section-bar"></span>
+                        <h3>Datos personales</h3>
+                        <span>Paso 1</span>
+                    </div>
 
-                <label>Edad</label>
-                <input type="number" name="edad" min="12" required>
+                    <div class="sol-grid">
+                        <div class="sol-field sol-field--full">
+                            <label for="nombre">Nombre completo</label>
+                            <input type="text" id="nombre" name="nombre" placeholder="Ej. María García" required>
+                        </div>
 
-                <label>Número de identificación</label>
-                <input type="text" name="identificacion" required>
+                        <div class="sol-field">
+                            <label for="edad">Edad</label>
+                            <input type="number" id="edad" name="edad" min="12" placeholder="25" required>
+                        </div>
 
-                <label>Celular</label>
-                <input type="text" name="celular" required>
+                        <div class="sol-field">
+                            <label for="celular">Celular</label>
+                            <input type="text" id="celular" name="celular" placeholder="300 123 4567" required>
+                        </div>
 
-                <label>Plan seleccionado</label>
-                <select name="plan_id" required>
-                    <option value="">Seleccione un plan</option>
+                        <div class="sol-field sol-field--full">
+                            <label for="correo">Correo electrónico</label>
+                            <input type="email" id="correo" name="correo" placeholder="tu@correo.com" required>
+                            <p class="sol-field-hint">Lo usarás para iniciar sesión cuando aprueben tu solicitud.</p>
+                        </div>
 
-                    <?php foreach ($planes as $plan): ?>
-                        <?php $planId = $plan['id_plan'] ?? $plan['id'] ?? ''; ?>
-                        <option value="<?= e($planId) ?>"
-                                data-modalidad="<?= e(strtolower($plan['modalidad'] ?? 'virtual')) ?>"
-                                <?= ($planSeleccionado !== '' && $planSeleccionado == (string) $planId) ? 'selected' : '' ?>>
-                            <?= e($plan['nombre'] ?? 'Plan') ?> - $<?= e($plan['precio'] ?? '0') ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
+                        <div class="sol-field">
+                            <label for="password">Contraseña</label>
+                            <input type="password" id="password" name="password" minlength="6" placeholder="Mínimo 6 caracteres" required autocomplete="new-password">
+                        </div>
 
-                <label>Modalidad</label>
-                <select name="modalidad" required>
-                    <option value="">Seleccione modalidad</option>
-                    <option value="presencial">Presencial</option>
-                    <option value="virtual">Virtual</option>
-                    <option value="mixta">Mixta</option>
-                </select>
+                        <div class="sol-field">
+                            <label for="password_confirm">Confirmar contraseña</label>
+                            <input type="password" id="password_confirm" name="password_confirm" minlength="6" placeholder="Repite la contraseña" required autocomplete="new-password">
+                        </div>
 
-                <label>Tipo de cuenta bancaria</label>
-                <select name="tipo_cuenta" required>
-                    <option value="">Seleccione una opción</option>
-                    <option value="ahorros">Ahorros</option>
-                    <option value="corriente">Corriente</option>
-                    <option value="nequi">Nequi</option>
-                    <option value="daviplata">Daviplata</option>
-                </select>
+                        <div class="sol-field sol-field--full">
+                            <label for="identificacion">Número de identificación</label>
+                            <input type="text" id="identificacion" name="identificacion" placeholder="Documento de identidad" required>
+                        </div>
+                    </div>
+                </div>
 
-                <label>Número de cuenta</label>
-                <input type="text" name="numero_cuenta" required>
+                <div class="sol-section">
+                    <div class="sol-section-head">
+                        <span class="sol-section-bar"></span>
+                        <h3>Plan y modalidad</h3>
+                        <span>Paso 2</span>
+                    </div>
 
-                <label>Comprobante de pago</label>
-                <input type="file" name="comprobante" accept="image/*,.pdf" required>
+                    <div class="sol-grid">
+                        <div class="sol-field sol-field--full">
+                            <label for="plan_id">Plan seleccionado</label>
+                            <select id="plan_id" name="plan_id" required>
+                                <option value="">Seleccione un plan</option>
+                                <?php foreach ($planes as $plan): ?>
+                                    <?php
+                                    $planId = $plan['id_plan'] ?? $plan['id'] ?? '';
+                                    $cupoInfo = $plan['cupo_info'] ?? null;
+                                    $cupoEtiqueta = '';
+                                    if (!empty($cupoInfo['cupo_maximo'])) {
+                                        $disponibles = (int) ($cupoInfo['cupos_disponibles'] ?? 0);
+                                        $cupoEtiqueta = $disponibles === 1
+                                            ? ' · 1 cupo disponible'
+                                            : ' · ' . $disponibles . ' cupos disponibles';
+                                    }
+                                    ?>
+                                    <option value="<?= e($planId) ?>"
+                                            data-modalidad="<?= e(strtolower($plan['modalidad'] ?? 'virtual')) ?>"
+                                            <?= ($planSeleccionado !== '' && $planSeleccionado === (string) $planId) ? 'selected' : '' ?>>
+                                        <?= e($plan['nombre'] ?? 'Plan') ?> — $<?= e(number_format((float) ($plan['precio'] ?? 0), 0, ',', '.')) ?><?= e($cupoEtiqueta) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
 
-                <button type="submit">Enviar solicitud</button>
+                        <div class="sol-field sol-field--full">
+                            <label for="modalidad">Modalidad</label>
+                            <select id="modalidad" name="modalidad" required>
+                                <option value="">Seleccione modalidad</option>
+                                <option value="presencial">Presencial</option>
+                                <option value="virtual">Virtual</option>
+                                <option value="mixta">Mixta</option>
+                                <option value="mixto">Mixto</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sol-section">
+                    <div class="sol-section-head">
+                        <span class="sol-section-bar"></span>
+                        <h3>Información de pago</h3>
+                        <span>Paso 3</span>
+                    </div>
+
+                    <div class="sol-grid">
+                        <div class="sol-field">
+                            <label for="tipo_cuenta">Tipo de cuenta</label>
+                            <select id="tipo_cuenta" name="tipo_cuenta" required>
+                                <option value="">Seleccione</option>
+                                <option value="ahorros">Ahorros</option>
+                                <option value="corriente">Corriente</option>
+                                <option value="nequi">Nequi</option>
+                                <option value="daviplata">Daviplata</option>
+                            </select>
+                        </div>
+
+                        <div class="sol-field">
+                            <label for="numero_cuenta">Número de cuenta</label>
+                            <input type="text" id="numero_cuenta" name="numero_cuenta" placeholder="Cuenta origen del pago" required>
+                        </div>
+
+                        <div class="sol-field sol-field--full">
+                            <label for="comprobante">Comprobante de pago</label>
+                            <div class="sol-upload">
+                                <input type="file" id="comprobante" name="comprobante" accept="image/*,.pdf" required>
+                                <div class="sol-upload-box">
+                                    <span class="sol-upload-icon" aria-hidden="true">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                            <path d="M12 16V4M12 4l-4 4M12 4l4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                                        </svg>
+                                    </span>
+                                    <div class="sol-upload-text">
+                                        <strong>Arrastra o selecciona tu comprobante</strong>
+                                        <span>Formatos: JPG, PNG o PDF — máx. recomendado 5 MB</span>
+                                    </div>
+                                </div>
+                                <p class="sol-upload-name" id="comprobanteNombre" hidden></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="sol-submit">Enviar solicitud</button>
+
+                <p class="sol-form-foot">
+                    ¿Ya tienes cuenta? <a href="../views/auth/login.php">Inicia sesión</a>
+                    · <a href="planPublico.php">Ver planes</a>
+                </p>
             </form>
-        </div>
-    </section>
+        </section>
 
-</main>
+    </div>
+</div>
 
 <script>
 (function () {
-    var planSelect = document.querySelector('select[name="plan_id"]');
-    var modalidadSelect = document.querySelector('select[name="modalidad"]');
-    if (!planSelect || !modalidadSelect) return;
+    var planSelect = document.getElementById('plan_id');
+    var modalidadSelect = document.getElementById('modalidad');
+    var fileInput = document.getElementById('comprobante');
+    var fileName = document.getElementById('comprobanteNombre');
 
-    function sincronizarModalidad() {
-        var opt = planSelect.options[planSelect.selectedIndex];
-        var mod = opt && opt.getAttribute('data-modalidad');
-        if (!mod) return;
-        for (var i = 0; i < modalidadSelect.options.length; i++) {
-            if (modalidadSelect.options[i].value === mod) {
-                modalidadSelect.selectedIndex = i;
-                break;
+    if (planSelect && modalidadSelect) {
+        function sincronizarModalidad() {
+            var opt = planSelect.options[planSelect.selectedIndex];
+            var mod = opt && opt.getAttribute('data-modalidad');
+            if (!mod) return;
+            for (var i = 0; i < modalidadSelect.options.length; i++) {
+                if (modalidadSelect.options[i].value === mod) {
+                    modalidadSelect.selectedIndex = i;
+                    break;
+                }
             }
         }
+
+        planSelect.addEventListener('change', sincronizarModalidad);
+        sincronizarModalidad();
     }
 
-    planSelect.addEventListener('change', sincronizarModalidad);
-    sincronizarModalidad();
+    if (fileInput && fileName) {
+        fileInput.addEventListener('change', function () {
+            if (fileInput.files && fileInput.files[0]) {
+                fileName.textContent = 'Archivo: ' + fileInput.files[0].name;
+                fileName.hidden = false;
+            } else {
+                fileName.hidden = true;
+                fileName.textContent = '';
+            }
+        });
+    }
+
+    var form = document.getElementById('formSolicitud');
+    var pass = document.getElementById('password');
+    var passConfirm = document.getElementById('password_confirm');
+
+    if (form && pass && passConfirm) {
+        form.addEventListener('submit', function (e) {
+            if (pass.value !== passConfirm.value) {
+                e.preventDefault();
+                alert('Las contraseñas no coinciden.');
+                passConfirm.focus();
+            }
+        });
+    }
 })();
 </script>
 

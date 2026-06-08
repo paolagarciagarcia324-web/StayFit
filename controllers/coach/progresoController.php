@@ -30,7 +30,7 @@ class CoachProgresoController
 
         $clientes = $this->clienteModel->obtenerPorCoach($coachId); // Obtiene clientes
         $progresos = $this->progresoModel->obtenerPorCoach($coachId); // Obtiene progresos
-        $avanceVirtual = $this->progresoVideoModel->obtenerPorCoach($coachId); // Obtiene avance virtual
+        $avanceVirtual = $this->progresoVideoModel->obtenerResumenPorCoach($coachId); // Avance global por clienta
 
         require_once __DIR__ . '/../../views/coach/progreso.php'; // Carga vista
     }

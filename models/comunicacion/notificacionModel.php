@@ -1,111 +1,168 @@
 <?php
 
-require_once __DIR__ . '/../../config/database.php'; // Importa conexión
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../config/schemaHelper.php';
 
 class NotificacionModel
 {
-    private $db; // Conexión BD
+    private $db;
+    private SchemaHelper $schema;
 
     public function __construct()
     {
-        $database = new Database(); // Instancia conexión
-        $this->db = $database->conectar(); // Abre conexión
+        $database = new Database();
+        $this->db = $database->conectar();
+        $this->schema = new SchemaHelper($this->db);
+    }
+
+    private function usaEsquemaNuevo(): bool
+    {
+        return $this->schema->tablaExiste('notificaciones');
+    }
+
+    private function normalizarFila(array $fila): array
+    {
+        $fila['id_usuario'] = $fila['id_usuario'] ?? $fila['id_user'] ?? null;
+        $fila['contenido'] = $fila['contenido'] ?? $fila['mensaje'] ?? '';
+        $fila['tipo'] = $fila['tipo'] ?? $fila['tipo_notificacion'] ?? 'SISTEMA';
+        $fila['fecha_envio'] = $fila['fecha_envio'] ?? $fila['creado_en'] ?? null;
+
+        return $fila;
+    }
+
+    private function normalizarLista(array $filas): array
+    {
+        return array_map([$this, 'normalizarFila'], $filas);
     }
 
     public function obtenerPorUsuario($usuarioId)
     {
-        $sql = "SELECT * FROM notificacion 
-                WHERE id_usuario = :usuario_id 
-                ORDER BY fecha_envio DESC"; // Notificaciones usuario
+        if ($this->usaEsquemaNuevo()) {
+            $sql = 'SELECT *, mensaje AS contenido, creado_en AS fecha_envio
+                    FROM notificaciones
+                    WHERE id_user = :usuario_id
+                    ORDER BY creado_en DESC';
+        } else {
+            $sql = 'SELECT * FROM notificacion
+                    WHERE id_usuario = :usuario_id
+                    ORDER BY fecha_envio DESC';
+        }
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':usuario_id', $usuarioId); // Usuario
-        $stmt->execute(); // Ejecuta consulta
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':usuario_id', $usuarioId);
+        $stmt->execute();
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna notificaciones
+        return $this->normalizarLista($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
     public function obtenerNoLeidas($usuarioId)
     {
-        $sql = "SELECT * FROM notificacion 
-                WHERE id_usuario = :usuario_id 
-                AND leida = 0
-                ORDER BY fecha_envio DESC"; // Notificaciones pendientes
+        if ($this->usaEsquemaNuevo()) {
+            $sql = 'SELECT *, mensaje AS contenido, creado_en AS fecha_envio
+                    FROM notificaciones
+                    WHERE id_user = :usuario_id AND leida = 0
+                    ORDER BY creado_en DESC';
+        } else {
+            $sql = 'SELECT * FROM notificacion
+                    WHERE id_usuario = :usuario_id AND leida = 0
+                    ORDER BY fecha_envio DESC';
+        }
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':usuario_id', $usuarioId); // Usuario
-        $stmt->execute(); // Ejecuta consulta
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':usuario_id', $usuarioId);
+        $stmt->execute();
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna pendientes
+        return $this->normalizarLista($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
     public function crear($datos)
     {
-        $sql = "INSERT INTO notificacion 
-                (id_usuario, titulo, contenido, tipo, leida, fecha_envio)
-                VALUES 
-                (:id_usuario, :titulo, :contenido, :tipo, 0, NOW())"; // Crea notificación
+        if ($this->usaEsquemaNuevo()) {
+            $sql = 'INSERT INTO notificaciones (id_user, titulo, mensaje, tipo_notificacion, leida, creado_en)
+                    VALUES (:id_usuario, :titulo, :contenido, :tipo, 0, NOW())';
+        } else {
+            $sql = 'INSERT INTO notificacion (id_usuario, titulo, contenido, tipo, leida, fecha_envio)
+                    VALUES (:id_usuario, :titulo, :contenido, :tipo, 0, NOW())';
+        }
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':id_usuario', $datos['id_usuario']); // Usuario destino
-        $stmt->bindParam(':titulo', $datos['titulo']); // Título
-        $stmt->bindParam(':contenido', $datos['contenido']); // Contenido
-        $stmt->bindValue(':tipo', $datos['tipo'] ?? 'SISTEMA'); // Tipo
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id_usuario', $datos['id_usuario']);
+        $stmt->bindParam(':titulo', $datos['titulo']);
+        $stmt->bindParam(':contenido', $datos['contenido']);
+        $stmt->bindValue(':tipo', $datos['tipo'] ?? 'SISTEMA');
 
-        return $stmt->execute(); // Ejecuta registro
+        return $stmt->execute();
     }
 
     public function marcarLeida($id)
     {
-        $sql = "UPDATE notificacion SET leida = 1, fecha_lectura = NOW() WHERE id_notificacion = :id"; // Marca leída
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':id', $id); // Notificación
+        $tabla = $this->usaEsquemaNuevo() ? 'notificaciones' : 'notificacion';
+        $sql = "UPDATE {$tabla} SET leida = 1, fecha_lectura = NOW() WHERE id_notificacion = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $id);
 
-        return $stmt->execute(); // Ejecuta actualización
+        return $stmt->execute();
     }
 
     public function eliminar($id)
     {
-        $sql = "DELETE FROM notificacion WHERE id_notificacion = :id"; // Elimina notificación
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':id', $id); // Notificación
+        $tabla = $this->usaEsquemaNuevo() ? 'notificaciones' : 'notificacion';
+        $sql = "DELETE FROM {$tabla} WHERE id_notificacion = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $id);
 
-        return $stmt->execute(); // Ejecuta eliminación
+        return $stmt->execute();
     }
 
     public function obtenerPorRol($rol)
     {
-        $usuarioId = $_SESSION['usuario_id'] ?? null; // Usuario en sesión
+        $usuarioId = $_SESSION['usuario_id'] ?? null;
 
-        if ($usuarioId && (strtolower($rol) === 'admin' || strtolower($rol) === 'administrador')) { // Admin actual
-            return $this->obtenerPorUsuario($usuarioId); // Notificaciones del admin logueado
+        if ($usuarioId && (strtolower($rol) === 'admin' || strtolower($rol) === 'administrador')) {
+            return $this->obtenerPorUsuario($usuarioId);
         }
 
-        $sql = "SELECT n.*
-                FROM notificacion n
-                INNER JOIN users_roles ur ON ur.id_usuario = n.id_usuario
-                INNER JOIN rol r ON r.id_rol = ur.id_rol
-                WHERE r.nombre = 'Administrador'
-                ORDER BY n.fecha_envio DESC"; // Notificaciones de administradores
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "SELECT n.*, n.mensaje AS contenido, n.creado_en AS fecha_envio
+                    FROM notificaciones n
+                    INNER JOIN user_roles ur ON ur.id_user = n.id_user
+                    INNER JOIN roles r ON r.id_rol = ur.id_rol
+                    WHERE LOWER(r.nombre) IN ('administrador', 'admin')
+                    ORDER BY n.creado_en DESC";
+        } else {
+            $sql = "SELECT n.*
+                    FROM notificacion n
+                    INNER JOIN users_roles ur ON ur.id_usuario = n.id_usuario
+                    INNER JOIN rol r ON r.id_rol = ur.id_rol
+                    WHERE r.nombre = 'Administrador'
+                    ORDER BY n.fecha_envio DESC";
+        }
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->execute(); // Ejecuta consulta
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna lista
+        return $this->normalizarLista($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
     public function notificarAdministrador($titulo, $contenido)
     {
-        $sql = "SELECT u.id_usuario
-                FROM users u
-                INNER JOIN users_roles ur ON ur.id_usuario = u.id_usuario
-                INNER JOIN rol r ON r.id_rol = ur.id_rol
-                WHERE LOWER(r.nombre) IN ('administrador', 'admin') AND u.estado = 'ACTIVO'";
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "SELECT u.id_user AS id_usuario
+                    FROM user u
+                    INNER JOIN user_roles ur ON ur.id_user = u.id_user
+                    INNER JOIN roles r ON r.id_rol = ur.id_rol
+                    WHERE LOWER(r.nombre) IN ('administrador', 'admin') AND u.estado = 'ACTIVO'";
+        } else {
+            $sql = "SELECT u.id_usuario
+                    FROM users u
+                    INNER JOIN users_roles ur ON ur.id_usuario = u.id_usuario
+                    INNER JOIN rol r ON r.id_rol = ur.id_rol
+                    WHERE LOWER(r.nombre) IN ('administrador', 'admin') AND u.estado = 'ACTIVO'";
+        }
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->execute(); // Ejecuta consulta
-
-        $admins = $stmt->fetchAll(PDO::FETCH_ASSOC); // Obtiene admins
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         foreach ($admins as $admin) {
             if (empty($admin['id_usuario'])) {
@@ -120,19 +177,14 @@ class NotificacionModel
             ]);
         }
 
-        return true; // Finaliza proceso
+        return true;
     }
 
     public function registrarTrazabilidad($usuarioId, $accion)
     {
-        $sql = "INSERT INTO bitacora_busqueda (id_usuario, modulo, accion, fecha_hora)
-                VALUES (:usuario_id, 'Notificaciones', :accion, NOW())"; // Guarda historial
+        require_once __DIR__ . '/../../config/helpers.php';
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':usuario_id', $usuarioId); // Usuario responsable
-        $stmt->bindParam(':accion', $accion); // Acción realizada
-
-        return $stmt->execute(); // Ejecuta registro
+        return registrarBitacora($this->db, $usuarioId ? (int) $usuarioId : null, 'Notificaciones', $accion);
     }
 }
 

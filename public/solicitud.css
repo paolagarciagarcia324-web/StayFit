@@ -1,0 +1,534 @@
+/* =========================================================
+   FIGUEFIT — Solicitud de ingreso (público premium)
+   ========================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+:root {
+    --sol-black:        #0a0b0f;
+    --sol-dark:         #111318;
+    --sol-card:         #16181f;
+    --sol-input:        #1e2029;
+    --sol-fuchsia:      #ff2fa0;
+    --sol-fuchsia-soft: rgba(255, 47, 160, 0.14);
+    --sol-mint:         #55eadc;
+    --sol-mint-soft:    rgba(85, 234, 220, 0.12);
+    --sol-white:        #ffffff;
+    --sol-text:         #e8ecf4;
+    --sol-muted:        #8b93a7;
+    --sol-soft:         #c8d0e0;
+    --sol-border:       rgba(255, 255, 255, 0.08);
+    --sol-radius-lg:    26px;
+    --sol-radius-md:    16px;
+    --sol-radius-sm:    12px;
+    --sol-shadow:       0 40px 100px rgba(0, 0, 0, 0.55);
+}
+
+* { box-sizing: border-box; }
+
+body.sol-page {
+    margin: 0;
+    min-height: 100vh;
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    color: var(--sol-text);
+    background:
+        radial-gradient(ellipse 80% 50% at 5% 0%, rgba(255, 47, 160, 0.16) 0%, transparent 55%),
+        radial-gradient(ellipse 70% 45% at 95% 10%, rgba(85, 234, 220, 0.10) 0%, transparent 50%),
+        linear-gradient(160deg, #1a0e1f 0%, #0d0d14 40%, #0a0b10 100%);
+    -webkit-font-smoothing: antialiased;
+}
+
+body.sol-page::before,
+body.sol-page::after {
+    content: "";
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+}
+
+body.sol-page::before {
+    top: -180px;
+    right: -180px;
+    width: 520px;
+    height: 520px;
+    background: radial-gradient(circle, rgba(255, 47, 160, 0.10) 0%, transparent 70%);
+}
+
+body.sol-page::after {
+    bottom: -160px;
+    left: -160px;
+    width: 460px;
+    height: 460px;
+    background: radial-gradient(circle, rgba(85, 234, 220, 0.08) 0%, transparent 70%);
+}
+
+a { text-decoration: none; color: inherit; }
+
+/* ── Top bar ─────────────────────────────────────────── */
+
+.sol-topbar {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 22px clamp(20px, 5vw, 56px);
+    border-bottom: 1px solid var(--sol-border);
+    backdrop-filter: blur(14px);
+    background: rgba(10, 11, 15, 0.72);
+}
+
+.sol-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 24px;
+    font-weight: 900;
+    color: var(--sol-white);
+    letter-spacing: 0.2px;
+}
+
+.sol-brand img {
+    width: 46px;
+    height: 46px;
+    object-fit: contain;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    padding: 5px;
+}
+
+.sol-brand em {
+    color: var(--sol-fuchsia);
+    font-style: normal;
+}
+
+.sol-topnav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.sol-topnav a {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--sol-soft);
+    padding: 9px 14px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    transition: color 0.22s, border-color 0.22s, background 0.22s;
+}
+
+.sol-topnav a:hover {
+    color: var(--sol-white);
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--sol-border);
+}
+
+.sol-topnav a.is-active {
+    color: var(--sol-mint);
+    background: var(--sol-mint-soft);
+    border-color: rgba(85, 234, 220, 0.28);
+}
+
+.sol-topnav .sol-btn-login {
+    background: var(--sol-fuchsia);
+    color: var(--sol-white);
+    border-color: rgba(255, 47, 160, 0.45);
+    box-shadow: 0 6px 20px rgba(255, 47, 160, 0.22);
+}
+
+.sol-topnav .sol-btn-login:hover {
+    background: #e0238e;
+    color: var(--sol-white);
+}
+
+/* ── Shell ───────────────────────────────────────────── */
+
+.sol-shell {
+    position: relative;
+    z-index: 1;
+    width: min(100%, 1280px);
+    margin: 0 auto;
+    padding: clamp(24px, 4vw, 48px) clamp(16px, 4vw, 40px) 56px;
+}
+
+.sol-wrapper {
+    display: grid;
+    grid-template-columns: 0.92fr 1.08fr;
+    min-height: calc(100vh - 120px);
+    border-radius: var(--sol-radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--sol-border);
+    box-shadow: var(--sol-shadow);
+}
+
+/* ── Panel visual ────────────────────────────────────── */
+
+.sol-visual {
+    position: relative;
+    min-height: 100%;
+    overflow: hidden;
+    background: url("../img/register.png") center/cover no-repeat;
+}
+
+.sol-visual::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 85% 12%, rgba(255, 47, 160, 0.12), transparent 38%),
+        radial-gradient(circle at 8% 88%, rgba(85, 234, 220, 0.08), transparent 38%);
+    pointer-events: none;
+}
+
+/* ── Panel formulario ─────────────────────────────────── */
+
+.sol-panel {
+    background: var(--sol-card);
+    padding: clamp(28px, 4vw, 48px) clamp(24px, 4vw, 48px);
+    overflow-y: auto;
+    max-height: calc(100vh - 120px);
+    position: relative;
+}
+
+.sol-panel::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: clamp(24px, 4vw, 48px);
+    right: clamp(24px, 4vw, 48px);
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--sol-fuchsia), var(--sol-mint), transparent);
+    border-radius: 2px;
+}
+
+.sol-form-head {
+    margin-bottom: 28px;
+}
+
+.sol-form-head h2 {
+    margin: 0 0 8px;
+    font-size: clamp(1.65rem, 2.5vw, 2rem);
+    font-weight: 900;
+    color: var(--sol-white);
+    line-height: 1.1;
+}
+
+.sol-form-head p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--sol-muted);
+}
+
+.sol-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding: 14px 16px;
+    border-radius: var(--sol-radius-sm);
+    background: var(--sol-mint-soft);
+    border: 1px solid rgba(85, 234, 220, 0.28);
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--sol-soft);
+}
+
+.sol-note-icon {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--sol-mint);
+    background: rgba(85, 234, 220, 0.14);
+}
+
+.sol-note strong {
+    color: var(--sol-mint);
+}
+
+.sol-alert {
+    margin-bottom: 22px;
+    padding: 14px 16px;
+    border-radius: var(--sol-radius-sm);
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+.sol-alert--error {
+    background: rgba(255, 47, 160, 0.10);
+    border: 1px solid rgba(255, 47, 160, 0.30);
+    color: #ffb8dc;
+}
+
+.sol-alert--success {
+    background: var(--sol-mint-soft);
+    border: 1px solid rgba(85, 234, 220, 0.32);
+    color: #b8fff5;
+}
+
+/* ── Secciones del formulario ─────────────────────────── */
+
+.sol-section {
+    margin-bottom: 28px;
+    padding: 22px;
+    border-radius: var(--sol-radius-md);
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--sol-border);
+}
+
+.sol-section-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--sol-border);
+}
+
+.sol-section-bar {
+    width: 4px;
+    height: 28px;
+    border-radius: 4px;
+    background: linear-gradient(180deg, var(--sol-fuchsia), var(--sol-mint));
+    flex-shrink: 0;
+}
+
+.sol-section-head h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--sol-white);
+}
+
+.sol-section-head span {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--sol-muted);
+}
+
+.sol-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.sol-field {
+    margin-bottom: 0;
+}
+
+.sol-field--full {
+    grid-column: 1 / -1;
+}
+
+.sol-field label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    color: var(--sol-soft);
+    text-transform: uppercase;
+}
+
+.sol-field-hint {
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--sol-muted, #8b93a7);
+}
+
+.sol-field input,
+.sol-field select {
+    width: 100%;
+    height: 50px;
+    padding: 0 16px;
+    border-radius: var(--sol-radius-sm);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: var(--sol-input);
+    color: var(--sol-white);
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.22s, box-shadow 0.22s, background 0.22s;
+}
+
+.sol-field input::placeholder {
+    color: #6b7388;
+}
+
+.sol-field input:focus,
+.sol-field select:focus {
+    border-color: var(--sol-fuchsia);
+    background: #252830;
+    box-shadow: 0 0 0 3px rgba(255, 47, 160, 0.14);
+}
+
+.sol-field select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%238b93a7' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 40px;
+}
+
+.sol-field select option {
+    background: var(--sol-dark);
+    color: var(--sol-white);
+}
+
+/* ── Upload ──────────────────────────────────────────── */
+
+.sol-upload {
+    position: relative;
+}
+
+.sol-upload input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.sol-upload-box {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 88px;
+    padding: 16px 18px;
+    border-radius: var(--sol-radius-sm);
+    border: 1px dashed rgba(85, 234, 220, 0.35);
+    background: rgba(85, 234, 220, 0.04);
+    transition: border-color 0.22s, background 0.22s;
+}
+
+.sol-upload:hover .sol-upload-box,
+.sol-upload:focus-within .sol-upload-box {
+    border-color: var(--sol-mint);
+    background: rgba(85, 234, 220, 0.08);
+}
+
+.sol-upload-icon {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--sol-mint);
+    background: var(--sol-mint-soft);
+    border: 1px solid rgba(85, 234, 220, 0.25);
+}
+
+.sol-upload-text strong {
+    display: block;
+    font-size: 13px;
+    color: var(--sol-white);
+    margin-bottom: 4px;
+}
+
+.sol-upload-text span {
+    font-size: 12px;
+    color: var(--sol-muted);
+}
+
+.sol-upload-name {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--sol-mint);
+    font-weight: 600;
+}
+
+/* ── Botón submit ────────────────────────────────────── */
+
+.sol-submit {
+    width: 100%;
+    height: 54px;
+    margin-top: 8px;
+    border: none;
+    border-radius: var(--sol-radius-sm);
+    background: linear-gradient(135deg, var(--sol-fuchsia) 0%, #e0238e 100%);
+    color: var(--sol-white);
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 28px rgba(255, 47, 160, 0.30);
+    transition: transform 0.22s, box-shadow 0.22s;
+}
+
+.sol-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 36px rgba(255, 47, 160, 0.38);
+}
+
+.sol-submit:active {
+    transform: translateY(0);
+}
+
+.sol-form-foot {
+    margin-top: 18px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--sol-muted);
+    line-height: 1.55;
+}
+
+.sol-form-foot a {
+    color: var(--sol-fuchsia);
+    font-weight: 700;
+}
+
+.sol-form-foot a:hover {
+    color: var(--sol-mint);
+}
+
+/* ── Responsive ──────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+    .sol-wrapper {
+        grid-template-columns: 1fr;
+        min-height: auto;
+    }
+
+    .sol-visual {
+        min-height: 340px;
+    }
+
+    .sol-panel {
+        max-height: none;
+    }
+}
+
+@media (max-width: 640px) {
+    .sol-topbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .sol-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .sol-section {
+        padding: 16px;
+    }
+}

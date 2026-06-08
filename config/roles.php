@@ -5,19 +5,19 @@
  */
 function normalizarRol($rol)
 {
-    $rol = strtolower(trim((string) $rol)); // Minúsculas sin espacios
+    $rol = strtolower(trim((string) $rol));
+    $rol = str_replace([' ', '-'], '_', $rol);
 
     $mapa = [
         'administrador' => 'administrador',
         'admin' => 'administrador',
         'coach' => 'coach',
         'cliente' => 'cliente',
-        'cliente-institucional' => 'cliente_institucional',
         'cliente_institucional' => 'cliente_institucional',
         'clienteins' => 'cliente_institucional',
     ];
 
-    return $mapa[$rol] ?? $rol; // Retorna rol normalizado
+    return $mapa[$rol] ?? $rol;
 }
 
 function esAdministrador()

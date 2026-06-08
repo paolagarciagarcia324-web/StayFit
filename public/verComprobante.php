@@ -4,6 +4,7 @@ session_start();
 
 require_once __DIR__ . '/../config/roles.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/schemaHelper.php';
 require_once __DIR__ . '/../config/helpers.php';
 
 if (!isset($_SESSION['usuario_id']) || !esAdministrador()) {
@@ -13,27 +14,44 @@ if (!isset($_SESSION['usuario_id']) || !esAdministrador()) {
 
 $rutaArchivo = null;
 $db = (new Database())->conectar();
+$schema = new SchemaHelper($db);
+$esquemaNuevo = $schema->usaEsquemaNuevo();
 
 if (!empty($_GET['solicitud_id'])) {
-    $stmt = $db->prepare(
-        "SELECT s.url_comprobante, p.url_comprobante AS comprobante_pago
-         FROM solicitud_ingreso s
-         LEFT JOIN pago p ON p.id_solicitud = s.id_solicitud
-         WHERE s.id_solicitud = :id LIMIT 1"
-    );
-    $stmt->bindValue(':id', (int) $_GET['solicitud_id'], PDO::PARAM_INT);
+    $solicitudId = (int) $_GET['solicitud_id'];
+
+    if ($esquemaNuevo) {
+        $sql = "SELECT p.comprobante_url AS comprobante_pago
+                FROM solicitudes_compra s
+                LEFT JOIN pagos p ON p.id_solicitud = s.id_solicitud
+                WHERE s.id_solicitud = :id
+                LIMIT 1";
+    } else {
+        $sql = "SELECT s.url_comprobante, p.url_comprobante AS comprobante_pago
+                FROM solicitud_ingreso s
+                LEFT JOIN pago p ON p.id_solicitud = s.id_solicitud
+                WHERE s.id_solicitud = :id
+                LIMIT 1";
+    }
+
+    $stmt = $db->prepare($sql);
+    $stmt->bindValue(':id', $solicitudId, PDO::PARAM_INT);
     $stmt->execute();
     $fila = $stmt->fetch(PDO::FETCH_ASSOC);
-    $rutaRelativa = trim((string) ($fila['url_comprobante'] ?? ''));
 
+    $rutaRelativa = trim((string) ($fila['url_comprobante'] ?? ''));
     if ($rutaRelativa === '') {
         $rutaRelativa = trim((string) ($fila['comprobante_pago'] ?? ''));
     }
 
     $rutaArchivo = rutaFisicaComprobante($rutaRelativa);
 } elseif (!empty($_GET['pago_id'])) {
-    $stmt = $db->prepare('SELECT url_comprobante FROM pago WHERE id_pago = :id LIMIT 1');
-    $stmt->bindValue(':id', (int) $_GET['pago_id'], PDO::PARAM_INT);
+    $pagoId = (int) $_GET['pago_id'];
+    $tablaPago = $esquemaNuevo ? 'pagos' : 'pago';
+    $columnaComprobante = $esquemaNuevo ? 'comprobante_url' : 'url_comprobante';
+
+    $stmt = $db->prepare("SELECT {$columnaComprobante} AS url_comprobante FROM {$tablaPago} WHERE id_pago = :id LIMIT 1");
+    $stmt->bindValue(':id', $pagoId, PDO::PARAM_INT);
     $stmt->execute();
     $fila = $stmt->fetch(PDO::FETCH_ASSOC);
     $rutaArchivo = rutaFisicaComprobante($fila['url_comprobante'] ?? null);

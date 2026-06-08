@@ -1,242 +1,362 @@
 <?php
 
-if (!function_exists('e')) { // Evita duplicar función
-    function e($valor) { // Limpia salida HTML
-        return htmlspecialchars((string)$valor, ENT_QUOTES, 'UTF-8'); // Retorna texto seguro
+if (!function_exists('e')) {
+    function e($valor) {
+        return htmlspecialchars((string) $valor, ENT_QUOTES, 'UTF-8');
     }
 }
 
-$clienteInstitucional = $clienteInstitucional ?? []; // Datos del cliente institucional
-$institucion = $institucion ?? []; // Datos de institución
-$convenio = $convenio ?? []; // Datos de convenio
+if (!function_exists('institucionEstadoBadge')) {
+    function institucionEstadoBadge(?string $estado): array
+    {
+        $estado = strtolower(trim((string) $estado));
+
+        return match ($estado) {
+            'activa', 'activo' => [
+                'class' => 'fp-badge fp-badge-ok',
+                'label' => 'Activo',
+            ],
+            'inactiva', 'inactivo' => [
+                'class' => 'fp-badge fp-badge-alert',
+                'label' => 'Inactivo',
+            ],
+            default => [
+                'class' => 'fp-badge fp-badge-pending',
+                'label' => $estado !== '' ? ucfirst($estado) : 'Sin estado',
+            ],
+        };
+    }
+}
+
+if (!function_exists('institucionFormatearFecha')) {
+    function institucionFormatearFecha(?string $fecha): string
+    {
+        if ($fecha === null || trim($fecha) === '') {
+            return 'No registrada';
+        }
+
+        try {
+            $dt = new DateTime($fecha);
+
+            return $dt->format('d/m/Y');
+        } catch (Exception $e) {
+            return $fecha;
+        }
+    }
+}
+
+$clienteInstitucional = $clienteInstitucional ?? [];
+$institucion = $institucion ?? [];
+$convenio = $convenio ?? [];
+
+$nombreCliente = trim((string) ($clienteInstitucional['nombre_completo'] ?? $clienteInstitucional['nombre'] ?? $_SESSION['nombre'] ?? 'Cliente institucional'));
+$institucionNombre = trim((string) ($institucion['nombre'] ?? $clienteInstitucional['institucion'] ?? ''));
+$planConvenio = trim((string) ($convenio['tipo'] ?? $convenio['plan_nombre'] ?? ''));
+$tieneInstitucion = $institucionNombre !== '' || !empty($institucion);
+$tieneConvenio = !empty($convenio) && ($planConvenio !== '' || !empty($convenio['fecha_inicio']));
+
+$estadoInstitucion = institucionEstadoBadge($institucion['estado'] ?? 'activo');
+$estadoConvenio = institucionEstadoBadge($convenio['estado'] ?? 'activo');
+$estadoCliente = institucionEstadoBadge($clienteInstitucional['estado'] ?? 'activo');
+
+$inicialesInst = '';
+foreach (preg_split('/\s+/', $institucionNombre) as $parte) {
+    if ($parte !== '') {
+        $inicialesInst .= mb_strtoupper(mb_substr($parte, 0, 1));
+    }
+    if (mb_strlen($inicialesInst) >= 2) {
+        break;
+    }
+}
+$inicialesInst = $inicialesInst !== '' ? $inicialesInst : 'IN';
 
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8"> <!-- Codificación -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
-    <title>Institución | StayFit</title> <!-- Título -->
-
-    <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: #f7f7f7;
-            color: #2D2D2D;
-        }
-
-        .cliente-wrapper {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        .sidebar {
-            width: 245px;
-            background: #2D2D2D;
-            color: #FFFFFF;
-            padding: 28px 20px;
-        }
-
-        .sidebar h2 {
-            color: #D63384;
-            margin-bottom: 30px;
-        }
-
-        .sidebar a {
-            display: block;
-            color: #FFFFFF;
-            text-decoration: none;
-            padding: 12px 14px;
-            border-radius: 12px;
-            margin-bottom: 8px;
-        }
-
-        .sidebar a:hover,
-        .sidebar a.active {
-            background: #D63384;
-        }
-
-        .content {
-            flex: 1;
-            padding: 34px;
-        }
-
-        .page-header {
-            background: linear-gradient(135deg, #D63384, #2D2D2D);
-            color: #FFFFFF;
-            border-radius: 24px;
-            padding: 32px;
-            margin-bottom: 28px;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 22px;
-        }
-
-        .card {
-            background: #FFFFFF;
-            border-radius: 22px;
-            padding: 24px;
-            box-shadow: 0 10px 28px rgba(45, 45, 45, 0.08);
-        }
-
-        .card h3 {
-            margin-top: 0;
-            color: #D63384;
-        }
-
-        .info {
-            background: #fff7fb;
-            border-left: 5px solid #D63384;
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 14px;
-        }
-
-        .info strong {
-            color: #D63384;
-            display: block;
-            margin-bottom: 6px;
-        }
-
-        .badge {
-            display: inline-block;
-            background: #3EB489;
-            color: #FFFFFF;
-            padding: 7px 13px;
-            border-radius: 20px;
-            font-size: 13px;
-        }
-
-        .empty {
-            color: #777;
-            background: #f4f4f4;
-            padding: 18px;
-            border-radius: 16px;
-        }
-
-        @media (max-width: 900px) {
-            .cliente-wrapper {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                width: auto;
-            }
-
-            .grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi institución | FigueFit</title>
+    <link rel="stylesheet" href="../../public/panel.css?v=13">
 </head>
+<body class="fp-panel">
 
-<body>
-<div class="cliente-wrapper">
+<div class="fp-layout cliente-wrapper">
 
-    <aside class="sidebar">
-        <h2>StayFit</h2>
-        <a href="../../controller/clienteIns/dashboardController.php">Dashboard</a>
-        <a href="../../controller/clienteIns/perfilController.php">Perfil</a>
-        <a class="active" href="../../controller/clienteIns/institucionController.php">Institución</a>
-        <a href="../../controller/clienteIns/planController.php">Mi plan</a>
-        <a href="../../controller/clienteIns/entrenamientoController.php">Entrenamiento</a>
-        <a href="../../controller/clienteIns/nutricionController.php">Nutrición</a>
-        <a href="../../controller/clienteIns/progresoController.php">Progreso</a>
-        <a href="../../controller/clienteIns/sesionGrupalController.php">Sesiones grupales</a>
-        <a href="../../controller/auth/logouthController.php">Cerrar sesión</a>
-    </aside>
+    <?php require __DIR__ . '/../partials/panel/sidebarClienteIns.php'; ?>
 
-    <main class="content">
+    <div class="fp-main-area">
+        <header class="fp-topbar topbar">
+            <div>
+                <strong class="fp-topbar-role">Cliente institucional</strong>
+                <p class="fp-topbar-name">Hola, <?= e($nombreCliente) ?></p>
+            </div>
+            <a class="logout" href="../../controllers/auth/logouthController.php">Cerrar sesión</a>
+        </header>
 
-        <section class="page-header">
-            <h1>Mi institución</h1>
-            <p>Consulta tu vínculo institucional, convenio activo y beneficios disponibles dentro de StayFit.</p>
-        </section>
+        <main class="fp-content content">
 
-        <section class="grid">
+            <section class="fp-hero hero page-header">
+                <span class="fp-hero-tag">Convenio corporativo</span>
+                <h1>Mi <span>institución</span></h1>
+                <p>Consulta tu vínculo institucional, el convenio activo y los beneficios disponibles en FigueFit.</p>
+            </section>
 
-            <div class="card">
-                <h3>Información de la institución</h3>
-
-                <?php if (empty($institucion)): ?>
-                    <div class="empty">No tienes una institución vinculada actualmente.</div>
-                <?php else: ?>
-                    <div class="info">
-                        <strong>Nombre</strong>
-                        <?= e($institucion['nombre'] ?? 'Sin nombre') ?>
+            <section class="fp-stats-premium">
+                <article class="fp-stat-premium fp-stat-premium--fuchsia">
+                    <div class="fp-stat-premium-head">
+                        <div class="fp-stat-premium-icon fp-coach-avatar" aria-hidden="true"><?= e($inicialesInst) ?></div>
                     </div>
+                    <p class="fp-stat-premium-value" style="font-size:17px;line-height:1.35;">
+                        <?= e($institucionNombre !== '' ? $institucionNombre : 'Sin institución') ?>
+                    </p>
+                    <p class="fp-stat-premium-label">Institución vinculada</p>
+                </article>
 
-                    <div class="info">
-                        <strong>NIT / Identificación</strong>
-                        <?= e($institucion['nit'] ?? 'No registrado') ?>
+                <article class="fp-stat-premium fp-stat-premium--mint">
+                    <div class="fp-stat-premium-head">
+                        <div class="fp-stat-premium-icon" aria-hidden="true">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                                <rect x="4" y="5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                                <path d="M8 10h8M8 14h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                            </svg>
+                        </div>
                     </div>
+                    <p class="fp-stat-premium-value" style="font-size:16px;line-height:1.35;">
+                        <?= e($planConvenio !== '' ? $planConvenio : 'Sin plan') ?>
+                    </p>
+                    <p class="fp-stat-premium-label">Plan de convenio</p>
+                </article>
 
-                    <div class="info">
-                        <strong>Correo</strong>
-                        <?= e($institucion['correo'] ?? 'No registrado') ?>
+                <article class="fp-stat-premium">
+                    <div class="fp-stat-premium-head">
+                        <div class="fp-stat-premium-icon" aria-hidden="true">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                                <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+                            </svg>
+                        </div>
                     </div>
+                    <p class="fp-stat-premium-value" style="font-size:15px;">
+                        <?php if ($tieneConvenio): ?>
+                            <span class="<?= e($estadoConvenio['class']) ?>"><?= e($estadoConvenio['label']) ?></span>
+                        <?php else: ?>
+                            <span class="fp-badge fp-badge-pending">Pendiente</span>
+                        <?php endif; ?>
+                    </p>
+                    <p class="fp-stat-premium-label">Estado del convenio</p>
+                </article>
+            </section>
 
-                    <div class="info">
-                        <strong>Teléfono</strong>
-                        <?= e($institucion['telefono'] ?? 'No registrado') ?>
+            <div class="fp-perfil-grid">
+                <article class="fp-card card fp-perfil-card">
+                    <div class="fp-perfil-card-head fp-perfil-card-head--fuchsia">
+                        <h3>Información de la institución</h3>
+                        <p>Datos de contacto y registro de la organización a la que perteneces.</p>
                     </div>
+                    <div class="fp-perfil-card-body">
+                        <?php if (!$tieneInstitucion): ?>
+                            <div class="fp-progreso-empty">
+                                <div class="fp-progreso-empty-icon" aria-hidden="true">
+                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                                        <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                                        <path d="M8 7h8M8 11h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    </svg>
+                                </div>
+                                <strong>Sin institución vinculada</strong>
+                                <p>No tienes una organización asociada a tu cuenta en este momento.</p>
+                            </div>
+                        <?php else: ?>
+                            <div class="fp-perfil-resumen">
+                                <div class="fp-perfil-resumen-item">
+                                    <span class="fp-perfil-resumen-icon" aria-hidden="true">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                            <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                                            <path d="M8 7h8M8 11h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                        </svg>
+                                    </span>
+                                    <div>
+                                        <strong>Nombre</strong>
+                                        <span><?= e($institucion['nombre'] ?? $institucionNombre) ?></span>
+                                    </div>
+                                </div>
+                                <div class="fp-perfil-resumen-item">
+                                    <span class="fp-perfil-resumen-icon fp-perfil-resumen-icon--mint" aria-hidden="true">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                            <path d="M7 7h10v10H7z" stroke="currentColor" stroke-width="1.8"/>
+                                            <path d="M9 11h6M9 15h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                        </svg>
+                                    </span>
+                                    <div>
+                                        <strong>NIT / Identificación</strong>
+                                        <span><?= e($institucion['nit'] ?? 'No registrado') ?></span>
+                                    </div>
+                                </div>
+                                <div class="fp-perfil-resumen-item">
+                                    <span class="fp-perfil-resumen-icon" aria-hidden="true">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                            <path d="M4 6h16v12H4z" stroke="currentColor" stroke-width="1.8"/>
+                                            <path d="M4 8l8 5 8-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                        </svg>
+                                    </span>
+                                    <div>
+                                        <strong>Correo</strong>
+                                        <span><?= e($institucion['correo'] ?? 'No registrado') ?></span>
+                                    </div>
+                                </div>
+                                <div class="fp-perfil-resumen-item">
+                                    <span class="fp-perfil-resumen-icon fp-perfil-resumen-icon--mint" aria-hidden="true">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                            <path d="M6 4h12v14H6z" stroke="currentColor" stroke-width="1.8"/>
+                                            <path d="M9 21h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                        </svg>
+                                    </span>
+                                    <div>
+                                        <strong>Teléfono</strong>
+                                        <span><?= e($institucion['telefono'] ?? 'No registrado') ?></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <p style="margin-top:18px;">
+                                <span class="<?= e($estadoInstitucion['class']) ?>"><?= e($estadoInstitucion['label']) ?></span>
+                            </p>
+                        <?php endif; ?>
+                    </div>
+                </article>
 
-                    <span class="badge"><?= e($institucion['estado'] ?? 'activo') ?></span>
-                <?php endif; ?>
+                <article class="fp-card card fp-perfil-card">
+                    <div class="fp-perfil-card-head fp-perfil-card-head--mint">
+                        <h3>Convenio institucional</h3>
+                        <p>Plan activo, vigencia y beneficios incluidos en tu membresía corporativa.</p>
+                    </div>
+                    <div class="fp-perfil-card-body">
+                        <?php if (!$tieneConvenio): ?>
+                            <div class="fp-progreso-empty">
+                                <div class="fp-progreso-empty-icon" aria-hidden="true">
+                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                                        <rect x="4" y="5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                                        <path d="M8 10h8M8 14h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    </svg>
+                                </div>
+                                <strong>Sin convenio registrado</strong>
+                                <p>Aún no hay un plan de convenio asociado a tu cuenta institucional.</p>
+                            </div>
+                        <?php else: ?>
+                            <div class="fp-perfil-resumen">
+                                <div class="fp-perfil-resumen-item">
+                                    <span class="fp-perfil-resumen-icon fp-perfil-resumen-icon--mint" aria-hidden="true">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                            <path d="M4 6h16v12H4z" stroke="currentColor" stroke-width="1.8"/>
+                                            <path d="M8 10h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                        </svg>
+                                    </span>
+                                    <div>
+                                        <strong>Tipo de convenio</strong>
+                                        <span><?= e($convenio['tipo'] ?? 'No definido') ?></span>
+                                    </div>
+                                </div>
+                                <div class="fp-perfil-resumen-item">
+                                    <span class="fp-perfil-resumen-icon" aria-hidden="true">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                            <rect x="4" y="5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                                            <path d="M8 3v4M16 3v4M4 9h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                        </svg>
+                                    </span>
+                                    <div>
+                                        <strong>Fecha de inicio</strong>
+                                        <span><?= e(institucionFormatearFecha($convenio['fecha_inicio'] ?? null)) ?></span>
+                                    </div>
+                                </div>
+                                <div class="fp-perfil-resumen-item">
+                                    <span class="fp-perfil-resumen-icon fp-perfil-resumen-icon--mint" aria-hidden="true">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                            <rect x="4" y="5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                                            <path d="M8 3v4M16 3v4M4 9h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                            <path d="M9 14l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </span>
+                                    <div>
+                                        <strong>Fecha de vencimiento</strong>
+                                        <span><?= e(institucionFormatearFecha($convenio['fecha_fin'] ?? null)) ?></span>
+                                    </div>
+                                </div>
+                                <div class="fp-perfil-resumen-item">
+                                    <span class="fp-perfil-resumen-icon" aria-hidden="true">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                            <path d="M12 2l3 6 6 .9-4.5 4.2 1 6-5.5-3.2-5.5 3.2 1-6L3 8.9 9 8z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                                        </svg>
+                                    </span>
+                                    <div>
+                                        <strong>Beneficios</strong>
+                                        <span><?= e($convenio['beneficios'] ?? 'No registrados') ?></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <p style="margin-top:18px;">
+                                <span class="<?= e($estadoConvenio['class']) ?>"><?= e($estadoConvenio['label']) ?></span>
+                            </p>
+                        <?php endif; ?>
+                    </div>
+                </article>
             </div>
 
-            <div class="card">
-                <h3>Convenio institucional</h3>
-
-                <?php if (empty($convenio)): ?>
-                    <div class="empty">No hay información de convenio registrada.</div>
-                <?php else: ?>
-                    <div class="info">
-                        <strong>Tipo de convenio</strong>
-                        <?= e($convenio['tipo'] ?? 'No definido') ?>
+            <article class="fp-card card fp-perfil-card" style="margin-top:24px;">
+                <div class="fp-perfil-card-head fp-perfil-card-head--neutral">
+                    <h3>Tu vinculación</h3>
+                    <p>Resumen de tu cuenta como cliente institucional en la plataforma.</p>
+                </div>
+                <div class="fp-perfil-card-body">
+                    <div class="fp-perfil-grid" style="margin:0;">
+                        <div class="fp-perfil-resumen" style="grid-column:1/-1;">
+                            <div class="fp-perfil-resumen-item">
+                                <span class="fp-perfil-resumen-icon" aria-hidden="true">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                        <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/>
+                                        <path d="M5 20c1.5-3 4-4.5 7-4.5s5.5 1.5 7 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    </svg>
+                                </span>
+                                <div>
+                                    <strong>Cliente</strong>
+                                    <span><?= e($nombreCliente) ?></span>
+                                </div>
+                            </div>
+                            <div class="fp-perfil-resumen-item">
+                                <span class="fp-perfil-resumen-icon fp-perfil-resumen-icon--mint" aria-hidden="true">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                        <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+                                    </svg>
+                                </span>
+                                <div>
+                                    <strong>Estado de vinculación</strong>
+                                    <span><span class="<?= e($estadoCliente['class']) ?>"><?= e($estadoCliente['label']) ?></span></span>
+                                </div>
+                            </div>
+                            <?php if (!empty($clienteInstitucional['cargo'])): ?>
+                                <div class="fp-perfil-resumen-item">
+                                    <span class="fp-perfil-resumen-icon" aria-hidden="true">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                            <path d="M8 7h8v12H8z" stroke="currentColor" stroke-width="1.8"/>
+                                            <path d="M6 7h12M9 3h6v4H9z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                        </svg>
+                                    </span>
+                                    <div>
+                                        <strong>Cargo</strong>
+                                        <span><?= e($clienteInstitucional['cargo']) ?></span>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                        </div>
                     </div>
-
-                    <div class="info">
-                        <strong>Fecha de inicio</strong>
-                        <?= e($convenio['fecha_inicio'] ?? 'No registrada') ?>
+                    <div class="fp-row-actions" style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;">
+                        <a class="btn fp-btn-sm fp-btn-outline-mint" href="../../controllers/clienteIns/planController.php">Ver mi plan</a>
+                        <a class="btn fp-btn-sm fp-btn-outline" href="../../controllers/clienteIns/perfilController.php">Editar perfil</a>
                     </div>
+                </div>
+            </article>
 
-                    <div class="info">
-                        <strong>Fecha de vencimiento</strong>
-                        <?= e($convenio['fecha_fin'] ?? 'No registrada') ?>
-                    </div>
-
-                    <div class="info">
-                        <strong>Beneficios</strong>
-                        <?= e($convenio['beneficios'] ?? 'No registrados') ?>
-                    </div>
-
-                    <span class="badge"><?= e($convenio['estado'] ?? 'activo') ?></span>
-                <?php endif; ?>
-            </div>
-
-        </section>
-
-        <section class="card" style="margin-top: 24px;">
-            <h3>Datos del cliente institucional</h3>
-
-            <div class="info">
-                <strong>Cliente</strong>
-                <?= e($clienteInstitucional['nombre'] ?? $_SESSION['nombre'] ?? 'Cliente institucional') ?>
-            </div>
-
-            <div class="info">
-                <strong>Estado de vinculación</strong>
-                <?= e($clienteInstitucional['estado'] ?? 'activo') ?>
-            </div>
-        </section>
-
-    </main>
+        </main>
+    </div>
 </div>
 </body>
 </html>

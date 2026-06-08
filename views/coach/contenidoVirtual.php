@@ -15,57 +15,17 @@ $materiales = $materiales ?? [];
 $categorias = $categorias ?? [];
 $flash = $flash ?? null;
 $planId = (int) ($plan['id_plan'] ?? $_GET['plan_id'] ?? 0);
-$ctrl = '../../controller/coach/contenidoVirtualController.php';
+$ctrl = '../../controllers/coach/contenidoVirtualController.php';
+
+$tituloPagina = 'Contenido virtual | FigueFit Coach';
+$vistaActiva = 'contenidoVirtual';
+
+require __DIR__ . '/../partials/panel/coachShellOpen.php';
 
 ?>
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contenido virtual | StayFit Coach</title>
-    <style>
-        body { margin: 0; font-family: 'Segoe UI', Arial, sans-serif; background: #f7f7f7; color: #2D2D2D; }
-        .coach-wrapper { display: flex; min-height: 100vh; }
-        .sidebar { width: 245px; background: #2D2D2D; color: #fff; padding: 28px 20px; }
-        .sidebar h2 { color: #D63384; margin-bottom: 30px; }
-        .sidebar a { display: block; color: #fff; text-decoration: none; padding: 12px 14px; border-radius: 12px; margin-bottom: 8px; }
-        .sidebar a:hover, .sidebar a.active { background: #D63384; }
-        .content { flex: 1; padding: 34px; }
-        .page-header { background: linear-gradient(135deg, #D63384, #2D2D2D); color: #fff; border-radius: 24px; padding: 32px; margin-bottom: 28px; }
-        .card { background: #fff; border-radius: 22px; padding: 24px; margin-bottom: 22px; box-shadow: 0 10px 28px rgba(45,45,45,.08); }
-        .card h3 { color: #D63384; margin-top: 0; }
-        label { font-weight: 600; display: block; margin-top: 10px; }
-        input, select, textarea { width: 100%; padding: 12px; margin: 6px 0 14px; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; }
-        textarea { min-height: 90px; }
-        .btn { display: inline-block; background: #D63384; color: #fff; padding: 9px 14px; border-radius: 12px; text-decoration: none; border: none; cursor: pointer; font-weight: 700; margin: 4px 4px 4px 0; }
-        .btn-green { background: #3EB489; }
-        .btn-muted { background: #666; }
-        .alert-success { background: #e8f8f1; color: #1d6b4f; border: 1px solid #3EB489; padding: 14px; border-radius: 14px; margin-bottom: 20px; }
-        .alert-error { background: #fde8f0; color: #8b2252; border: 1px solid #D63384; padding: 14px; border-radius: 14px; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; border-bottom: 1px solid #eee; vertical-align: top; }
-        .thumb { max-width: 120px; max-height: 70px; border-radius: 8px; }
-        .badge { background: #3EB489; color: #fff; padding: 4px 10px; border-radius: 12px; font-size: 12px; }
-        .campo-url, .campo-archivo { display: none; }
-    </style>
-</head>
-<body>
-<div class="coach-wrapper">
-    <aside class="sidebar">
-        <h2>StayFit</h2>
-        <a href="../../controller/coach/dashboardController.php">Dashboard</a>
-        <a href="../../controller/coach/clientesController.php">Clientes</a>
-        <a href="../../controller/coach/entrenamientoController.php">Entrenamientos</a>
-        <a class="active" href="<?= e($ctrl) ?>">Contenido virtual</a>
-        <a href="../../controller/coach/seguimientoVirtualController.php">Seguimiento virtual</a>
-        <a href="../../controller/coach/comunicacionController.php">Comunicación</a>
-        <a href="../../controller/auth/logouthController.php">Cerrar sesión</a>
-    </aside>
 
-    <main class="content">
-        <section class="page-header">
-            <h1>Biblioteca virtual</h1>
+        <section class="fp-hero hero page-header">
+            <h1>Biblioteca <span>virtual</span></h1>
             <p>Sube videos, fotos o enlaces con descripción para los planes virtuales. Tus clientas lo verán en entrenamiento.</p>
         </section>
 
@@ -157,8 +117,7 @@ $ctrl = '../../controller/coach/contenidoVirtualController.php';
         </section>
         <?php endif; ?>
         <?php endif; ?>
-    </main>
-</div>
+
 <script>
 function toggleCamposMaterial() {
     var t = document.getElementById('tipo_media').value;
@@ -167,5 +126,5 @@ function toggleCamposMaterial() {
 }
 toggleCamposMaterial();
 </script>
-</body>
-</html>
+
+<?php require __DIR__ . '/../partials/panel/coachShellClose.php'; ?>

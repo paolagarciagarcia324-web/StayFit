@@ -32,14 +32,18 @@ class ClienteProgresoController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Valida formulario
 
             $datos = [
-                'cliente_id' => $this->obtenerClienteId(), // ID cliente
-                'peso' => $_POST['peso'], // Peso actual
-                'medidas' => trim($_POST['medidas'] ?? ''), // Medidas corporales
-                'observacion' => trim($_POST['observacion'] ?? ''), // Observación cliente
-                'foto' => $_FILES['foto']['name'] ?? null // Foto progreso
+                'cliente_id' => $this->obtenerClienteId(),
+                'peso' => $_POST['peso'],
+                'cintura' => $_POST['cintura'] !== '' ? $_POST['cintura'] : null,
+                'cadera' => $_POST['cadera'] !== '' ? $_POST['cadera'] : null,
+                'brazos' => $_POST['brazos'] !== '' ? $_POST['brazos'] : null,
+                'piernas' => $_POST['piernas'] !== '' ? $_POST['piernas'] : null,
+                'observacion' => trim($_POST['observacion'] ?? ''),
+                'foto_nombre' => $_FILES['foto']['name'] ?? null,
+                'foto_tmp' => $_FILES['foto']['tmp_name'] ?? null,
             ];
 
-            $this->progresoModel->crear($datos); // Guarda progreso
+            $this->progresoModel->registrar($datos);
 
             $this->progresoModel->registrarTrazabilidad($_SESSION['usuario_id'], 'Progreso registrado por cliente'); // Registra historial
         }

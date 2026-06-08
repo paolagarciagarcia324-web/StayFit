@@ -36,7 +36,7 @@ class CoachReporteController
         $reporteRutinas = $this->rutinaModel->reportePorCoach($coachId); // Reporte rutinas
         $reporteSesiones = $this->sesionModel->reportePorCoach($coachId); // Reporte sesiones
 
-        require_once __DIR__ . '/../../views/coach/progreso.php'; // Carga vista existente
+        require_once __DIR__ . '/../../views/coach/reportes.php';
     }
 
     private function obtenerCoachId()

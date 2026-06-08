@@ -1,170 +1,205 @@
 <?php
 
-require_once __DIR__ . '/../../config/database.php'; // Importa conexión
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../config/schemaHelper.php';
 
 class CoachModel
 {
-    private $db; // Conexión BD
+    private $db;
+    private SchemaHelper $schema;
 
     public function __construct()
     {
-        $database = new Database(); // Instancia conexión
-        $this->db = $database->conectar(); // Abre conexión
+        $database = new Database();
+        $this->db = $database->conectar();
+        $this->schema = new SchemaHelper($this->db);
+    }
+
+    private function usaEsquemaNuevo(): bool
+    {
+        return $this->schema->usaEsquemaNuevo();
+    }
+
+    private function sqlBaseSelect(): string
+    {
+        if ($this->usaEsquemaNuevo()) {
+            return "SELECT c.id_coach, u.id_user AS id_usuario, u.nombres AS nombre, u.apellidos AS apellido,
+                           u.correo, u.estado, u.telefono,
+                           c.especialidad, c.certificaciones AS credencial, c.biografia
+                    FROM coaches c
+                    INNER JOIN user u ON u.id_user = c.id_user";
+        }
+
+        return "SELECT u.id_usuario, u.nombre, u.apellido, u.correo, u.estado, u.telefono,
+                       c.especialidad, c.credencial, c.biografia
+                FROM coach c
+                INNER JOIN users u ON u.id_usuario = c.id_coach";
+    }
+
+    private function normalizarLista(array $lista): array
+    {
+        foreach ($lista as &$fila) {
+            $fila['id'] = $fila['id_coach'] ?? $fila['id_usuario'] ?? $fila['id'] ?? null;
+            $fila['estado'] = strtolower($fila['estado'] ?? $fila['estado_coach'] ?? 'activo');
+            if (!empty($fila['apellido'])) {
+                $fila['nombre_completo'] = trim(($fila['nombre'] ?? '') . ' ' . ($fila['apellido'] ?? ''));
+            }
+        }
+
+        return $lista;
     }
 
     public function obtenerTodos()
     {
-        $sql = "SELECT u.id_usuario, u.nombre, u.apellido, u.correo, u.estado, u.telefono,
-                       c.especialidad, c.credencial, c.biografia
-                FROM coach c
-                INNER JOIN users u ON u.id_usuario = c.id_coach
-                ORDER BY u.id_usuario DESC"; // Consulta coaches
+        $sql = $this->sqlBaseSelect() . ' ORDER BY ' . ($this->usaEsquemaNuevo() ? 'u.id_user' : 'u.id_usuario') . ' DESC';
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->execute(); // Ejecuta consulta
-
-        $lista = $stmt->fetchAll(PDO::FETCH_ASSOC); // Obtiene filas
-
-        foreach ($lista as &$fila) { // Normaliza para vistas admin
-            $fila['id'] = $fila['id_usuario'] ?? $fila['id'] ?? null; // ID
-            $fila['estado'] = strtolower($fila['estado'] ?? 'activo'); // Estado
-        }
-
-        return $lista; // Retorna lista
+        return $this->normalizarLista($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
     public function obtenerActivos()
     {
-        $sql = "SELECT u.id_usuario AS id, u.id_usuario, u.nombre, u.apellido, u.correo, u.telefono,
-                       c.especialidad, c.biografia
-                FROM coach c
-                INNER JOIN users u ON u.id_usuario = c.id_coach
-                WHERE u.estado = 'ACTIVO'
-                ORDER BY u.nombre ASC"; // Consulta activos
+        $sql = $this->sqlBaseSelect() . ' WHERE u.estado = \'ACTIVO\' ORDER BY ' . ($this->usaEsquemaNuevo() ? 'u.nombres' : 'u.nombre') . ' ASC';
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->execute(); // Ejecuta consulta
-
-        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna coaches activos
+        return $this->normalizarLista($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
     public function obtenerPorId($id)
     {
-        $sql = "SELECT u.id_usuario, u.nombre, u.apellido, u.correo, u.estado, u.telefono,
-                       c.especialidad, c.credencial, c.biografia
-                FROM coach c
-                INNER JOIN users u ON u.id_usuario = c.id_coach
-                WHERE c.id_coach = :id
-                LIMIT 1"; // Busca por ID
+        $campo = $this->usaEsquemaNuevo() ? 'c.id_coach' : 'c.id_coach';
+        $sql = $this->sqlBaseSelect() . " WHERE {$campo} = :id LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':id', $id); // Asigna ID
-        $stmt->execute(); // Ejecuta consulta
+        $fila = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        return $stmt->fetch(PDO::FETCH_ASSOC); // Retorna coach
+        return $fila ? $this->normalizarLista([$fila])[0] : null;
     }
 
     public function obtenerPorUsuario($usuarioId)
     {
-        $sql = "SELECT u.id_usuario AS id, u.id_usuario, u.nombre, u.apellido, u.correo, u.estado, u.telefono,
-                       c.especialidad, c.credencial, c.biografia
-                FROM coach c
-                INNER JOIN users u ON u.id_usuario = c.id_coach
-                WHERE c.id_coach = :usuario_id
-                LIMIT 1"; // Busca por usuario
+        $campo = $this->usaEsquemaNuevo() ? 'c.id_user' : 'c.id_coach';
+        $sql = $this->sqlBaseSelect() . " WHERE {$campo} = :usuario_id LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':usuario_id', $usuarioId);
+        $stmt->execute();
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':usuario_id', $usuarioId); // Asigna usuario
-        $stmt->execute(); // Ejecuta consulta
+        $fila = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        return $stmt->fetch(PDO::FETCH_ASSOC); // Retorna coach
+        return $fila ? $this->normalizarLista([$fila])[0] : null;
     }
 
     public function crear($datos)
     {
-        $sql = "INSERT INTO coach 
-                (id_coach, especialidad, credencial, biografia)
-                VALUES
-                (:id_coach, :especialidad, :credencial, :biografia)"; // Crea coach
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "INSERT INTO coaches (id_user, especialidad, certificaciones, biografia, estado_coach, creado_en)
+                    VALUES (:id_user, :especialidad, :credencial, :biografia, 'ACTIVO', NOW())";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':id_user', $datos['id_coach']);
+        } else {
+            $sql = "INSERT INTO coach (id_coach, especialidad, credencial, biografia)
+                    VALUES (:id_coach, :especialidad, :credencial, :biografia)";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':id_coach', $datos['id_coach']);
+        }
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':id_coach', $datos['id_coach']); // ID usuario (FK)
-        $stmt->bindValue(':especialidad', $datos['especialidad'] ?? null); // Especialidad
-        $stmt->bindValue(':credencial', $datos['credencial'] ?? null); // Credencial
-        $stmt->bindValue(':biografia', $datos['biografia'] ?? null); // Biografía
+        $stmt->bindValue(':especialidad', $datos['especialidad'] ?? null);
+        $stmt->bindValue(':credencial', $datos['credencial'] ?? null);
+        $stmt->bindValue(':biografia', $datos['biografia'] ?? null);
 
-        return $stmt->execute(); // Ejecuta registro
+        return $stmt->execute();
     }
 
     public function actualizar($datos)
     {
-        $sql = "UPDATE coach 
-                SET especialidad = :especialidad,
-                    credencial = :credencial,
-                    biografia = :biografia
-                WHERE id_coach = :id"; // Actualiza coach
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "UPDATE coaches
+                    SET especialidad = :especialidad, certificaciones = :credencial, biografia = :biografia
+                    WHERE id_coach = :id";
+        } else {
+            $sql = "UPDATE coach
+                    SET especialidad = :especialidad, credencial = :credencial, biografia = :biografia
+                    WHERE id_coach = :id";
+        }
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindValue(':especialidad', $datos['especialidad'] ?? null); // Especialidad
-        $stmt->bindValue(':credencial', $datos['credencial'] ?? null); // Credencial
-        $stmt->bindValue(':biografia', $datos['biografia'] ?? null); // Biografía
-        $stmt->bindParam(':id', $datos['id_coach']); // ID coach
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':especialidad', $datos['especialidad'] ?? null);
+        $stmt->bindValue(':credencial', $datos['credencial'] ?? null);
+        $stmt->bindValue(':biografia', $datos['biografia'] ?? null);
+        $stmt->bindParam(':id', $datos['id_coach']);
 
-        return $stmt->execute(); // Ejecuta actualización
+        return $stmt->execute();
     }
 
     public function cambiarEstado($id, $estado)
     {
-        $mapa = ['activo' => 'ACTIVO', 'inactivo' => 'INACTIVO', 'suspendido' => 'SUSPENDIDO']; // Estados
-        $estadoBd = $mapa[strtolower($estado)] ?? strtoupper($estado); // Estado BD
+        $mapa = ['activo' => 'ACTIVO', 'inactivo' => 'INACTIVO', 'suspendido' => 'SUSPENDIDO'];
+        $estadoBd = $mapa[strtolower($estado)] ?? strtoupper($estado);
 
-        $sql = "UPDATE users SET estado = :estado WHERE id_usuario = :id"; // Cambia estado en users
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':estado', $estadoBd); // Nuevo estado
-        $stmt->bindParam(':id', $id); // ID usuario
+        if ($this->usaEsquemaNuevo()) {
+            $sql = 'UPDATE user SET estado = :estado WHERE id_user = :id';
+        } else {
+            $sql = 'UPDATE users SET estado = :estado WHERE id_usuario = :id';
+        }
 
-        return $stmt->execute(); // Ejecuta cambio
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':estado', $estadoBd);
+        $stmt->bindParam(':id', $id);
+
+        return $stmt->execute();
     }
 
     public function contarActivos()
     {
-        $sql = "SELECT COUNT(*) AS total
-                FROM coach c
-                INNER JOIN users u ON u.id_usuario = c.id_coach
-                WHERE u.estado = 'ACTIVO'"; // Cuenta activos
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "SELECT COUNT(*) AS total FROM coaches c INNER JOIN user u ON u.id_user = c.id_user WHERE u.estado = 'ACTIVO'";
+        } else {
+            $sql = "SELECT COUNT(*) AS total FROM coach c INNER JOIN users u ON u.id_usuario = c.id_coach WHERE u.estado = 'ACTIVO'";
+        }
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->execute(); // Ejecuta consulta
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
 
-        return $stmt->fetch(PDO::FETCH_ASSOC); // Retorna total
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function obtenerClientesAsignados($coachId)
     {
-        $sql = "SELECT u.id_usuario AS id, u.nombre, u.correo, c.tipo_cliente, pc.estado AS estado_plan
-                FROM plan_cliente pc
-                INNER JOIN cliente c ON c.id_cliente = pc.id_cliente
-                INNER JOIN users u ON u.id_usuario = c.id_cliente
-                WHERE pc.id_coach = :coach_id
-                ORDER BY u.nombre ASC"; // Clientes del coach
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "SELECT c.id_cliente AS id, u.nombres AS nombre, u.correo,
+                           'INDIVIDUAL' AS tipo_cliente, pc.estado_plan_cliente AS estado_plan
+                    FROM clientes c
+                    INNER JOIN user u ON u.id_user = c.id_user
+                    LEFT JOIN planes_cliente pc ON pc.id_cliente = c.id_cliente AND pc.estado_plan_cliente = 'ACTIVO'
+                    WHERE c.id_coach = :coach_id
+                    ORDER BY u.nombres ASC";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':coach_id', $coachId);
+        } else {
+            $sql = "SELECT u.id_usuario AS id, u.nombre, u.correo, c.tipo_cliente, pc.estado AS estado_plan
+                    FROM plan_cliente pc
+                    INNER JOIN cliente c ON c.id_cliente = pc.id_cliente
+                    INNER JOIN users u ON u.id_usuario = c.id_cliente
+                    WHERE pc.id_coach = :coach_id
+                    ORDER BY u.nombre ASC";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':coach_id', $coachId);
+        }
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':coach_id', $coachId); // Coach
-        $stmt->execute(); // Ejecuta consulta
+        $stmt->execute();
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna clientes
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function registrarTrazabilidad($usuarioId, $accion)
     {
-        $sql = "INSERT INTO bitacora_busqueda (id_usuario, modulo, accion, fecha_hora)
-                VALUES (:usuario_id, 'Coaches', :accion, NOW())"; // Guarda historial
+        require_once __DIR__ . '/../../config/helpers.php';
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':usuario_id', $usuarioId); // Usuario responsable
-        $stmt->bindParam(':accion', $accion); // Acción realizada
-
-        return $stmt->execute(); // Ejecuta registro
+        return registrarBitacora($this->db, $usuarioId ? (int) $usuarioId : null, 'Coaches', $accion);
     }
 }
 

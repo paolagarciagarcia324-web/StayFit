@@ -1,118 +1,145 @@
 <?php
 
-session_start(); // Inicia la sesión
+session_start();
 
-require_once __DIR__ . '/../../config/database.php'; // Importa la conexión
-require_once __DIR__ . '/../../config/roles.php'; // Helpers de roles
-require_once __DIR__ . '/../../models/usuario/usuarioModel.php'; // Importa el modelo usuario
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../config/roles.php';
+require_once __DIR__ . '/../../models/usuario/usuarioModel.php';
 
 class LoginController
 {
-    private $db; // Conexión
-    private $usuarioModel; // Modelo usuario
+    private $db;
+    private $usuarioModel;
 
     public function __construct()
     {
-        $database = new Database(); // Instancia la base de datos
-        $this->db = $database->conectar(); // Abre conexión
-
-        $this->usuarioModel = new UsuarioModel(); // Instancia modelo
+        $database = new Database();
+        $this->db = $database->conectar();
+        $this->usuarioModel = new UsuarioModel($this->db);
     }
 
     public function login()
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { // Valida método POST
-            header('Location: ../../views/auth/login.php'); // Redirige al login
-            exit; // Detiene ejecución
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ../../views/auth/login.php');
+            exit;
         }
 
-        $correo = trim($_POST['correo'] ?? ''); // Captura correo
-        $password = trim($_POST['password'] ?? ''); // Captura contraseña
+        $correo = trim($_POST['correo'] ?? '');
+        $password = trim($_POST['password'] ?? '');
 
-        if (empty($correo) || empty($password)) { // Valida campos vacíos
-            $this->alerta('warning', 'Campos incompletos', 'Ingrese correo y contraseña'); // Guarda alerta
-            header('Location: ../../views/auth/login.php'); // Redirige al login
-            exit; // Detiene ejecución
+        if ($correo === '' || $password === '') {
+            $this->alerta('warning', 'Campos incompletos', 'Ingrese correo y contraseña');
+            header('Location: ../../views/auth/login.php');
+            exit;
         }
 
-        if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) { // Valida formato de correo
-            $this->alerta('error', 'Correo inválido', 'Ingrese un correo válido'); // Guarda alerta
-            header('Location: ../../views/auth/login.php'); // Redirige al login
-            exit; // Detiene ejecución
+        if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+            $this->alerta('error', 'Correo inválido', 'Ingrese un correo válido');
+            header('Location: ../../views/auth/login.php');
+            exit;
         }
 
-        $usuario = $this->usuarioModel->obtenerPorCorreo($correo); // Busca usuario
+        $usuario = $this->usuarioModel->obtenerPorCorreo($correo);
 
-        if (!$usuario) { // Valida existencia
-            $this->alerta('error', 'Usuario no encontrado', 'El correo no está registrado'); // Guarda alerta
-            header('Location: ../../views/auth/login.php'); // Redirige al login
-            exit; // Detiene ejecución
+        if (!$usuario) {
+            $this->alerta('error', 'Usuario no encontrado', 'El correo no está registrado');
+            header('Location: ../../views/auth/login.php');
+            exit;
         }
 
-        if (strtolower($usuario['estado'] ?? '') !== 'activo') { // Valida estado activo
-            $this->alerta('error', 'Usuario inactivo', 'Su cuenta no está activa'); // Guarda alerta
-            header('Location: ../../views/auth/login.php'); // Redirige al login
-            exit; // Detiene ejecución
+        if (strtolower($usuario['estado'] ?? '') !== 'activo') {
+            $this->alerta('error', 'Usuario inactivo', 'Su cuenta no está activa');
+            header('Location: ../../views/auth/login.php');
+            exit;
         }
 
-        $passwordHash = $usuario['password'] ?? $usuario['hash_contrasena'] ?? ''; // Hash de contraseña
+        $passwordHash = $usuario['password'] ?? $usuario['hash_contrasena'] ?? $usuario['password_hash'] ?? '';
 
-        if (!password_verify($password, $passwordHash)) { // Verifica contraseña
-            $this->alerta('error', 'Contraseña incorrecta', 'Verifique sus credenciales'); // Guarda alerta
-            header('Location: ../../views/auth/login.php'); // Redirige al login
-            exit; // Detiene ejecución
+        if (!$this->passwordValida($usuario, $password, $passwordHash)) {
+            $this->alerta('error', 'Contraseña incorrecta', 'Verifique sus credenciales');
+            header('Location: ../../views/auth/login.php');
+            exit;
         }
 
-        session_regenerate_id(true); // Regenera sesión
+        $rol = normalizarRol($usuario['rol'] ?? '');
 
-        $_SESSION['usuario_id'] = $usuario['id'] ?? $usuario['id_usuario']; // Guarda ID
-        $_SESSION['nombre'] = $usuario['nombre']; // Guarda nombre
-        $_SESSION['correo'] = $usuario['correo']; // Guarda correo
-        $_SESSION['rol'] = normalizarRol($usuario['rol']); // Guarda rol normalizado
+        if ($rol === '') {
+            $this->alerta('error', 'Rol no válido', 'No se pudo determinar el acceso');
+            header('Location: ../../views/auth/login.php');
+            exit;
+        }
 
-        $this->redirigirPorRol($_SESSION['rol']); // Redirige según rol
+        session_regenerate_id(true);
+
+        $_SESSION['usuario_id'] = $usuario['id'] ?? $usuario['id_usuario'];
+        $_SESSION['nombre'] = trim(($usuario['nombre'] ?? '') . ' ' . ($usuario['apellido'] ?? ''));
+        $_SESSION['correo'] = $usuario['correo'];
+        $_SESSION['rol'] = $rol;
+
+        $this->redirigirPorRol($rol);
+    }
+
+    private function passwordValida(array $usuario, string $password, string $passwordHash): bool
+    {
+        if ($passwordHash !== '' && password_verify($password, $passwordHash)) {
+            return true;
+        }
+
+        $infoHash = password_get_info($passwordHash);
+        $esPasswordPlano = ($infoHash['algo'] ?? 0) === 0;
+
+        if ($esPasswordPlano && $passwordHash !== '' && hash_equals($passwordHash, $password)) {
+            $usuarioId = $usuario['id'] ?? $usuario['id_usuario'] ?? null;
+
+            if ($usuarioId) {
+                $this->usuarioModel->actualizarPassword($usuarioId, $password);
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     private function redirigirPorRol($rol)
     {
-        $rol = normalizarRol($rol); // Normaliza rol
-
-        switch ($rol) {
+        switch (normalizarRol($rol)) {
             case 'administrador':
-                header('Location: ../admin/dashboardController.php'); // Panel admin
+                header('Location: ../admin/dashboardController.php');
                 exit;
 
             case 'coach':
-                header('Location: ../coach/dashboardController.php'); // Panel coach
+                header('Location: ../coach/dashboardController.php');
                 exit;
 
             case 'cliente':
-                header('Location: ../cliente/dashboardController.php'); // Panel cliente
+                header('Location: ../cliente/dashboardController.php');
                 exit;
 
             case 'clienteins':
             case 'cliente_institucional':
-                header('Location: ../clienteIns/dashboardController.php'); // Panel institucional
+                header('Location: ../clienteIns/dashboardController.php');
                 exit;
 
             default:
-                $this->alerta('error', 'Rol no válido', 'No se pudo determinar el acceso'); // Guarda alerta
-                header('Location: ../../views/auth/login.php'); // Redirige al login
+                $this->alerta('error', 'Rol no válido', 'No se pudo determinar el acceso');
+                header('Location: ../../views/auth/login.php');
                 exit;
         }
     }
 
     private function alerta($icono, $titulo, $texto)
     {
-        $_SESSION['alert'] = [ // Guarda alerta
-            'icon' => $icono, // Tipo
-            'title' => $titulo, // Título
-            'text' => $texto // Mensaje
+        $_SESSION['alert'] = [
+            'icon' => $icono,
+            'title' => $titulo,
+            'text' => $texto
         ];
     }
 }
 
-$controller = new LoginController(); // Crea controlador
-$controller->login(); // Ejecuta login
+$controller = new LoginController();
+$controller->login();
 
 ?>

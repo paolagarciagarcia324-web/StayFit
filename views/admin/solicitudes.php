@@ -2,218 +2,162 @@
 
 require_once __DIR__ . '/../../config/helpers.php';
 
-if (!function_exists('e')) { // Evita duplicar función
-    function e($valor) { // Limpia salida HTML
-        return htmlspecialchars((string)$valor, ENT_QUOTES, 'UTF-8'); // Retorna texto seguro
+if (!function_exists('e')) {
+    function e($valor) {
+        return htmlspecialchars((string) $valor, ENT_QUOTES, 'UTF-8');
+    }
+}
+
+if (!function_exists('solicitudEstadoBadge')) {
+    function solicitudEstadoBadge(?string $estado): array
+    {
+        $estado = strtolower(trim((string) $estado));
+
+        return match ($estado) {
+            'aprobada', 'validada' => [
+                'class' => 'fp-badge fp-badge-ok',
+                'label' => $estado === 'validada' ? 'Validada' : 'Aprobada',
+            ],
+            'rechazada', 'cancelada' => [
+                'class' => 'fp-badge fp-badge-alert',
+                'label' => ucfirst($estado),
+            ],
+            'en_revision' => [
+                'class' => 'fp-badge fp-badge-warn',
+                'label' => 'En revisión',
+            ],
+            default => [
+                'class' => 'fp-badge fp-badge-pending',
+                'label' => 'Pendiente',
+            ],
+        };
     }
 }
 
 $solicitudes = $solicitudes ?? [];
 $solicitud = $solicitud ?? null;
 $flash = $flash ?? null;
+$abrirModal = $abrirModal ?? false;
 
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8"> <!-- Codificación -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
-    <title>Solicitudes | StayFit</title> <!-- Título -->
-    <link rel="stylesheet" href="../../public/style.css"> <!-- Estilos -->
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitudes | FigueFit</title>
+    <link rel="stylesheet" href="../../public/panel.css?v=3">
     <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: #f7f7f7;
-            color: #2D2D2D;
+        .sol-modal-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 28px;
+            align-items: start;
         }
 
-        .admin-wrapper {
+        .sol-modal-info-head {
             display: flex;
-            min-height: 100vh;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 20px;
         }
 
-        .sidebar {
-            width: 245px;
-            background: #2D2D2D;
-            color: #FFFFFF;
-            padding: 28px 20px;
+        .sol-modal-info-head h3 {
+            margin: 0;
+            font-size: 20px;
+            color: var(--fp-white);
         }
 
-        .sidebar h2 {
-            color: #D63384;
-            margin-bottom: 30px;
+        .sol-modal-dl {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px 20px;
+            margin: 0 0 22px;
         }
 
-        .sidebar a {
-            display: block;
-            color: #FFFFFF;
-            text-decoration: none;
-            padding: 12px 14px;
-            border-radius: 12px;
-            margin-bottom: 8px;
+        .sol-modal-dl div {
+            min-width: 0;
         }
 
-        .sidebar a:hover,
-        .sidebar a.active {
-            background: #D63384;
+        .sol-modal-dl dt {
+            margin: 0 0 4px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: var(--fp-text-muted);
         }
 
-        .content {
-            flex: 1;
-            padding: 34px;
+        .sol-modal-dl dd {
+            margin: 0;
+            font-size: 14px;
+            color: var(--fp-text-soft);
+            word-break: break-word;
         }
 
-        .page-header {
-            background: linear-gradient(135deg, #2D2D2D, #D63384);
-            color: #FFFFFF;
-            border-radius: 22px;
-            padding: 30px;
-            margin-bottom: 28px;
+        .sol-modal-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 18px;
         }
 
-        .card {
-            background: #FFFFFF;
-            border-radius: 20px;
-            padding: 24px;
-            box-shadow: 0 10px 28px rgba(45, 45, 45, 0.08);
+        .sol-modal-comprobante h4 {
+            margin: 0 0 14px;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: var(--fp-text-muted);
         }
 
-        .card h3 {
-            color: #D63384;
+        .sol-modal-comprobante .comprobante-preview {
             margin-top: 0;
         }
 
-        .alert-success {
-            background: #e8f8f1;
-            color: #1d6b4f;
-            border: 1px solid #3EB489;
-            padding: 14px 18px;
-            border-radius: 14px;
-            margin-bottom: 22px;
-        }
-
-        .alert-error {
-            background: #fde8f0;
-            color: #8b2252;
-            border: 1px solid #D63384;
-            padding: 14px 18px;
-            border-radius: 14px;
-            margin-bottom: 22px;
-        }
-
-        table {
+        .sol-modal-comprobante .comprobante-img {
+            max-height: 340px;
             width: 100%;
-            border-collapse: collapse;
+            object-fit: contain;
+            background: rgba(0, 0, 0, 0.25);
         }
 
-        th {
-            text-align: left;
-            padding: 14px;
-            border-bottom: 2px solid #eee;
+        .sol-modal-comprobante .comprobante-pdf {
+            min-height: 340px;
+            height: 340px;
         }
 
-        td {
-            padding: 14px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .badge {
-            background: #D63384;
-            color: #FFFFFF;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 13px;
-        }
-
-        .badge.ok {
-            background: #3EB489;
-        }
-
-        .btn {
-            background: #D63384;
-            color: #FFFFFF;
-            padding: 9px 13px;
-            border-radius: 12px;
-            text-decoration: none;
-            font-weight: 700;
-        }
-
-        .btn-green {
-            background: #3EB489;
-        }
-
-        .comprobante-preview {
-            margin-top: 16px;
-            padding: 16px;
-            background: #f9f9f9;
-            border-radius: 14px;
-            border: 1px solid #eee;
-        }
-
-        .comprobante-img {
-            max-width: 100%;
-            max-height: 420px;
-            border-radius: 12px;
-            border: 1px solid #ddd;
+        .sol-reject-form label {
             display: block;
-        }
-
-        .comprobante-pdf {
-            width: 100%;
-            min-height: 420px;
-            border: 1px solid #ddd;
-            border-radius: 12px;
-        }
-
-        .sin-comprobante {
-            color: #777;
-            font-style: italic;
-        }
-
-        .btn-mini {
-            display: inline-block;
-            padding: 6px 12px;
+            margin-bottom: 8px;
             font-size: 12px;
+            font-weight: 700;
+            color: var(--fp-text-muted);
+            text-transform: uppercase;
         }
 
-        textarea {
+        .sol-reject-form textarea {
             width: 100%;
             min-height: 80px;
-            border: 1px solid #ddd;
-            border-radius: 12px;
-            padding: 12px;
-            font-family: inherit;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
         @media (max-width: 900px) {
-            .admin-wrapper {
-                flex-direction: column;
+            .sol-modal-layout {
+                grid-template-columns: 1fr;
             }
 
-            .sidebar {
-                width: auto;
+            .sol-modal-dl {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
-
-<body>
+<body class="fp-panel">
 <div class="admin-wrapper">
 
-    <aside class="sidebar">
-        <h2>StayFit</h2>
-        <a href="../../controller/admin/dashboardController.php">Dashboard</a>
-        <a class="active" href="../../controller/admin/solicitudController.php">Solicitudes</a>
-        <a href="../../controller/admin/pagoController.php">Pagos</a>
-        <a href="../../controller/admin/clienteController.php">Clientes</a>
-        <a href="../../controller/admin/asignacionController.php">Asignaciones</a>
-        <?php require_once __DIR__ . '/../partials/cerrarSesion.php'; ?>
-
-    </aside>
+    <?php require __DIR__ . '/../partials/panel/sidebarAdmin.php'; ?>
 
     <main class="content">
 
@@ -231,103 +175,185 @@ $flash = $flash ?? null;
         <section class="card">
             <h3>Listado de solicitudes</h3>
 
-            <table>
-                <thead>
-                    <tr>
-                        <th>Solicitante</th>
-                        <th>Contacto</th>
-                        <th>Plan</th>
-                        <th>Modalidad</th>
-                        <th>Comprobante</th>
-                        <th>Estado</th>
-                        <th>Acción</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    <?php if (empty($solicitudes)): ?>
+            <div class="fp-table-wrap">
+                <table class="fp-table-premium">
+                    <thead>
                         <tr>
-                            <td colspan="7">No hay solicitudes registradas.</td>
+                            <th>Solicitante</th>
+                            <th>Plan</th>
+                            <th>Comprobante</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
                         </tr>
-                    <?php endif; ?>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($solicitudes)): ?>
+                            <tr class="fp-empty-row">
+                                <td colspan="5">No hay solicitudes registradas.</td>
+                            </tr>
+                        <?php endif; ?>
 
-                    <?php foreach ($solicitudes as $item): ?>
-                        <tr>
-                            <td>
-                                <strong><?= e($item['nombre'] ?? '') ?></strong><br>
-                                <small><?= e($item['identificacion'] ?? '') ?></small>
-                            </td>
+                        <?php foreach ($solicitudes as $item): ?>
+                            <?php
+                            $estadoBadge = solicitudEstadoBadge($item['estado'] ?? 'pendiente');
+                            $solicitudId = (int) ($item['id'] ?? 0);
+                            $detalleUrl = '../../controllers/admin/solicitudController.php?accion=detalleFragment&id=' . $solicitudId;
+                            ?>
+                            <tr>
+                                <td>
+                                    <div class="fp-cell-stack">
+                                        <strong><?= e($item['nombre'] ?? 'Sin nombre') ?></strong>
+                                        <span>ID <?= e($item['identificacion'] ?? '—') ?></span>
+                                        <?php if (!empty($item['celular'])): ?>
+                                            <span class="fp-cell-highlight"><?= e($item['celular']) ?></span>
+                                        <?php endif; ?>
+                                        <?php if (!empty($item['correo'])): ?>
+                                            <span><?= e($item['correo']) ?></span>
+                                        <?php endif; ?>
+                                    </div>
+                                </td>
 
-                            <td><?= e($item['celular'] ?? '') ?></td>
-                            <td><?= e($item['plan_interes'] ?? '—') ?></td>
-                            <td><?= e($item['modalidad'] ?? 'No definida') ?></td>
+                                <td>
+                                    <div class="fp-cell-stack">
+                                        <strong><?= e($item['plan_interes'] ?? '—') ?></strong>
+                                        <span class="fp-tag-inline"><?= e($item['modalidad'] ?? 'Sin modalidad') ?></span>
+                                        <?php if (!empty($item['monto_pago'])): ?>
+                                            <span>$<?= e(number_format((float) $item['monto_pago'], 0, ',', '.')) ?></span>
+                                        <?php endif; ?>
+                                    </div>
+                                </td>
 
-                            <td>
-                                <?php if (!empty($item['url_comprobante'])): ?>
-                                    <a class="btn btn-mini" target="_blank" rel="noopener"
-                                       href="<?= e(urlPublicaComprobante($item['url_comprobante'], (int) ($item['id'] ?? 0))) ?>">
-                                        Ver archivo
-                                    </a>
-                                    <a class="btn btn-mini" href="../../controller/admin/solicitudController.php?accion=detalle&id=<?= e($item['id'] ?? '') ?>#detalle-comprobante">
-                                        En detalle
-                                    </a>
-                                <?php else: ?>
-                                    <span class="sin-comprobante">—</span>
-                                <?php endif; ?>
-                            </td>
+                                <td>
+                                    <?php if (!empty($item['url_comprobante'])): ?>
+                                        <a class="fp-link-compact" target="_blank" rel="noopener"
+                                           href="<?= e(urlPublicaComprobante($item['url_comprobante'], $solicitudId)) ?>">
+                                            Ver comprobante
+                                        </a>
+                                    <?php else: ?>
+                                        <span class="sin-comprobante">Sin archivo</span>
+                                    <?php endif; ?>
+                                </td>
 
-                            <td>
-                                <span class="badge <?= (($item['estado'] ?? '') === 'aprobada') ? 'ok' : '' ?>">
-                                    <?= e($item['estado'] ?? 'pendiente') ?>
-                                </span>
-                            </td>
+                                <td>
+                                    <span class="<?= e($estadoBadge['class']) ?>"><?= e($estadoBadge['label']) ?></span>
+                                </td>
 
-                            <td>
-                                <a class="btn" href="../../controller/admin/solicitudController.php?accion=detalle&id=<?= e($item['id'] ?? '') ?>">Ver</a>
+                                <td>
+                                    <div class="fp-row-actions">
+                                        <button type="button"
+                                                class="btn fp-btn-sm fp-btn-outline js-sol-detalle"
+                                                data-solicitud-id="<?= e($solicitudId) ?>"
+                                                data-detalle-url="<?= e($detalleUrl) ?>">
+                                            Detalle
+                                        </button>
 
-                                <?php if (($item['estado'] ?? '') === 'pendiente'): ?>
-                                    <a class="btn-green btn" href="../../controller/admin/solicitudController.php?accion=marcarRevision&id=<?= e($item['id'] ?? '') ?>">Revisar</a>
-                                <?php endif; ?>
+                                        <?php if (($item['estado'] ?? '') === 'pendiente'): ?>
+                                            <a class="btn fp-btn-sm fp-btn-outline-mint"
+                                               href="../../controllers/admin/solicitudController.php?accion=marcarRevision&id=<?= e($item['id'] ?? '') ?>">
+                                                Revisar
+                                            </a>
+                                        <?php endif; ?>
 
-                                <a class="btn-green btn" href="../../controller/admin/validacionPagoController.php?accion=aprobar&solicitud_id=<?= e($item['id'] ?? '') ?>">Aprobar pago</a>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+                                        <a class="btn fp-btn-sm btn-green"
+                                           href="../../controllers/admin/validacionPagoController.php?accion=aprobar&solicitud_id=<?= e($item['id'] ?? '') ?>">
+                                            Aprobar
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         </section>
-
-        <?php if ($solicitud): ?>
-            <section class="card" style="margin-top: 24px;">
-                <h3>Detalle de solicitud</h3>
-
-                <p><strong>Nombre:</strong> <?= e($solicitud['nombre'] ?? '') ?></p>
-                <p><strong>Edad:</strong> <?= e($solicitud['edad'] ?? '') ?></p>
-                <p><strong>Identificación:</strong> <?= e($solicitud['identificacion'] ?? '') ?></p>
-                <p><strong>Celular:</strong> <?= e($solicitud['celular'] ?? '') ?></p>
-                <p><strong>Plan:</strong> <?= e($solicitud['plan_interes'] ?? '') ?></p>
-                <p><strong>Modalidad:</strong> <?= e($solicitud['modalidad'] ?? '') ?></p>
-                <p><strong>Tipo cuenta:</strong> <?= e($solicitud['tipo_cuenta'] ?? '') ?></p>
-                <p><strong>Número cuenta:</strong> <?= e($solicitud['numero_cuenta'] ?? '') ?></p>
-                <p><strong>Monto:</strong> $<?= e($solicitud['monto_pago'] ?? '0') ?></p>
-                <p><strong>Estado:</strong> <?= e($solicitud['estado'] ?? '') ?></p>
-
-                <h4>Comprobante de pago</h4>
-                <?php
-                $urlComprobante = $solicitud['url_comprobante'] ?? null;
-                $solicitudIdComprobante = (int) ($solicitud['id'] ?? 0);
-                require __DIR__ . '/partials/comprobanteVista.php';
-                ?>
-
-                <form action="../../controller/admin/solicitudController.php?accion=rechazar" method="POST">
-                    <input type="hidden" name="id" value="<?= e($solicitud['id'] ?? '') ?>">
-                    <textarea name="observacion" placeholder="Motivo del rechazo"></textarea>
-                    <button class="btn" type="submit">Rechazar solicitud</button>
-                </form>
-            </section>
-        <?php endif; ?>
 
     </main>
 </div>
+
+<div class="fp-modal" id="solModal" aria-hidden="true" role="dialog" aria-labelledby="solModalTitle">
+    <div class="fp-modal-backdrop" data-close-modal></div>
+    <div class="fp-modal-dialog fp-modal-dialog--wide">
+        <header class="fp-modal-header">
+            <div>
+                <span class="fp-modal-tag">Solicitud de ingreso</span>
+                <h2 id="solModalTitle">Detalle del solicitante</h2>
+            </div>
+            <button type="button" class="fp-modal-close" data-close-modal aria-label="Cerrar">&times;</button>
+        </header>
+        <div class="fp-modal-body" id="solModalBody">
+            <?php if ($solicitud): ?>
+                <?php require __DIR__ . '/partials/solicitudDetalleContenido.php'; ?>
+            <?php else: ?>
+                <p class="fp-modal-loading">Cargando detalle…</p>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    var modal = document.getElementById('solModal');
+    var body = document.getElementById('solModalBody');
+    if (!modal || !body) return;
+
+    var fragmentBase = '../../controllers/admin/solicitudController.php?accion=detalleFragment&id=';
+
+    function openModal() {
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('fp-modal-open');
+    }
+
+    function closeModal() {
+        modal.classList.remove('is-open');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('fp-modal-open');
+        if (window.location.search.indexOf('accion=detalle') !== -1) {
+            history.replaceState(null, '', '../../controllers/admin/solicitudController.php');
+        }
+    }
+
+    function loadDetalle(id) {
+        body.innerHTML = '<p class="fp-modal-loading">Cargando detalle…</p>';
+        openModal();
+
+        fetch(fragmentBase + encodeURIComponent(id), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(function (res) {
+                if (!res.ok) throw new Error('No se pudo cargar el detalle.');
+                return res.text();
+            })
+            .then(function (html) {
+                body.innerHTML = html;
+            })
+            .catch(function () {
+                body.innerHTML = '<p class="fp-modal-error">No se pudo cargar el detalle. Intenta de nuevo.</p>';
+            });
+    }
+
+    document.querySelectorAll('.js-sol-detalle').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var id = btn.getAttribute('data-solicitud-id');
+            if (id) loadDetalle(id);
+        });
+    });
+
+    modal.querySelectorAll('[data-close-modal]').forEach(function (el) {
+        el.addEventListener('click', closeModal);
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && modal.classList.contains('is-open')) {
+            closeModal();
+        }
+    });
+
+    <?php if ($abrirModal && $solicitud): ?>
+    openModal();
+    <?php endif; ?>
+})();
+</script>
+
 </body>
 </html>

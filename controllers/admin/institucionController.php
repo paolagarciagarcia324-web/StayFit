@@ -1,139 +1,221 @@
 <?php
 
-require_once __DIR__ . '/../../config/roles.php'; // Validaci�n de roles
-require_once __DIR__ . '/../../models/institucion/institucionModel.php'; // Importa el modelo de institución
-require_once __DIR__ . '/../../models/cliente/clienteInsModel.php'; // Importa el modelo de cliente institucional
+require_once __DIR__ . '/../../config/roles.php';
+require_once __DIR__ . '/../../config/helpers.php';
+require_once __DIR__ . '/../../models/institucion/institucionModel.php';
+require_once __DIR__ . '/../../models/institucion/enlaceInstitucionalModel.php';
+require_once __DIR__ . '/../../models/cliente/clienteInsModel.php';
+require_once __DIR__ . '/../../models/plan/planModel.php';
 
 class InstitucionController
 {
-    private $institucionModel; // Modelo de instituciones
-    private $clienteInsModel; // Modelo de clientes institucionales
+    private InstitucionModel $institucionModel;
+    private EnlaceInstitucionalModel $enlaceModel;
+    private ClienteInsModel $clienteInsModel;
+    private PlanModel $planModel;
 
     public function __construct()
     {
-        session_start(); // Inicia la sesión
+        session_start();
+        $this->validarAdministrador();
 
-        $this->validarAdministrador(); // Valida acceso del administrador
-
-        $this->institucionModel = new InstitucionModel(); // Instancia instituciones
-        $this->clienteInsModel = new ClienteInsModel(); // Instancia clientes institucionales
+        $this->institucionModel = new InstitucionModel();
+        $this->enlaceModel = new EnlaceInstitucionalModel();
+        $this->clienteInsModel = new ClienteInsModel();
+        $this->planModel = new PlanModel();
     }
 
     public function index()
     {
-        $instituciones = $this->institucionModel->obtenerTodos(); // Obtiene instituciones
-        $clientesInstitucionales = $this->clienteInsModel->obtenerTodos(); // Obtiene clientes institucionales
+        $instituciones = $this->institucionModel->obtenerTodos();
+        $clientesInstitucionales = $this->clienteInsModel->obtenerTodos();
+        $planes = $this->planModel->obtenerPlanesInstitucionales();
+        $enlaces = $this->enlaceModel->obtenerTodosConDetalle();
 
-        require_once __DIR__ . '/../../views/admin/instituciones.php'; // Carga la vista
+        $enlacesPorInstitucion = [];
+        foreach ($enlaces as $enlace) {
+            $enlacesPorInstitucion[(int) ($enlace['id_institucion'] ?? 0)] = $enlace;
+        }
+
+        require_once __DIR__ . '/../../views/admin/instituciones.php';
     }
 
     public function guardar()
     {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Verifica envío del formulario
-
-            $datos = [
-                'nombre' => trim($_POST['nombre']), // Nombre de institución
-                'nit' => trim($_POST['nit']), // NIT o identificación
-                'telefono' => trim($_POST['telefono']), // Teléfono de contacto
-                'correo' => trim($_POST['correo']), // Correo de contacto
-                'direccion' => trim($_POST['direccion']), // Dirección
-                'estado' => 'activo' // Estado inicial
-            ];
-
-            $this->institucionModel->crear($datos); // Guarda institución
-
-            $this->registrarTrazabilidad('Institución registrada'); // Guarda trazabilidad
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: institucionController.php');
+            exit;
         }
 
-        header('Location: institucionController.php'); // Redirige al panel
-        exit; // Detiene la ejecución
+        $planId = (int) ($_POST['plan_id'] ?? 0);
+        $datos = [
+            'nombre' => trim($_POST['nombre'] ?? ''),
+            'nit' => trim($_POST['nit'] ?? ''),
+            'telefono' => trim($_POST['telefono'] ?? ''),
+            'correo' => trim($_POST['correo'] ?? ''),
+            'direccion' => trim($_POST['direccion'] ?? ''),
+            'estado' => 'activo',
+        ];
+
+        if ($datos['nombre'] === '' || $planId <= 0) {
+            $this->flash('error', 'Completa los datos de la institución y selecciona un plan de convenio.');
+            header('Location: institucionController.php');
+            exit;
+        }
+
+        if (!$this->validarPlan($planId)) {
+            $this->flash('error', 'El plan seleccionado no es válido o no está activo.');
+            header('Location: institucionController.php');
+            exit;
+        }
+
+        $idInstitucion = $this->institucionModel->crear($datos);
+
+        if (!$idInstitucion) {
+            $this->flash('error', 'No se pudo crear la institución.');
+            header('Location: institucionController.php');
+            exit;
+        }
+
+        $enlace = $this->enlaceModel->sincronizarEnlace(
+            $idInstitucion,
+            $planId,
+            (int) ($_SESSION['usuario_id'] ?? 0) ?: null,
+            false
+        );
+
+        if (!$enlace) {
+            $this->flash('warning', 'Institución creada, pero no se pudo generar el enlace de registro. Edítala para intentar de nuevo.');
+        } else {
+            $this->flash('success', 'Institución creada con plan y enlace de registro listos para compartir.');
+        }
+
+        $this->registrarTrazabilidad('Institución registrada con plan #' . $planId);
+        header('Location: institucionController.php');
+        exit;
     }
 
     public function actualizar()
     {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Verifica envío del formulario
-
-            $datos = [
-                'id' => $_POST['id'], // ID de institución
-                'nombre' => trim($_POST['nombre']), // Nombre actualizado
-                'nit' => trim($_POST['nit']), // NIT actualizado
-                'telefono' => trim($_POST['telefono']), // Teléfono actualizado
-                'correo' => trim($_POST['correo']), // Correo actualizado
-                'direccion' => trim($_POST['direccion']), // Dirección actualizada
-                'estado' => $_POST['estado'] // Estado actualizado
-            ];
-
-            $this->institucionModel->actualizar($datos); // Actualiza institución
-
-            $this->registrarTrazabilidad('Institución actualizada'); // Guarda trazabilidad
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: institucionController.php');
+            exit;
         }
 
-        header('Location: institucionController.php'); // Redirige al panel
-        exit; // Detiene la ejecución
+        $idInstitucion = (int) ($_POST['id'] ?? 0);
+        $planId = (int) ($_POST['plan_id'] ?? 0);
+        $regenerarEnlace = !empty($_POST['regenerar_enlace']);
+
+        $datos = [
+            'id' => $idInstitucion,
+            'nombre' => trim($_POST['nombre'] ?? ''),
+            'nit' => trim($_POST['nit'] ?? ''),
+            'telefono' => trim($_POST['telefono'] ?? ''),
+            'correo' => trim($_POST['correo'] ?? ''),
+            'direccion' => trim($_POST['direccion'] ?? ''),
+            'estado' => $_POST['estado'] ?? 'activo',
+        ];
+
+        if ($idInstitucion <= 0 || $datos['nombre'] === '' || $planId <= 0) {
+            $this->flash('error', 'Datos incompletos para actualizar la institución.');
+            header('Location: institucionController.php');
+            exit;
+        }
+
+        if (!$this->validarPlan($planId)) {
+            $this->flash('error', 'El plan seleccionado no es válido.');
+            header('Location: institucionController.php');
+            exit;
+        }
+
+        if (!$this->institucionModel->actualizar($datos)) {
+            $this->flash('error', 'No se pudo actualizar la institución.');
+            header('Location: institucionController.php');
+            exit;
+        }
+
+        $adminId = (int) ($_SESSION['usuario_id'] ?? 0) ?: null;
+        $enlace = $this->enlaceModel->sincronizarEnlace($idInstitucion, $planId, $adminId, $regenerarEnlace);
+
+        if (!$enlace) {
+            $this->flash('warning', 'Institución actualizada, pero el enlace no pudo sincronizarse.');
+        } elseif ($regenerarEnlace) {
+            $this->flash('success', 'Institución, plan y enlace actualizados. El enlace anterior ya no funciona.');
+        } else {
+            $this->flash('success', 'Institución y plan del enlace actualizados. El mismo enlace sigue activo.');
+        }
+
+        $this->registrarTrazabilidad('Institución actualizada (plan #' . $planId . ')');
+        header('Location: institucionController.php');
+        exit;
     }
 
     public function vincularCliente()
     {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Verifica envío del formulario
-
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $datos = [
-                'cliente_id' => $_POST['cliente_id'], // ID del cliente
-                'institucion_id' => $_POST['institucion_id'], // ID de institución
-                'cargo' => trim($_POST['cargo']), // Cargo o relación
-                'estado' => 'activo' // Estado de vinculación
+                'cliente_id' => $_POST['cliente_id'],
+                'institucion_id' => $_POST['institucion_id'],
+                'cargo' => trim($_POST['cargo'] ?? ''),
+                'estado' => 'activo',
             ];
 
-            $this->clienteInsModel->vincularInstitucion($datos); // Vincula cliente con institución
-
-            $this->registrarTrazabilidad('Cliente vinculado a institución'); // Guarda trazabilidad
+            $this->clienteInsModel->vincularInstitucion($datos);
+            $this->registrarTrazabilidad('Cliente vinculado a institución');
         }
 
-        header('Location: institucionController.php'); // Redirige al panel
-        exit; // Detiene la ejecución
+        header('Location: institucionController.php');
+        exit;
     }
 
     public function cambiarEstado()
     {
-        if (isset($_GET['id']) && isset($_GET['estado'])) { // Verifica datos recibidos
-
-            $id = $_GET['id']; // ID de institución
-            $estado = $_GET['estado']; // Nuevo estado
-
-            $this->institucionModel->cambiarEstado($id, $estado); // Cambia estado
-
-            $this->registrarTrazabilidad('Estado de institución cambiado'); // Guarda trazabilidad
+        if (isset($_GET['id'], $_GET['estado'])) {
+            $this->institucionModel->cambiarEstado($_GET['id'], $_GET['estado']);
+            $this->registrarTrazabilidad('Estado de institución cambiado');
         }
 
-        header('Location: institucionController.php'); // Redirige al panel
-        exit; // Detiene la ejecución
+        header('Location: institucionController.php');
+        exit;
     }
 
-    private function registrarTrazabilidad($accion)
+    private function validarPlan(int $planId): bool
     {
-        $adminId = $_SESSION['usuario_id'] ?? null; // ID del administrador
+        $plan = $this->planModel->obtenerPorId($planId);
 
-        $this->institucionModel->registrarTrazabilidad($adminId, $accion); // Registra historial
+        return $plan && ($plan['estado'] ?? '') === 'activo';
     }
 
-    private function validarAdministrador()
+    private function flash(string $tipo, string $mensaje): void
     {
-        $rol = strtolower($_SESSION['rol'] ?? ''); // Obtiene rol de sesión
+        $_SESSION['flash'] = ['tipo' => $tipo, 'mensaje' => $mensaje];
+    }
 
-        if ($rol !== 'admin' && $rol !== 'administrador') { // Valida permiso
-            header('Location: ../../views/auth/accesoDenegado.php'); // Redirige acceso denegado
-            exit; // Detiene la ejecución
+    private function registrarTrazabilidad(string $accion): void
+    {
+        $adminId = $_SESSION['usuario_id'] ?? null;
+        $this->institucionModel->registrarTrazabilidad($adminId, $accion);
+    }
+
+    private function validarAdministrador(): void
+    {
+        $rol = strtolower($_SESSION['rol'] ?? '');
+
+        if ($rol !== 'admin' && $rol !== 'administrador') {
+            header('Location: ../../views/auth/accesoDenegado.php');
+            exit;
         }
     }
 }
 
-$controller = new InstitucionController(); // Crea el controlador
+$controller = new InstitucionController();
 
-$accion = $_GET['accion'] ?? 'index'; // Acción por defecto
+$accion = $_GET['accion'] ?? 'index';
 
-if (method_exists($controller, $accion)) { // Verifica si existe la acción
-    $controller->$accion(); // Ejecuta la acción
+if (method_exists($controller, $accion)) {
+    $controller->$accion();
 } else {
-    $controller->index(); // Carga vista principal
+    $controller->index();
 }
 
 ?>

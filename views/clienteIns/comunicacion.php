@@ -16,61 +16,11 @@ $mensajes = $mensajes ?? []; // Mensajes del cliente institucional
 <head>
     <meta charset="UTF-8"> <!-- Codificación -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
-    <title>Comunicación Institucional | StayFit</title> <!-- Título -->
+    <title>Comunicación Institucional | StayFit</title>
+    <link rel="stylesheet" href="../../public/panel.css?v=1"> <!-- Título -->
 
     <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: #f7f7f7;
-            color: #2D2D2D;
-        }
-
-        .cliente-wrapper {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        .sidebar {
-            width: 245px;
-            background: #2D2D2D;
-            color: #FFFFFF;
-            padding: 28px 20px;
-        }
-
-        .sidebar h2 {
-            color: #D63384;
-            margin-bottom: 30px;
-        }
-
-        .sidebar a {
-            display: block;
-            color: #FFFFFF;
-            text-decoration: none;
-            padding: 12px 14px;
-            border-radius: 12px;
-            margin-bottom: 8px;
-        }
-
-        .sidebar a:hover,
-        .sidebar a.active {
-            background: #D63384;
-        }
-
-        .content {
-            flex: 1;
-            padding: 34px;
-        }
-
-        .page-header {
-            background: linear-gradient(135deg, #D63384, #2D2D2D);
-            color: #FFFFFF;
-            border-radius: 24px;
-            padding: 32px;
-            margin-bottom: 28px;
-        }
-
-        .chat-card {
+.chat-card {
             background: #FFFFFF;
             border-radius: 24px;
             box-shadow: 0 10px 28px rgba(45, 45, 45, 0.08);
@@ -159,18 +109,7 @@ $mensajes = $mensajes ?? []; // Mensajes del cliente institucional
             padding: 60px 20px;
         }
 
-        @media (max-width: 900px) {
-            .cliente-wrapper {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                width: auto;
-            }
-
-            .chat-form {
-                flex-direction: column;
-            }
+        
 
             button {
                 padding: 14px;
@@ -179,23 +118,10 @@ $mensajes = $mensajes ?? []; // Mensajes del cliente institucional
     </style>
 </head>
 
-<body>
+<body class="fp-panel">
 <div class="cliente-wrapper">
 
-    <aside class="sidebar">
-        <h2>StayFit</h2>
-        <a href="../../controller/clienteIns/dashboardController.php">Dashboard</a>
-        <a href="../../controller/clienteIns/perfilController.php">Perfil</a>
-        <a href="../../controller/clienteIns/institucionController.php">Institución</a>
-        <a href="../../controller/clienteIns/planController.php">Mi plan</a>
-        <a href="../../controller/clienteIns/entrenamientoController.php">Entrenamiento</a>
-        <a href="../../controller/clienteIns/nutricionController.php">Nutrición</a>
-        <a href="../../controller/clienteIns/progresoController.php">Progreso</a>
-        <a href="../../controller/clienteIns/sesionGrupalController.php">Sesiones grupales</a>
-        <a href="../../controller/clienteIns/calendarioController.php">Calendario</a>
-        <a class="active" href="../../controller/clienteIns/comunicacionController.php">Comunicación</a>
-        <a href="../../controller/auth/logouthController.php">Cerrar sesión</a>
-    </aside>
+    <?php require __DIR__ . '/../partials/panel/sidebarClienteIns.php'; ?>
 
     <main class="content">
 
@@ -226,7 +152,7 @@ $mensajes = $mensajes ?? []; // Mensajes del cliente institucional
                 <?php endforeach; ?>
             </div>
 
-            <form class="chat-form" action="../../controller/clienteIns/comunicacionController.php?accion=enviar" method="POST">
+            <form class="chat-form" action="../../controllers/clienteIns/comunicacionController.php?accion=enviar" method="POST">
                 <textarea name="mensaje" placeholder="Escribe tu mensaje..." required></textarea>
                 <button type="submit">Enviar</button>
             </form>

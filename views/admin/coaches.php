@@ -1,300 +1,318 @@
 <?php
 
-if (!function_exists('e')) { // Evita repetir la función
-    function e($valor) { // Limpia texto para imprimir
-        return htmlspecialchars((string)$valor, ENT_QUOTES, 'UTF-8'); // Retorna texto seguro
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+$alert = $_SESSION['alert'] ?? null;
+unset($_SESSION['alert']);
+
+if (!function_exists('e')) {
+    function e($valor) {
+        return htmlspecialchars((string) $valor, ENT_QUOTES, 'UTF-8');
     }
 }
 
-$coaches = $coaches ?? []; // Lista de coaches
-$coach = $coach ?? null; // Detalle de coach
-$clientes = $clientes ?? []; // Clientes asignados
-?>
+if (!function_exists('coachEstadoBadge')) {
+    function coachEstadoBadge(?string $estado): array
+    {
+        $estado = strtolower(trim((string) $estado));
 
+        return match ($estado) {
+            'activo' => [
+                'class' => 'fp-badge fp-badge-ok',
+                'label' => 'Activo',
+            ],
+            'inactivo', 'suspendido' => [
+                'class' => 'fp-badge fp-badge-alert',
+                'label' => ucfirst($estado),
+            ],
+            default => [
+                'class' => 'fp-badge fp-badge-pending',
+                'label' => $estado !== '' ? ucfirst($estado) : 'Sin estado',
+            ],
+        };
+    }
+}
+
+if (!function_exists('coachEsActivo')) {
+    function coachEsActivo(?string $estado): bool
+    {
+        return strtolower(trim((string) $estado)) === 'activo';
+    }
+}
+
+if (!function_exists('coachNombreMostrar')) {
+    function coachNombreMostrar(array $item): string
+    {
+        return trim($item['nombre_completo'] ?? $item['nombre'] ?? 'Coach sin nombre');
+    }
+}
+
+if (!function_exists('coachInicial')) {
+    function coachInicial(array $item): string
+    {
+        $nombre = coachNombreMostrar($item);
+
+        return strtoupper(substr($nombre, 0, 1));
+    }
+}
+
+$coaches = $coaches ?? [];
+$coach = $coach ?? null;
+$clientes = $clientes ?? [];
+
+$totalCoaches = count($coaches);
+$totalActivos = count(array_filter($coaches, fn($c) => coachEsActivo($c['estado'] ?? '')));
+$totalInactivos = $totalCoaches - $totalActivos;
+
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8"> <!-- Codificación -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
-    <title>Coaches | StayFit</title> <!-- Título -->
-    <link rel="stylesheet" href="../../public/style.css"> <!-- Estilos generales -->
-
-    <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: #f7f7f7;
-            color: #2D2D2D;
-        }
-
-        .admin-wrapper {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        .sidebar {
-            width: 245px;
-            background: #2D2D2D;
-            color: #FFFFFF;
-            padding: 28px 20px;
-        }
-
-        .sidebar h2 {
-            color: #D63384;
-            margin-bottom: 30px;
-        }
-
-        .sidebar a {
-            display: block;
-            color: #FFFFFF;
-            text-decoration: none;
-            padding: 12px 14px;
-            border-radius: 12px;
-            margin-bottom: 8px;
-        }
-
-        .sidebar a:hover,
-        .sidebar a.active {
-            background: #D63384;
-        }
-
-        .content {
-            flex: 1;
-            padding: 34px;
-        }
-
-        .page-header {
-            background: linear-gradient(135deg, #2D2D2D, #D63384);
-            color: #FFFFFF;
-            border-radius: 22px;
-            padding: 30px;
-            margin-bottom: 28px;
-        }
-
-        .page-header h1 {
-            margin: 0 0 8px;
-            font-size: 32px;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 360px 1fr;
-            gap: 22px;
-        }
-
-        .card {
-            background: #FFFFFF;
-            border-radius: 20px;
-            padding: 24px;
-            box-shadow: 0 10px 28px rgba(45, 45, 45, 0.08);
-        }
-
-        .card h3 {
-            color: #D63384;
-            margin-top: 0;
-        }
-
-        label {
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        input,
-        textarea,
-        select {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0 15px;
-            border: 1px solid #ddd;
-            border-radius: 12px;
-            font-family: inherit;
-        }
-
-        textarea {
-            min-height: 90px;
-            resize: vertical;
-        }
-
-        button,
-        .btn {
-            display: inline-block;
-            background: #D63384;
-            color: #FFFFFF;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 12px;
-            cursor: pointer;
-            text-decoration: none;
-            font-weight: 700;
-        }
-
-        .btn-green {
-            background: #3EB489;
-        }
-
-        .btn-dark {
-            background: #2D2D2D;
-        }
-
-        .coach-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 18px;
-        }
-
-        .coach-card {
-            border: 1px solid #eee;
-            border-radius: 18px;
-            padding: 18px;
-            background: #FFFFFF;
-        }
-
-        .coach-avatar {
-            width: 54px;
-            height: 54px;
-            border-radius: 50%;
-            background: #D63384;
-            color: #FFFFFF;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            margin-bottom: 12px;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            background: #3EB489;
-            color: #FFFFFF;
-            font-size: 13px;
-            margin-bottom: 10px;
-        }
-
-        .badge.off {
-            background: #D63384;
-        }
-
-        @media (max-width: 1000px) {
-            .admin-wrapper {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                width: auto;
-            }
-
-            .grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coaches | FigueFit</title>
+    <link rel="stylesheet" href="../../public/panel.css?v=7">
 </head>
-
-<body>
+<body class="fp-panel">
 <div class="admin-wrapper">
 
-    <aside class="sidebar">
-        <h2>StayFit</h2>
-        <a href="dashboardController.php">Dashboard</a>
-        <a href="clienteController.php">Clientes</a>
-        <a class="active" href="coachController.php">Coaches</a>
-        <a href="asignacionController.php">Asignaciones</a>
-        <a href="planController.php">Planes</a>
-        <a href="pagoController.php">Pagos</a>
-        <a href="solicitudController.php">Solicitudes</a>
-        <?php require_once __DIR__ . '/../partials/cerrarSesion.php'; ?>
-
-    </aside>
+    <?php require __DIR__ . '/../partials/panel/sidebarAdmin.php'; ?>
 
     <main class="content">
 
         <section class="page-header">
+            <span class="fp-hero-tag">Equipo profesional</span>
             <h1>Coaches</h1>
-            <p>Administra el equipo profesional que acompaña el entrenamiento, nutrición y progreso de las clientas.</p>
+            <p>Administra el equipo que acompaña el entrenamiento, nutrición y progreso de las clientas.</p>
         </section>
 
-        <section class="grid">
+        <?php if ($alert): ?>
+            <div class="<?= ($alert['icon'] ?? '') === 'success' ? 'alert-success' : 'alert-error' ?>">
+                <strong><?= e($alert['title'] ?? 'Aviso') ?></strong>
+                <?= e($alert['text'] ?? '') ?>
+            </div>
+        <?php endif; ?>
 
-            <div class="card">
-                <h3>Registrar nuevo coach</h3>
+        <section class="fp-stats-premium">
+            <article class="fp-stat-premium fp-stat-premium--fuchsia">
+                <div class="fp-stat-premium-head">
+                    <div class="fp-stat-premium-icon" aria-hidden="true">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="8" r="3.5" stroke="currentColor" stroke-width="1.8"/>
+                            <path d="M5 20c0-3.3 2.7-5.5 7-5.5s7 2.2 7 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="fp-stat-premium-value"><?= e((string) $totalCoaches) ?></p>
+                <p class="fp-stat-premium-label">Coaches registrados</p>
+            </article>
 
-                <form action="../../controller/admin/coachController.php?accion=guardar" method="POST">
-                    <label>Nombre completo</label>
-                    <input type="text" name="nombre" required>
+            <article class="fp-stat-premium fp-stat-premium--mint">
+                <div class="fp-stat-premium-head">
+                    <div class="fp-stat-premium-icon" aria-hidden="true">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                            <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="fp-stat-premium-value"><?= e((string) $totalActivos) ?></p>
+                <p class="fp-stat-premium-label">Coaches activos</p>
+            </article>
 
-                    <label>Correo</label>
-                    <input type="email" name="correo" required>
+            <article class="fp-stat-premium fp-stat-premium--warn">
+                <div class="fp-stat-premium-head">
+                    <div class="fp-stat-premium-icon" aria-hidden="true">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                            <path d="M8 12h8M12 8v8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="fp-stat-premium-value"><?= e((string) $totalInactivos) ?></p>
+                <p class="fp-stat-premium-label">Coaches inactivos</p>
+            </article>
+        </section>
 
-                    <label>Identificación</label>
-                    <input type="text" name="identificacion" required>
+        <section class="card fp-panel-unified">
+            <div class="fp-panel-unified-head">
+                <h3>Gestión de coaches</h3>
+            </div>
 
-                    <label>Celular</label>
-                    <input type="text" name="celular" required>
+            <div class="fp-panel-form-block">
+                <form class="fp-form-premium" action="../../controllers/admin/coachController.php?accion=guardar" method="POST" autocomplete="off">
+                    <div class="fp-form-grid">
+                        <div class="fp-field fp-field--full" style="grid-column: span 2;">
+                            <label for="coach_nombre">Nombre completo</label>
+                            <input type="text" id="coach_nombre" name="nombre" placeholder="Ana López" required autocomplete="name">
+                        </div>
 
-                    <label>Contraseña de acceso</label>
-                    <input type="password" name="contrasena" minlength="6" placeholder="Si se deja vacío, se usa la identificación">
+                        <div class="fp-field">
+                            <label for="coach_correo">Correo</label>
+                            <input type="email" id="coach_correo" name="correo" placeholder="coach@correo.com" required autocomplete="off">
+                        </div>
 
-                    <label>Especialidad</label>
-                    <input type="text" name="especialidad" placeholder="Ej: Fuerza, pérdida de grasa, movilidad" required>
+                        <div class="fp-field">
+                            <label for="coach_celular">Celular</label>
+                            <input type="tel" id="coach_celular" name="celular" placeholder="300 123 4567" required autocomplete="tel">
+                        </div>
 
-                    <label>Biografía profesional</label>
-                    <textarea name="biografia" placeholder="Describe experiencia, enfoque y tipo de acompañamiento"></textarea>
+                        <div class="fp-field">
+                            <label for="coach_identificacion">Identificación</label>
+                            <input type="text" id="coach_identificacion" name="identificacion" placeholder="Documento" required autocomplete="off">
+                        </div>
 
-                    <button type="submit">Guardar coach</button>
+                        <div class="fp-field">
+                            <label for="coach_contrasena">Contraseña</label>
+                            <input type="password" id="coach_contrasena" name="contrasena" minlength="6" placeholder="Opcional" autocomplete="new-password">
+                        </div>
+
+                        <div class="fp-field">
+                            <label for="coach_especialidad">Especialidad</label>
+                            <input type="text" id="coach_especialidad" name="especialidad" placeholder="Fuerza, movilidad…" required>
+                        </div>
+
+                        <div class="fp-field fp-field--full">
+                            <label for="coach_biografia">Biografía profesional</label>
+                            <textarea id="coach_biografia" name="biografia" placeholder="Experiencia, enfoque y tipo de acompañamiento"></textarea>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="fp-form-submit" style="max-width:220px;margin-top:6px;">Registrar coach</button>
+                    <span class="fp-field-hint" style="display:block;margin-top:8px;">Si no defines contraseña, se usará el número de identificación.</span>
                 </form>
             </div>
 
-            <div class="card">
-                <h3>Equipo de coaches</h3>
+            <div class="fp-panel-list-block">
+                <h4>Equipo de coaches</h4>
 
-                <div class="coach-list">
-                    <?php if (empty($coaches)): ?>
-                        <p>No hay coaches registrados.</p>
-                    <?php endif; ?>
-
-                    <?php foreach ($coaches as $item): ?>
-                        <article class="coach-card">
-                            <div class="coach-avatar">
-                                <?= strtoupper(substr(e($item['nombre'] ?? 'C'), 0, 1)) ?>
-                            </div>
-
-                            <span class="badge <?= (($item['estado'] ?? '') === 'activo') ? '' : 'off' ?>">
-                                <?= e($item['estado'] ?? 'sin estado') ?>
-                            </span>
-
-                            <h3><?= e($item['nombre'] ?? 'Coach sin nombre') ?></h3>
-                            <p><strong>Especialidad:</strong> <?= e($item['especialidad'] ?? 'No definida') ?></p>
-                            <p><strong>Correo:</strong> <?= e($item['correo'] ?? 'Sin correo') ?></p>
-                            <p><strong>Celular:</strong> <?= e($item['celular'] ?? 'Sin celular') ?></p>
-
-                            <a class="btn btn-dark" href="../../controller/admin/coachController.php?accion=detalle&id=<?= e($item['id'] ?? '') ?>">
-                                Ver
-                            </a>
-
-                            <?php if (($item['estado'] ?? '') === 'activo'): ?>
-                                <a class="btn" href="../../controller/admin/coachController.php?accion=cambiarEstado&id=<?= e($item['id'] ?? '') ?>&estado=inactivo">
-                                    Inactivar
-                                </a>
-                            <?php else: ?>
-                                <a class="btn btn-green" href="../../controller/admin/coachController.php?accion=cambiarEstado&id=<?= e($item['id'] ?? '') ?>&estado=activo">
-                                    Activar
-                                </a>
+                <div class="fp-table-wrap">
+                    <table class="fp-table-premium fp-table-fluid">
+                        <thead>
+                            <tr>
+                                <th class="col-cliente">Coach</th>
+                                <th class="col-contacto">Contacto</th>
+                                <th style="width:22%;">Especialidad</th>
+                                <th class="col-estado">Estado</th>
+                                <th class="col-acciones">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($coaches)): ?>
+                                <tr class="fp-empty-row">
+                                    <td colspan="5">No hay coaches registrados todavía.</td>
+                                </tr>
                             <?php endif; ?>
-                        </article>
-                    <?php endforeach; ?>
+
+                            <?php foreach ($coaches as $item): ?>
+                                <?php
+                                $estadoBadge = coachEstadoBadge($item['estado'] ?? '');
+                                $coachId = (int) ($item['id'] ?? 0);
+                                $activo = coachEsActivo($item['estado'] ?? '');
+                                $nombre = coachNombreMostrar($item);
+                                ?>
+                                <tr>
+                                    <td>
+                                        <div class="fp-coach-cell">
+                                            <span class="fp-coach-avatar" aria-hidden="true"><?= e(coachInicial($item)) ?></span>
+                                            <div class="fp-cell-stack">
+                                                <strong><?= e($nombre) ?></strong>
+                                                <?php if (!empty($item['identificacion'] ?? $item['credencial'] ?? null)): ?>
+                                                    <span>ID <?= e($item['identificacion'] ?? $item['credencial']) ?></span>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        <div class="fp-cell-stack">
+                                            <span class="fp-cell-highlight"><?= e($item['correo'] ?? 'Sin correo') ?></span>
+                                            <span><?= e($item['telefono'] ?? $item['celular'] ?? '—') ?></span>
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        <span class="fp-tag-inline"><?= e($item['especialidad'] ?? 'No definida') ?></span>
+                                    </td>
+
+                                    <td>
+                                        <span class="<?= e($estadoBadge['class']) ?>"><?= e($estadoBadge['label']) ?></span>
+                                    </td>
+
+                                    <td>
+                                        <div class="fp-row-actions">
+                                            <a class="btn fp-btn-sm fp-btn-outline"
+                                               href="../../controllers/admin/coachController.php?accion=detalle&id=<?= e($coachId) ?>">
+                                                Ver
+                                            </a>
+
+                                            <?php if ($activo): ?>
+                                                <a class="btn fp-btn-sm fp-btn-outline"
+                                                   href="../../controllers/admin/coachController.php?accion=cambiarEstado&id=<?= e($coachId) ?>&estado=inactivo"
+                                                   style="border-color:rgba(255,47,160,0.35)!important;color:var(--fp-fuchsia)!important;">
+                                                    Inactivar
+                                                </a>
+                                            <?php else: ?>
+                                                <a class="btn fp-btn-sm btn-green"
+                                                   href="../../controllers/admin/coachController.php?accion=cambiarEstado&id=<?= e($coachId) ?>&estado=activo">
+                                                    Activar
+                                                </a>
+                                            <?php endif; ?>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 </div>
             </div>
-
         </section>
 
         <?php if ($coach): ?>
             <section class="card" style="margin-top: 24px;">
                 <h3>Detalle del coach</h3>
-                <p><strong>Nombre:</strong> <?= e($coach['nombre'] ?? '') ?></p>
-                <p><strong>Especialidad:</strong> <?= e($coach['especialidad'] ?? '') ?></p>
-                <p><strong>Clientes asignados:</strong> <?= count($clientes) ?></p>
+
+                <dl class="fp-cliente-detail">
+                    <div class="fp-cliente-detail-item">
+                        <dt>Nombre</dt>
+                        <dd><?= e(coachNombreMostrar($coach)) ?></dd>
+                    </div>
+                    <div class="fp-cliente-detail-item">
+                        <dt>Correo</dt>
+                        <dd><?= e($coach['correo'] ?? '—') ?></dd>
+                    </div>
+                    <div class="fp-cliente-detail-item">
+                        <dt>Celular</dt>
+                        <dd><?= e($coach['telefono'] ?? '—') ?></dd>
+                    </div>
+                    <div class="fp-cliente-detail-item">
+                        <dt>Especialidad</dt>
+                        <dd><?= e($coach['especialidad'] ?? '—') ?></dd>
+                    </div>
+                    <div class="fp-cliente-detail-item">
+                        <dt>Estado</dt>
+                        <dd>
+                            <?php $detBadge = coachEstadoBadge($coach['estado'] ?? ''); ?>
+                            <span class="<?= e($detBadge['class']) ?>"><?= e($detBadge['label']) ?></span>
+                        </dd>
+                    </div>
+                    <div class="fp-cliente-detail-item">
+                        <dt>Clientes asignados</dt>
+                        <dd><?= e((string) count($clientes)) ?></dd>
+                    </div>
+                </dl>
+
+                <?php if (!empty($coach['biografia'])): ?>
+                    <p style="margin:16px 0 0;color:var(--fp-text-soft);font-size:14px;line-height:1.6;">
+                        <?= e($coach['biografia']) ?>
+                    </p>
+                <?php endif; ?>
+
+                <div class="fp-row-actions" style="margin-top:16px;max-width:none;">
+                    <a class="btn fp-btn-outline" href="../../controllers/admin/coachController.php">Volver al listado</a>
+                </div>
             </section>
         <?php endif; ?>
 

@@ -1,229 +1,354 @@
 <?php
 
-require_once __DIR__ . '/../../config/database.php'; // Importa conexión
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../config/schemaHelper.php';
 
 class ProgresoModel
 {
-    private $db; // Conexión BD
-    private $rutaBase; // Ruta para fotos
+    private $db;
+    private SchemaHelper $schema;
+    private $rutaBase;
 
     public function __construct()
     {
-        $database = new Database(); // Instancia conexión
-        $this->db = $database->conectar(); // Abre conexión
-        $this->rutaBase = __DIR__ . '/../../public/uploads/progresos/'; // Carpeta de fotos
+        $this->db = (new Database())->conectar();
+        $this->schema = new SchemaHelper($this->db);
+        $this->rutaBase = __DIR__ . '/../../public/uploads/progresos/';
+    }
+
+    private function usaEsquemaNuevo(): bool
+    {
+        return $this->schema->tablaExiste('registros_progreso');
+    }
+
+    private function tabla(): string
+    {
+        return $this->usaEsquemaNuevo() ? 'registros_progreso' : 'registro_progreso';
+    }
+
+    private function normalizarFila($fila)
+    {
+        if (!$fila) {
+            return false;
+        }
+
+        $fila['id'] = $fila['id_registro_progreso'] ?? $fila['id'] ?? null;
+        $fila['fecha'] = $fila['fecha_registro'] ?? $fila['fecha'] ?? '';
+        $fila['peso'] = $fila['peso_kg'] ?? $fila['peso'] ?? null;
+        $fila['cintura'] = $fila['cintura_cm'] ?? $fila['cintura'] ?? null;
+        $fila['cadera'] = $fila['cadera_cm'] ?? $fila['cadera'] ?? null;
+        $fila['brazos'] = $fila['brazo_cm'] ?? $fila['brazos'] ?? null;
+        $fila['piernas'] = $fila['pierna_cm'] ?? $fila['piernas'] ?? null;
+        $fila['fotos_evolucion'] = $fila['foto_url'] ?? $fila['fotos_evolucion'] ?? null;
+        $fila['observacion'] = $fila['observaciones_cliente'] ?? $fila['observacion_cliente'] ?? '';
+
+        return $fila;
+    }
+
+    private function sqlPorCliente(): string
+    {
+        if ($this->usaEsquemaNuevo()) {
+            return 'SELECT rp.* FROM registros_progreso rp WHERE rp.id_cliente = :cliente_id';
+        }
+
+        return 'SELECT rp.* FROM registro_progreso rp
+                INNER JOIN plan_cliente pc ON pc.id_plan_cliente = rp.id_plan_cliente
+                WHERE pc.id_cliente = :cliente_id';
     }
 
     public function obtenerTodos()
     {
-        $sql = "SELECT rp.*, u.nombre AS cliente
-                FROM registro_progreso rp
-                LEFT JOIN plan_cliente pc ON pc.id_plan_cliente = rp.id_plan_cliente
-                LEFT JOIN users u ON u.id_usuario = pc.id_cliente
-                ORDER BY rp.fecha DESC"; // Consulta progresos
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "SELECT rp.*, CONCAT(u.nombres, ' ', IFNULL(u.apellidos, '')) AS cliente
+                    FROM registros_progreso rp
+                    LEFT JOIN clientes c ON c.id_cliente = rp.id_cliente
+                    LEFT JOIN user u ON u.id_user = c.id_user
+                    ORDER BY rp.fecha_registro DESC";
+        } else {
+            $sql = "SELECT rp.*, u.nombre AS cliente
+                    FROM registro_progreso rp
+                    LEFT JOIN plan_cliente pc ON pc.id_plan_cliente = rp.id_plan_cliente
+                    LEFT JOIN users u ON u.id_usuario = pc.id_cliente
+                    ORDER BY rp.fecha DESC";
+        }
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->execute(); // Ejecuta consulta
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna lista
+        $lista = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
+            $lista[] = $this->normalizarFila($fila);
+        }
+
+        return $lista;
     }
 
     public function obtenerPorId($id)
     {
-        $sql = "SELECT * FROM registro_progreso WHERE id_registro_progreso = :id LIMIT 1"; // Busca progreso
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':id', $id); // ID progreso
-        $stmt->execute(); // Ejecuta consulta
+        $tabla = $this->tabla();
+        $sql = "SELECT * FROM {$tabla} WHERE id_registro_progreso = :id LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
 
-        return $stmt->fetch(PDO::FETCH_ASSOC); // Retorna progreso
+        return $this->normalizarFila($stmt->fetch(PDO::FETCH_ASSOC));
     }
 
     public function obtenerPorCliente($clienteId)
     {
-        $sql = "SELECT rp.* FROM registro_progreso rp
-                INNER JOIN plan_cliente pc ON pc.id_plan_cliente = rp.id_plan_cliente
-                WHERE pc.id_cliente = :cliente_id
-                ORDER BY rp.fecha DESC"; // Progresos del cliente
+        $orden = $this->usaEsquemaNuevo() ? 'rp.fecha_registro DESC' : 'rp.fecha DESC';
+        $sql = $this->sqlPorCliente() . " ORDER BY {$orden}";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':cliente_id', $clienteId);
+        $stmt->execute();
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':cliente_id', $clienteId); // Cliente
-        $stmt->execute(); // Ejecuta consulta
+        $lista = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
+            $lista[] = $this->normalizarFila($fila);
+        }
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna historial
+        return $lista;
     }
 
     public function obtenerUltimoPorCliente($clienteId)
     {
-        $sql = "SELECT rp.* FROM registro_progreso rp
-                INNER JOIN plan_cliente pc ON pc.id_plan_cliente = rp.id_plan_cliente
-                WHERE pc.id_cliente = :cliente_id
-                ORDER BY rp.fecha DESC
-                LIMIT 1"; // Último progreso
+        $orden = $this->usaEsquemaNuevo() ? 'rp.fecha_registro DESC' : 'rp.fecha DESC';
+        $sql = $this->sqlPorCliente() . " ORDER BY {$orden} LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':cliente_id', $clienteId);
+        $stmt->execute();
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':cliente_id', $clienteId); // Cliente
-        $stmt->execute(); // Ejecuta consulta
-
-        return $stmt->fetch(PDO::FETCH_ASSOC); // Retorna último registro
+        return $this->normalizarFila($stmt->fetch(PDO::FETCH_ASSOC));
     }
 
     public function obtenerPorCoach($coachId)
     {
-        $sql = "SELECT rp.*, u.nombre AS cliente
-                FROM registro_progreso rp
-                INNER JOIN plan_cliente pc ON pc.id_plan_cliente = rp.id_plan_cliente
-                INNER JOIN users u ON u.id_usuario = pc.id_cliente
-                WHERE pc.id_coach = :coach_id
-                ORDER BY rp.fecha DESC"; // Progresos de clientes del coach
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "SELECT rp.*, CONCAT(u.nombres, ' ', IFNULL(u.apellidos, '')) AS cliente
+                    FROM registros_progreso rp
+                    INNER JOIN clientes c ON c.id_cliente = rp.id_cliente
+                    INNER JOIN user u ON u.id_user = c.id_user
+                    WHERE c.id_coach = :coach_id
+                    ORDER BY rp.fecha_registro DESC";
+        } else {
+            $sql = "SELECT rp.*, u.nombre AS cliente
+                    FROM registro_progreso rp
+                    INNER JOIN plan_cliente pc ON pc.id_plan_cliente = rp.id_plan_cliente
+                    INNER JOIN users u ON u.id_usuario = pc.id_cliente
+                    WHERE pc.id_coach = :coach_id
+                    ORDER BY rp.fecha DESC";
+        }
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':coach_id', $coachId); // Coach
-        $stmt->execute(); // Ejecuta consulta
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':coach_id', $coachId);
+        $stmt->execute();
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna progresos
+        $lista = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
+            $lista[] = $this->normalizarFila($fila);
+        }
+
+        return $lista;
     }
 
     public function registrar($datos)
     {
-        $foto = $this->guardarFoto($datos); // Guarda foto si existe
+        $foto = $this->guardarFoto($datos);
 
-        $sql = "INSERT INTO registro_progreso 
+        if ($this->usaEsquemaNuevo()) {
+            $sql = 'INSERT INTO registros_progreso
+                    (id_cliente, fecha_registro, peso_kg, cintura_cm, cadera_cm, brazo_cm, pierna_cm, foto_url, observaciones_cliente)
+                    VALUES
+                    (:id_cliente, :fecha, :peso, :cintura, :cadera, :brazos, :piernas, :foto, :observacion)';
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindValue(':id_cliente', $datos['cliente_id'] ?? $datos['id_cliente']);
+            $stmt->bindValue(':fecha', $datos['fecha'] ?? date('Y-m-d'));
+            $stmt->bindParam(':peso', $datos['peso']);
+            $stmt->bindValue(':cintura', $datos['cintura'] ?? null);
+            $stmt->bindValue(':cadera', $datos['cadera'] ?? null);
+            $stmt->bindValue(':brazos', $datos['brazos'] ?? null);
+            $stmt->bindValue(':piernas', $datos['piernas'] ?? null);
+            $stmt->bindValue(':foto', $foto);
+            $stmt->bindValue(':observacion', $datos['observacion'] ?? '');
+
+            return $stmt->execute();
+        }
+
+        $sql = 'INSERT INTO registro_progreso
                 (id_plan_cliente, fecha, peso, cintura, cadera, brazos, piernas, fotos_evolucion, observacion_cliente)
                 VALUES
-                (:id_plan_cliente, :fecha, :peso, :cintura, :cadera, :brazos, :piernas, :fotos_evolucion, :observacion_cliente)"; // Registra progreso
+                (:id_plan_cliente, :fecha, :peso, :cintura, :cadera, :brazos, :piernas, :fotos_evolucion, :observacion_cliente)';
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id_plan_cliente', $datos['id_plan_cliente']);
+        $stmt->bindValue(':fecha', $datos['fecha'] ?? date('Y-m-d'));
+        $stmt->bindParam(':peso', $datos['peso']);
+        $stmt->bindValue(':cintura', $datos['cintura'] ?? null);
+        $stmt->bindValue(':cadera', $datos['cadera'] ?? null);
+        $stmt->bindValue(':brazos', $datos['brazos'] ?? null);
+        $stmt->bindValue(':piernas', $datos['piernas'] ?? null);
+        $stmt->bindValue(':fotos_evolucion', $foto);
+        $stmt->bindValue(':observacion_cliente', $datos['observacion'] ?? '');
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':id_plan_cliente', $datos['id_plan_cliente']); // Plan cliente
-        $stmt->bindValue(':fecha', $datos['fecha'] ?? date('Y-m-d')); // Fecha
-        $stmt->bindParam(':peso', $datos['peso']); // Peso
-        $stmt->bindValue(':cintura', $datos['cintura'] ?? null); // Cintura
-        $stmt->bindValue(':cadera', $datos['cadera'] ?? null); // Cadera
-        $stmt->bindValue(':brazos', $datos['brazos'] ?? null); // Brazos
-        $stmt->bindValue(':piernas', $datos['piernas'] ?? null); // Piernas
-        $stmt->bindValue(':fotos_evolucion', $foto); // Fotos
-        $stmt->bindValue(':observacion_cliente', $datos['observacion'] ?? ''); // Observación
-
-        return $stmt->execute(); // Ejecuta registro
+        return $stmt->execute();
     }
 
     public function actualizar($datos)
     {
-        $foto = $this->guardarFoto($datos); // Guarda nueva foto si llega
+        $foto = $this->guardarFoto($datos);
 
-        $sql = "UPDATE registro_progreso 
-                SET peso = :peso, cintura = :cintura, cadera = :cadera, 
+        if ($this->usaEsquemaNuevo()) {
+            $sql = 'UPDATE registros_progreso
+                    SET peso_kg = :peso, cintura_cm = :cintura, cadera_cm = :cadera,
+                        brazo_cm = :brazos, pierna_cm = :piernas,
+                        foto_url = COALESCE(:foto, foto_url),
+                        observaciones_cliente = :observacion
+                    WHERE id_registro_progreso = :id';
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':peso', $datos['peso']);
+            $stmt->bindValue(':cintura', $datos['cintura'] ?? null);
+            $stmt->bindValue(':cadera', $datos['cadera'] ?? null);
+            $stmt->bindValue(':brazos', $datos['brazos'] ?? null);
+            $stmt->bindValue(':piernas', $datos['piernas'] ?? null);
+            $stmt->bindValue(':foto', $foto);
+            $stmt->bindValue(':observacion', $datos['observacion'] ?? '');
+            $stmt->bindParam(':id', $datos['id']);
+
+            return $stmt->execute();
+        }
+
+        $sql = 'UPDATE registro_progreso
+                SET peso = :peso, cintura = :cintura, cadera = :cadera,
                     brazos = :brazos, piernas = :piernas,
                     fotos_evolucion = COALESCE(:fotos_evolucion, fotos_evolucion),
                     observacion_cliente = :observacion_cliente
-                WHERE id_registro_progreso = :id"; // Actualiza progreso
+                WHERE id_registro_progreso = :id';
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':peso', $datos['peso']);
+        $stmt->bindValue(':cintura', $datos['cintura'] ?? null);
+        $stmt->bindValue(':cadera', $datos['cadera'] ?? null);
+        $stmt->bindValue(':brazos', $datos['brazos'] ?? null);
+        $stmt->bindValue(':piernas', $datos['piernas'] ?? null);
+        $stmt->bindValue(':fotos_evolucion', $foto);
+        $stmt->bindValue(':observacion_cliente', $datos['observacion'] ?? '');
+        $stmt->bindParam(':id', $datos['id']);
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':peso', $datos['peso']); // Peso
-        $stmt->bindValue(':cintura', $datos['cintura'] ?? null); // Cintura
-        $stmt->bindValue(':cadera', $datos['cadera'] ?? null); // Cadera
-        $stmt->bindValue(':brazos', $datos['brazos'] ?? null); // Brazos
-        $stmt->bindValue(':piernas', $datos['piernas'] ?? null); // Piernas
-        $stmt->bindValue(':fotos_evolucion', $foto); // Fotos
-        $stmt->bindValue(':observacion_cliente', $datos['observacion'] ?? ''); // Observación
-        $stmt->bindParam(':id', $datos['id']); // ID progreso
-
-        return $stmt->execute(); // Ejecuta actualización
+        return $stmt->execute();
     }
 
     public function guardarObservacionCoach($datos)
     {
-        $sql = "INSERT INTO registro_progreso 
-                (id_plan_cliente, fecha, observacion_coach)
-                VALUES
-                (:id_plan_cliente, :fecha, :observacion_coach)"; // Guarda observación coach
+        if ($this->usaEsquemaNuevo()) {
+            $sql = 'INSERT INTO registros_progreso (id_cliente, fecha_registro, observaciones_coach)
+                    VALUES (:id_cliente, :fecha, :observacion_coach)';
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindValue(':id_cliente', $datos['cliente_id'] ?? $datos['id_cliente']);
+            $stmt->bindValue(':fecha', $datos['fecha'] ?? date('Y-m-d'));
+            $stmt->bindParam(':observacion_coach', $datos['observacion']);
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':id_plan_cliente', $datos['id_plan_cliente']); // Plan cliente
-        $stmt->bindValue(':fecha', $datos['fecha'] ?? date('Y-m-d')); // Fecha
-        $stmt->bindParam(':observacion_coach', $datos['observacion']); // Observación
+            return $stmt->execute();
+        }
 
-        return $stmt->execute(); // Ejecuta registro
+        $sql = 'INSERT INTO registro_progreso (id_plan_cliente, fecha, observacion_coach)
+                VALUES (:id_plan_cliente, :fecha, :observacion_coach)';
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id_plan_cliente', $datos['id_plan_cliente']);
+        $stmt->bindValue(':fecha', $datos['fecha'] ?? date('Y-m-d'));
+        $stmt->bindParam(':observacion_coach', $datos['observacion']);
+
+        return $stmt->execute();
     }
 
     public function cambiarEstado($id, $estado)
     {
-        $sql = "UPDATE registro_progreso SET estado = :estado WHERE id_registro_progreso = :id"; // Cambia estado
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':estado', $estado); // Estado nuevo
-        $stmt->bindParam(':id', $id); // ID progreso
+        if ($this->usaEsquemaNuevo()) {
+            return true;
+        }
 
-        return $stmt->execute(); // Ejecuta cambio
+        $sql = 'UPDATE registro_progreso SET estado = :estado WHERE id_registro_progreso = :id';
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':estado', $estado);
+        $stmt->bindParam(':id', $id);
+
+        return $stmt->execute();
     }
 
     public function eliminar($id)
     {
-        $sql = "DELETE FROM registro_progreso WHERE id_registro_progreso = :id"; // Elimina progreso
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':id', $id); // ID progreso
+        $tabla = $this->tabla();
+        $sql = "DELETE FROM {$tabla} WHERE id_registro_progreso = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $id);
 
-        return $stmt->execute(); // Ejecuta eliminación
+        return $stmt->execute();
     }
 
     public function reporteGeneral()
     {
-        $sql = "SELECT estado, COUNT(*) AS total
-                FROM registro_progreso
-                GROUP BY estado"; // Reporte general
+        $tabla = $this->tabla();
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->execute(); // Ejecuta consulta
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "SELECT 'registrado' AS estado, COUNT(*) AS total FROM {$tabla}";
+        } else {
+            $sql = "SELECT estado, COUNT(*) AS total FROM {$tabla} GROUP BY estado";
+        }
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna reporte
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function reportePorCoach($coachId)
     {
-        $sql = "SELECT rp.estado, COUNT(*) AS total
-                FROM registro_progreso rp
-                INNER JOIN plan_cliente pc ON pc.id_plan_cliente = rp.id_plan_cliente
-                WHERE pc.id_coach = :coach_id
-                GROUP BY rp.estado"; // Reporte por coach
+        if ($this->usaEsquemaNuevo()) {
+            $sql = "SELECT 'registrado' AS estado, COUNT(*) AS total
+                    FROM registros_progreso rp
+                    INNER JOIN clientes c ON c.id_cliente = rp.id_cliente
+                    WHERE c.id_coach = :coach_id";
+        } else {
+            $sql = "SELECT rp.estado, COUNT(*) AS total
+                    FROM registro_progreso rp
+                    INNER JOIN plan_cliente pc ON pc.id_plan_cliente = rp.id_plan_cliente
+                    WHERE pc.id_coach = :coach_id
+                    GROUP BY rp.estado";
+        }
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':coach_id', $coachId); // Coach
-        $stmt->execute(); // Ejecuta consulta
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':coach_id', $coachId);
+        $stmt->execute();
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna reporte
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     private function guardarFoto($datos)
     {
-        if (empty($datos['foto_tmp']) || empty($datos['foto_nombre'])) { // Valida foto
-            return null; // Sin foto nueva
+        if (empty($datos['foto_tmp']) || empty($datos['foto_nombre'])) {
+            return null;
         }
 
-        if (!is_dir($this->rutaBase)) { // Valida carpeta
-            mkdir($this->rutaBase, 0777, true); // Crea carpeta
+        if (!is_dir($this->rutaBase)) {
+            mkdir($this->rutaBase, 0777, true);
         }
 
-        $extension = pathinfo($datos['foto_nombre'], PATHINFO_EXTENSION); // Obtiene extensión
-        $nombreSeguro = 'progreso_' . time() . '_' . uniqid() . '.' . $extension; // Nombre único
-        $rutaCompleta = $this->rutaBase . $nombreSeguro; // Ruta física
-        $rutaRelativa = 'public/uploads/progresos/' . $nombreSeguro; // Ruta BD
+        $extension = pathinfo($datos['foto_nombre'], PATHINFO_EXTENSION);
+        $nombreSeguro = 'progreso_' . time() . '_' . uniqid() . '.' . $extension;
+        $rutaCompleta = $this->rutaBase . $nombreSeguro;
+        $rutaRelativa = 'public/uploads/progresos/' . $nombreSeguro;
 
-        if (is_uploaded_file($datos['foto_tmp'])) { // Valida archivo subido
-            move_uploaded_file($datos['foto_tmp'], $rutaCompleta); // Mueve archivo
-            return $rutaRelativa; // Retorna ruta
+        if (is_uploaded_file($datos['foto_tmp'])) {
+            move_uploaded_file($datos['foto_tmp'], $rutaCompleta);
+
+            return $rutaRelativa;
         }
 
-        return null; // No guarda foto
+        return null;
     }
 
     public function registrarTrazabilidad($usuarioId, $accion)
     {
-        $sql = "INSERT INTO bitacora_busqueda (id_usuario, modulo, accion, fecha_hora)
-                VALUES (:usuario_id, 'Progreso', :accion, NOW())"; // Guarda historial
+        require_once __DIR__ . '/../../config/helpers.php';
 
-        $stmt = $this->db->prepare($sql); // Prepara consulta
-        $stmt->bindParam(':usuario_id', $usuarioId); // Usuario responsable
-        $stmt->bindParam(':accion', $accion); // Acción realizada
-
-        return $stmt->execute(); // Ejecuta registro
+        return registrarBitacora($this->db, $usuarioId ? (int) $usuarioId : null, 'Progreso', $accion);
     }
 }
 

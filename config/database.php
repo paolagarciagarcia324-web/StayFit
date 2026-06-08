@@ -2,7 +2,7 @@
 
 class Database
 {
-    private $host = "127.0.0.1";   // Servidor de la base de datos
+    private $host = "localhost";    // Servidor de la base de datos
     private $port = "3320";        // Puerto de MySQL
     private $db_name = "stayfit";  // Nombre de la base de datos
     private $username = "root";    // Usuario de MySQL

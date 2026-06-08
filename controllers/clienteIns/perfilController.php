@@ -1,35 +1,40 @@
 <?php
 
-require_once __DIR__ . '/../../models/cliente/clienteInsModel.php'; // Importa cliente institucional
-require_once __DIR__ . '/../../models/usuario/usuarioModel.php'; // Importa usuario
-require_once __DIR__ . '/../../models/cliente/datosFisicosModel.php'; // Importa datos físicos
+require_once __DIR__ . '/../../models/cliente/clienteInsModel.php';
+require_once __DIR__ . '/../../models/usuario/usuarioModel.php';
+require_once __DIR__ . '/../../models/cliente/datosFisicosModel.php';
+require_once __DIR__ . '/../../models/institucion/institucionModel.php';
+require_once __DIR__ . '/../../config/roles.php';
 
 class ClienteInsPerfilController
 {
-    private $clienteInsModel; // Modelo cliente institucional
-    private $usuarioModel; // Modelo usuario
-    private $datosFisicosModel; // Modelo datos físicos
+    private $clienteInsModel;
+    private $usuarioModel;
+    private $datosFisicosModel;
+    private $institucionModel;
 
     public function __construct()
     {
-        session_start(); // Inicia sesión
+        session_start();
 
-        $this->validarClienteInstitucional(); // Valida acceso
+        $this->validarClienteInstitucional();
 
-        $this->clienteInsModel = new ClienteInsModel(); // Instancia cliente institucional
-        $this->usuarioModel = new UsuarioModel(); // Instancia usuario
-        $this->datosFisicosModel = new DatosFisicosModel(); // Instancia datos físicos
+        $this->clienteInsModel = new ClienteInsModel();
+        $this->usuarioModel = new UsuarioModel();
+        $this->datosFisicosModel = new DatosFisicosModel();
+        $this->institucionModel = new InstitucionModel();
     }
 
     public function index()
     {
-        $clienteId = $this->obtenerClienteId(); // Obtiene cliente actual
+        $clienteId = $this->obtenerClienteId();
 
-        $cliente = $this->clienteInsModel->obtenerPorId($clienteId); // Obtiene cliente
-        $usuario = $this->usuarioModel->obtenerPorId($_SESSION['usuario_id']); // Obtiene usuario
-        $datosFisicos = $this->datosFisicosModel->obtenerPorCliente($clienteId); // Obtiene datos físicos
+        $cliente = $this->clienteInsModel->obtenerPorId($clienteId);
+        $usuario = $this->usuarioModel->obtenerPorId($_SESSION['usuario_id']);
+        $datosFisicos = $this->datosFisicosModel->obtenerPorCliente($clienteId);
+        $institucion = $this->institucionModel->obtenerPorCliente($clienteId);
 
-        require_once __DIR__ . '/../../views/clienteIns/perfil.php'; // Carga vista
+        require_once __DIR__ . '/../../views/clienteIns/perfil.php';
     }
 
     public function actualizar()
@@ -76,11 +81,9 @@ class ClienteInsPerfilController
 
     private function validarClienteInstitucional()
     {
-        $rol = strtolower($_SESSION['rol'] ?? ''); // Obtiene rol
-
-        if ($rol !== 'clienteins' && $rol !== 'cliente_institucional') { // Valida rol
-            header('Location: ../../views/auth/accesoDenegado.php'); // Redirige
-            exit; // Detiene ejecución
+        if (!esClienteInstitucional()) {
+            header('Location: ../../views/auth/accesoDenegado.php');
+            exit;
         }
     }
 }
