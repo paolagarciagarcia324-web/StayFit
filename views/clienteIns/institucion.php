@@ -74,14 +74,40 @@ $inicialesInst = $inicialesInst !== '' ? $inicialesInst : 'IN';
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi institución | FigueFit</title>
-    <link rel="stylesheet" href="../../public/panel.css?v=13">
+    <meta charset="UTF-8"> <!-- Codificación -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
+    <title>Institución | StayFit</title>
+    <link rel="stylesheet" href="../../public/panel.css?v=1"> <!-- Título -->
+
+    <style>
+.info {
+            background: #fff7fb;
+            border-left: 5px solid #D63384;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+
+        .info strong {
+            color: #D63384;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        
+
+        .empty {
+            color: #777;
+            background: #f4f4f4;
+            padding: 18px;
+            border-radius: 16px;
+        }
+    </style>
 </head>
 <body class="fp-panel">
 
-<div class="fp-layout cliente-wrapper">
+<body class="fp-panel">
+<div class="cliente-wrapper">
 
     <?php require __DIR__ . '/../partials/panel/sidebarClienteIns.php'; ?>
 

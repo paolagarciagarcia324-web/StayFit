@@ -30,9 +30,79 @@ require __DIR__ . '/../partials/panel/coachShellOpen.php';
 
 ?>
 
-        <section class="fp-hero hero page-header">
-            <span class="fp-hero-tag">Alimentación</span>
-            <h1><span>Nutrición</span></h1>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8"> <!-- Codificación -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
+    <title>Nutrición Coach | StayFit</title>
+    <link rel="stylesheet" href="../../public/panel.css?v=1"> <!-- Título -->
+
+    <style>
+input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0 15px;
+            border: 1px solid #ddd;
+            border-radius: 14px;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        button {
+            width: 100%;
+            background: #D63384;
+            color: #FFFFFF;
+            border: none;
+            padding: 13px;
+            border-radius: 14px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .box {
+            background: #fff7fb;
+            border-left: 5px solid #D63384;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 15px;
+        }
+
+        .meal {
+            background: #f6fffb;
+            border-left: 5px solid #3EB489;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 15px;
+        }
+
+        
+
+        .empty {
+            background: #f4f4f4;
+            color: #777;
+            padding: 18px;
+            border-radius: 16px;
+        }
+    </style>
+</head>
+
+<body class="fp-panel">
+<div class="coach-wrapper">
+
+    <?php require __DIR__ . '/../partials/panel/sidebarCoach.php'; ?>
+
+    <main class="content">
+
+        <section class="page-header">
+            <h1>Nutrición</h1>
             <p>Crea planes nutricionales y comidas personalizadas para tus clientas.</p>
         </section>
 
@@ -52,34 +122,26 @@ require __DIR__ . '/../partials/panel/coachShellOpen.php';
             <article class="fp-card card fp-perfil-card">
                 <div class="fp-perfil-card-head fp-perfil-card-head--fuchsia">
                     <h3>Crear plan nutricional</h3>
-                    <p>Define el plan base para una clienta. Solo puede haber un plan activo por clienta.</p>
-                </div>
-                <div class="fp-perfil-card-body">
-                    <form class="fp-form-premium" action="../../controllers/coach/nutricionController.php?accion=crearPlan" method="POST">
-                        <div class="fp-field fp-field--full">
-                            <label for="nutri-cliente">Clienta</label>
-                            <select id="nutri-cliente" name="cliente_id" required <?= empty($clientes) ? 'disabled' : '' ?>>
-                                <option value="">Seleccione clienta</option>
-                                <?php foreach ($clientes as $cliente): ?>
-                                    <option value="<?= e($cliente['id'] ?? $cliente['id_cliente'] ?? '') ?>">
-                                        <?= e(nombreClienteCoach($cliente)) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="fp-field fp-field--full">
-                            <label for="nutri-nombre">Nombre del plan</label>
-                            <input type="text" id="nutri-nombre" name="nombre" placeholder="Ej: Plan definición marzo" required>
-                        </div>
-                        <div class="fp-field fp-field--full">
-                            <label for="nutri-desc">Descripción / recomendaciones</label>
-                            <textarea id="nutri-desc" name="descripcion" rows="3" placeholder="Hábitos, restricciones, notas generales"></textarea>
-                        </div>
-                        <div class="fp-field fp-field--full">
-                            <label for="nutri-obj">Objetivo nutricional</label>
-                            <textarea id="nutri-obj" name="objetivo" rows="2" placeholder="Ej: reducir grasa, ganar masa muscular" required></textarea>
-                        </div>
-                        <button type="submit" class="fp-form-submit fp-progreso-submit" <?= empty($clientes) ? 'disabled' : '' ?>>Crear plan</button>
+
+                    <form action="../../controllers/coach/nutricionController.php?accion=crearPlan" method="POST">
+                        <label>Cliente</label>
+                        <select name="cliente_id" required>
+                            <option value="">Seleccione cliente</option>
+                            <?php foreach ($clientes as $cliente): ?>
+                                <option value="<?= e($cliente['id'] ?? '') ?>"><?= e($cliente['nombre'] ?? 'Cliente') ?></option>
+                            <?php endforeach; ?>
+                        </select>
+
+                        <label>Nombre</label>
+                        <input type="text" name="nombre" required>
+
+                        <label>Descripción</label>
+                        <textarea name="descripcion" required></textarea>
+
+                        <label>Objetivo nutricional</label>
+                        <textarea name="objetivo" required></textarea>
+
+                        <button type="submit">Crear plan</button>
                     </form>
                 </div>
             </article>
@@ -87,55 +149,29 @@ require __DIR__ . '/../partials/panel/coachShellOpen.php';
             <article class="fp-card card fp-perfil-card">
                 <div class="fp-perfil-card-head fp-perfil-card-head--mint">
                     <h3>Agregar comida</h3>
-                    <p>Registra comidas dentro de un plan ya creado.</p>
-                </div>
-                <div class="fp-perfil-card-body">
-                    <form class="fp-form-premium" action="../../controllers/coach/comidaController.php?accion=guardar" method="POST">
-                        <div class="fp-field fp-field--full">
-                            <label for="nutri-plan">Plan nutricional</label>
-                            <select id="nutri-plan" name="plan_nutricional_id" required <?= empty($planesNutricionales) ? 'disabled' : '' ?>>
-                                <option value="">Seleccione plan</option>
-                                <?php foreach ($planesNutricionales as $plan): ?>
-                                    <option value="<?= e($plan['id'] ?? $plan['id_plan_nutricional'] ?? '') ?>">
-                                        <?= e($plan['nombre'] ?? 'Plan') ?><?= !empty($plan['cliente']) ? ' · ' . e($plan['cliente']) : '' ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                            <?php if (empty($planesNutricionales)): ?>
-                                <span class="fp-field-hint">Primero crea un plan nutricional arriba.</span>
-                            <?php endif; ?>
-                        </div>
-                        <div class="fp-form-grid">
-                            <div class="fp-field">
-                                <label for="nutri-comida-nombre">Nombre</label>
-                                <input type="text" id="nutri-comida-nombre" name="nombre" placeholder="Ej: Desayuno proteico" required>
-                            </div>
-                            <div class="fp-field">
-                                <label for="nutri-comida-tipo">Tipo</label>
-                                <select id="nutri-comida-tipo" name="tipo_comida">
-                                    <option value="DESAYUNO">Desayuno</option>
-                                    <option value="ALMUERZO">Almuerzo</option>
-                                    <option value="CENA">Cena</option>
-                                    <option value="SNACK">Snack</option>
-                                    <option value="OTRO">Otro</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="fp-field fp-field--full">
-                            <label for="nutri-comida-desc">Descripción</label>
-                            <textarea id="nutri-comida-desc" name="descripcion" rows="2" placeholder="Alimentos y porciones sugeridas"></textarea>
-                        </div>
-                        <div class="fp-form-grid">
-                            <div class="fp-field">
-                                <label for="nutri-comida-hora">Hora sugerida</label>
-                                <input type="time" id="nutri-comida-hora" name="hora">
-                            </div>
-                            <div class="fp-field">
-                                <label for="nutri-comida-cal">Calorías aprox.</label>
-                                <input type="number" id="nutri-comida-cal" name="calorias" min="0" step="1" placeholder="Opcional">
-                            </div>
-                        </div>
-                        <button type="submit" class="fp-form-submit fp-perfil-submit-mint" <?= empty($planesNutricionales) ? 'disabled' : '' ?>>Guardar comida</button>
+
+                    <form action="../../controllers/coach/comidaController.php?accion=guardar" method="POST">
+                        <label>Plan nutricional</label>
+                        <select name="plan_nutricional_id" required>
+                            <option value="">Seleccione plan</option>
+                            <?php foreach ($planesNutricionales as $plan): ?>
+                                <option value="<?= e($plan['id'] ?? '') ?>"><?= e($plan['nombre'] ?? 'Plan') ?></option>
+                            <?php endforeach; ?>
+                        </select>
+
+                        <label>Nombre comida</label>
+                        <input type="text" name="nombre" required>
+
+                        <label>Descripción</label>
+                        <textarea name="descripcion" required></textarea>
+
+                        <label>Hora sugerida</label>
+                        <input type="time" name="hora" required>
+
+                        <label>Calorías</label>
+                        <input type="number" name="calorias">
+
+                        <button type="submit">Guardar comida</button>
                     </form>
                 </div>
             </article>

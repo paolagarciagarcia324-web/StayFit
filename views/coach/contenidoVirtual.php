@@ -17,12 +17,32 @@ $flash = $flash ?? null;
 $planId = (int) ($plan['id_plan'] ?? $_GET['plan_id'] ?? 0);
 $ctrl = '../../controllers/coach/contenidoVirtualController.php';
 
-$tituloPagina = 'Contenido virtual | FigueFit Coach';
-$vistaActiva = 'contenidoVirtual';
-
-require __DIR__ . '/../partials/panel/coachShellOpen.php';
-
 ?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contenido virtual | StayFit Coach</title>
+    <link rel="stylesheet" href="../../public/panel.css?v=1">
+    <style>
+input, select, textarea { width: 100%; padding: 12px; margin: 6px 0 14px; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; }
+        textarea { min-height: 90px; }
+        
+        
+        .btn-muted { background: #666; }
+        .alert-success { background: #e8f8f1; color: #1d6b4f; border: 1px solid #3EB489; padding: 14px; border-radius: 14px; margin-bottom: 20px; }
+        .alert-error { background: #fde8f0; color: #8b2252; border: 1px solid #D63384; padding: 14px; border-radius: 14px; margin-bottom: 20px; }
+        
+        th, 
+        .thumb { max-width: 120px; max-height: 70px; border-radius: 8px; }
+        
+        .campo-url, .campo-archivo { display: none; }
+    </style>
+</head>
+<body class="fp-panel">
+<div class="coach-wrapper">
+    <?php require __DIR__ . '/../partials/panel/sidebarCoach.php'; ?>
 
         <section class="fp-hero hero page-header">
             <h1>Biblioteca <span>virtual</span></h1>

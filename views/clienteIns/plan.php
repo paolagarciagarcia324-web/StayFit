@@ -93,14 +93,45 @@ $estadoInstitucion = planInsEstadoBadge($institucion['estado'] ?? 'activo');
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi plan institucional | FigueFit</title>
-    <link rel="stylesheet" href="../../public/panel.css?v=14">
+    <meta charset="UTF-8"> <!-- Codificación -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
+    <title>Plan Institucional | StayFit</title>
+    <link rel="stylesheet" href="../../public/panel.css?v=1"> <!-- Título -->
+
+    <style>
+.plan-title {
+            font-size: 30px;
+            font-weight: 800;
+            color: #D63384;
+            margin: 0 0 10px;
+        }
+
+        
+
+        .badge-pink {
+            background: #D63384;
+        }
+
+        .access-item {
+            border-left: 5px solid #3EB489;
+            background: #f6fffb;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+
+        .empty {
+            background: #f4f4f4;
+            color: #777;
+            border-radius: 16px;
+            padding: 18px;
+        }
+    </style>
 </head>
 <body class="fp-panel">
 
-<div class="fp-layout cliente-wrapper">
+<body class="fp-panel">
+<div class="cliente-wrapper">
 
     <?php require __DIR__ . '/../partials/panel/sidebarClienteIns.php'; ?>
 
@@ -115,10 +146,47 @@ $estadoInstitucion = planInsEstadoBadge($institucion['estado'] ?? 'activo');
 
         <main class="fp-content content">
 
-            <section class="fp-hero hero page-header">
-                <span class="fp-hero-tag">Convenio corporativo</span>
-                <h1>Mi plan <span>institucional</span></h1>
-                <p>Consulta tu plan activo, beneficios, modalidad, accesos y estado del convenio con tu institución.</p>
+                <?php if (empty($accesos)): ?>
+                    <div class="empty">No tienes accesos habilitados todavía.</div>
+                <?php endif; ?>
+
+                <?php foreach ($accesos as $acceso): ?>
+                    <div class="access-item">
+                        <strong><?= e($acceso['modulo'] ?? 'Módulo') ?></strong>
+                        <p>Estado: <span class="badge"><?= e($acceso['estado'] ?? 'activo') ?></span></p>
+                    </div>
+                <?php endforeach; ?>
+
+                <a class="btn" href="../../controllers/clienteIns/pagoController.php">Ver pagos o renovar</a>
+            </div>
+
+        </section>
+
+        <?php if (!empty($pagos)): ?>
+            <section class="card" style="margin-top: 24px;">
+                <h3>Historial de pagos</h3>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Plan</th>
+                            <th>Monto</th>
+                            <th>Estado</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <?php foreach ($pagos as $pago): ?>
+                            <tr>
+                                <td><?= e($pago['plan'] ?? $pago['plan_id'] ?? 'Plan') ?></td>
+                                <td>$<?= e($pago['monto'] ?? '0') ?></td>
+                                <td><?= e($pago['estado'] ?? 'pendiente') ?></td>
+                                <td><?= e($pago['fecha'] ?? '') ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
             </section>
 
             <?php if (!$plan): ?>

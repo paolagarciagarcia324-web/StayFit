@@ -126,44 +126,6 @@ class PagoModel
         return $this->normalizarFila($stmt->fetch(PDO::FETCH_ASSOC));
     }
 
-    public function obtenerPorCliente($clienteId)
-    {
-        if ($this->usaEsquemaNuevo()) {
-            $sql = "SELECT p.*, pl.nombre AS plan
-                    FROM pagos p
-                    LEFT JOIN planes pl ON pl.id_plan = p.id_plan
-                    WHERE p.id_cliente = :cliente_id
-                    ORDER BY p.id_pago DESC";
-            $stmt = $this->db->prepare($sql);
-            $stmt->bindParam(':cliente_id', $clienteId);
-            $stmt->execute();
-
-            $lista = [];
-            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
-                $lista[] = $this->normalizarFila($fila);
-            }
-
-            return $lista;
-        }
-
-        $sql = "SELECT p.*, pl.nombre AS plan
-                FROM pago p
-                INNER JOIN plan_cliente pc ON pc.id_plan_cliente = p.id_plan_cliente
-                LEFT JOIN plan pl ON pl.id_plan = pc.id_plan
-                WHERE pc.id_cliente = :cliente_id
-                ORDER BY p.id_pago DESC";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':cliente_id', $clienteId);
-        $stmt->execute();
-
-        $lista = [];
-        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
-            $lista[] = $this->normalizarFila($fila);
-        }
-
-        return $lista;
-    }
-
     public function crearDesdeSolicitud($datos)
     {
         if ($this->usaEsquemaNuevo()) {

@@ -19,37 +19,52 @@ require __DIR__ . '/../partials/panel/coachShellOpen.php';
 
 ?>
 
-<?php if ($esDetalle): ?>
-    <?php
-    $nombreCliente = trim(($cliente['nombre'] ?? '') . ' ' . ($cliente['apellido'] ?? ''));
-    if ($nombreCliente === '' && !empty($cliente['nombre'])) {
-        $nombreCliente = trim((string) $cliente['nombre']);
-    }
-    $iniciales = '';
-    foreach (preg_split('/\s+/', $nombreCliente) as $parte) {
-        if ($parte !== '') {
-            $iniciales .= mb_strtoupper(mb_substr($parte, 0, 1));
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= $esDetalle ? 'Detalle cliente' : 'Mis clientas' ?> | StayFit Coach</title>
+
+    <style>
+th, 
+
+        
+
+        
+
+        .btn-secondary {
+            background: #2D2D2D;
         }
-        if (mb_strlen($iniciales) >= 2) {
-            break;
+
+        .empty {
+            color: #777;
+            background: #f4f4f4;
+            padding: 18px;
+            border-radius: 16px;
         }
-    }
-    $iniciales = $iniciales !== '' ? $iniciales : 'CL';
-    ?>
+    </style>
+</head>
 
-    <section class="fp-hero hero page-header">
-        <span class="fp-hero-tag">Seguimiento</span>
-        <h1><?= e($nombreCliente !== '' ? $nombreCliente : 'Cliente') ?></h1>
-        <p>Detalle de la clienta asignada a tu acompañamiento.</p>
-    </section>
+<body class="fp-panel">
+<div class="coach-wrapper">
 
-    <div class="fp-plan-actions" style="margin-bottom: 22px;">
-        <a class="fp-btn fp-btn-outline" href="../../controllers/coach/clientesController.php">← Volver al listado</a>
-    </div>
+    <?php require __DIR__ . '/../partials/panel/sidebarCoach.php'; ?>
 
-    <div class="fp-perfil-grid">
-        <article class="fp-card card fp-perfil-card">
-            <div class="fp-perfil-card-head fp-perfil-card-head--fuchsia">
+    <main class="content">
+
+        <?php if ($esDetalle): ?>
+            <?php
+            $nombreCliente = trim(($cliente['nombre'] ?? '') . ' ' . ($cliente['apellido'] ?? ''));
+            ?>
+            <section class="page-header">
+                <h1><?= e($nombreCliente !== '' ? $nombreCliente : 'Cliente') ?></h1>
+                <p>Detalle de la clienta asignada a tu acompañamiento.</p>
+            </section>
+
+            <a class="btn btn-secondary" href="../../controllers/coach/clientesController.php">Volver al listado</a>
+
+            <section class="card" style="margin-top: 24px;">
                 <h3>Información</h3>
                 <p>Datos de contacto y perfil de la clienta.</p>
             </div>
@@ -185,15 +200,7 @@ require __DIR__ . '/../partials/panel/coachShellOpen.php';
                                 ?>
                                 <tr>
                                     <td>
-                                        <div class="fp-cell-stack">
-                                            <strong><?= e($nombre !== '' ? $nombre : 'Cliente') ?></strong>
-                                        </div>
-                                    </td>
-                                    <td><?= e($item['correo'] ?? '') ?></td>
-                                    <td><span class="fp-tag-inline"><?= e($item['tipo_cliente'] ?? 'INDIVIDUAL') ?></span></td>
-                                    <td><span class="fp-badge fp-badge-ok"><?= e($item['estado_plan'] ?? 'ACTIVO') ?></span></td>
-                                    <td>
-                                        <a class="fp-btn-sm fp-btn-outline-mint" href="../../controllers/coach/clientesController.php?accion=detalle&id=<?= e($item['id'] ?? '') ?>">Ver</a>
+                                        <a class="btn" href="../../controllers/coach/clientesController.php?accion=detalle&id=<?= e($item['id'] ?? '') ?>">Ver</a>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

@@ -107,33 +107,6 @@ class InstitutionModel
         return $this->normalizarFila($stmt->fetch(PDO::FETCH_ASSOC));
     }
 
-    public function obtenerPorCliente($clienteId)
-    {
-        if (!$clienteId) {
-            return false;
-        }
-
-        if ($this->usaEsquemaNuevo()) {
-            $sql = "SELECT i.*
-                    FROM instituciones i
-                    INNER JOIN clientes c ON c.id_institucion = i.id_institucion
-                    WHERE c.id_cliente = :cliente_id
-                    LIMIT 1";
-        } else {
-            $sql = "SELECT i.*
-                    FROM institucion i
-                    INNER JOIN cliente_institucional ci ON ci.id_institucion = i.id_institucion
-                    WHERE ci.id_cliente = :cliente_id
-                    LIMIT 1";
-        }
-
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':cliente_id', $clienteId);
-        $stmt->execute();
-
-        return $this->normalizarFila($stmt->fetch(PDO::FETCH_ASSOC));
-    }
-
     public function crear($datos)
     {
         if ($this->usaEsquemaNuevo()) {
@@ -161,11 +134,7 @@ class InstitutionModel
             $stmt->bindParam(':activo', $estado, PDO::PARAM_INT);
         }
 
-        if (!$stmt->execute()) {
-            return false;
-        }
-
-        return (int) $this->db->lastInsertId();
+        return $stmt->execute();
     }
 
     public function actualizar($datos)

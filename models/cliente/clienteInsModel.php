@@ -27,11 +27,9 @@ class ClienteInsModel
             return "SELECT c.id_cliente, u.id_user AS id_usuario, u.nombres AS nombre, u.apellidos AS apellido,
                            u.correo, u.estado, 'INSTITUCIONAL' AS tipo_cliente,
                            c.objetivo_principal AS objetivos, c.id_institucion,
-                           i.nombre AS institucion,
                            NULL AS cargo, 0 AS es_contacto_principal, c.fecha_alta AS fecha_vinculacion
                     FROM clientes c
                     INNER JOIN user u ON u.id_user = c.id_user
-                    LEFT JOIN instituciones i ON i.id_institucion = c.id_institucion
                     WHERE c.id_institucion IS NOT NULL";
         }
 
@@ -51,17 +49,8 @@ class ClienteInsModel
 
         $fila['id'] = $fila['id_cliente'] ?? $fila['id_usuario'] ?? null;
 
-        $nombre = trim((string) ($fila['nombre'] ?? ''));
-        $apellido = trim((string) ($fila['apellido'] ?? ''));
-        $fila['nombre_completo'] = trim($nombre . ' ' . $apellido);
-        $fila['cliente'] = $fila['nombre_completo'] !== '' ? $fila['nombre_completo'] : ($fila['correo'] ?? 'Clienta');
-
-        if (empty($fila['cargo']) && !empty($fila['objetivos']) && str_starts_with((string) $fila['objetivos'], 'Cargo:')) {
-            $fila['cargo'] = trim(substr((string) $fila['objetivos'], strlen('Cargo:')));
-        }
-
-        if (empty($fila['institucion']) && !empty($fila['id_institucion'])) {
-            $fila['institucion'] = 'Institución #' . (int) $fila['id_institucion'];
+        if (!empty($fila['apellido'])) {
+            $fila['nombre_completo'] = trim(($fila['nombre'] ?? '') . ' ' . ($fila['apellido'] ?? ''));
         }
 
         return $fila;
@@ -138,138 +127,6 @@ class ClienteInsModel
         }
 
         return $lista;
-    }
-
-    public function obtenerPorInstitucion($idInstitucion)
-    {
-        if ($this->usaEsquemaNuevo()) {
-            $sql = "SELECT c.id_cliente, u.id_user AS id_usuario, u.nombres AS nombre, u.apellidos AS apellido,
-                           u.correo, u.estado, 'INSTITUCIONAL' AS tipo_cliente,
-                           c.objetivo_principal AS objetivos, c.id_institucion,
-                           i.nombre AS institucion, c.fecha_alta AS fecha_vinculacion
-                    FROM clientes c
-                    INNER JOIN user u ON u.id_user = c.id_user
-                    INNER JOIN instituciones i ON i.id_institucion = c.id_institucion
-                    WHERE c.id_institucion = :id_institucion
-                    ORDER BY c.fecha_alta DESC";
-        } else {
-            $sql = "SELECT u.id_usuario, u.nombre, u.apellido, u.correo, u.estado,
-                           c.tipo_cliente, c.objetivos,
-                           ci.id_institucion, ci.cargo, ci.fecha_vinculacion,
-                           ins.nombre AS institucion
-                    FROM cliente_institucional ci
-                    INNER JOIN cliente c ON c.id_cliente = ci.id_cliente
-                    INNER JOIN users u ON u.id_usuario = c.id_cliente
-                    INNER JOIN institucion ins ON ins.id_institucion = ci.id_institucion
-                    WHERE ci.id_institucion = :id_institucion
-                    ORDER BY ci.fecha_vinculacion DESC";
-        }
-
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':id_institucion', $idInstitucion);
-        $stmt->execute();
-
-        $lista = [];
-        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
-            $normalizada = $this->normalizarFila($fila);
-            if ($normalizada) {
-                $normalizada['cliente'] = trim(($normalizada['nombre'] ?? '') . ' ' . ($normalizada['apellido'] ?? ''));
-                $lista[] = $normalizada;
-            }
-        }
-
-        return $lista;
-    }
-
-    public function obtenerConvenio($clienteId)
-    {
-        $clienteId = (int) $clienteId;
-        if ($clienteId < 1) {
-            return null;
-        }
-
-        if ($this->usaEsquemaNuevo()) {
-            $joinEnlace = $this->schema->tablaExiste('enlaces_registro_institucional')
-                ? 'LEFT JOIN enlaces_registro_institucional e ON e.id_institucion = c.id_institucion'
-                : '';
-
-            $sql = "SELECT pc.fecha_inicio, pc.fecha_fin, pc.estado_plan_cliente,
-                           p.nombre AS plan_nombre, p.descripcion AS plan_descripcion,
-                           p.modalidad, p.tipo_cliente,
-                           i.nombre AS institucion_nombre, i.estado AS institucion_estado
-                    FROM clientes c
-                    LEFT JOIN instituciones i ON i.id_institucion = c.id_institucion
-                    LEFT JOIN planes_cliente pc
-                           ON pc.id_cliente = c.id_cliente
-                          AND pc.estado_plan_cliente = 'ACTIVO'
-                    LEFT JOIN planes p ON p.id_plan = pc.id_plan
-                    {$joinEnlace}
-                    WHERE c.id_cliente = :cliente_id
-                    ORDER BY pc.id_plan_cliente DESC
-                    LIMIT 1";
-
-            $stmt = $this->db->prepare($sql);
-            $stmt->bindValue(':cliente_id', $clienteId, PDO::PARAM_INT);
-            $stmt->execute();
-            $fila = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if (!$fila || empty($fila['plan_nombre'])) {
-                return null;
-            }
-
-            $beneficios = [];
-            if (!empty($fila['plan_descripcion'])) {
-                $beneficios[] = $fila['plan_descripcion'];
-            }
-            if (!empty($fila['modalidad'])) {
-                $beneficios[] = 'Modalidad: ' . ucfirst(strtolower((string) $fila['modalidad']));
-            }
-            if (!empty($fila['institucion_nombre'])) {
-                $beneficios[] = 'Institución: ' . $fila['institucion_nombre'];
-            }
-
-            $estadoPlan = strtoupper((string) ($fila['estado_plan_cliente'] ?? 'ACTIVO'));
-
-            return [
-                'tipo' => $fila['plan_nombre'],
-                'fecha_inicio' => $fila['fecha_inicio'] ?? null,
-                'fecha_fin' => $fila['fecha_fin'] ?? null,
-                'beneficios' => implode(' · ', $beneficios),
-                'estado' => strtolower($estadoPlan === 'ACTIVO' ? 'activo' : $estadoPlan),
-                'plan_nombre' => $fila['plan_nombre'],
-                'institucion' => $fila['institucion_nombre'] ?? null,
-            ];
-        }
-
-        $sql = "SELECT pc.fecha_inicio, pc.fecha_fin, pc.estado AS estado_plan,
-                       pl.nombre AS plan_nombre, pl.descripcion AS plan_descripcion,
-                       ins.nombre AS institucion_nombre
-                FROM cliente_institucional ci
-                INNER JOIN plan_cliente pc ON pc.id_cliente = ci.id_cliente AND pc.estado = 'ACTIVO'
-                INNER JOIN plan pl ON pl.id_plan = pc.id_plan
-                INNER JOIN institucion ins ON ins.id_institucion = ci.id_institucion
-                WHERE ci.id_cliente = :cliente_id
-                ORDER BY pc.id_plan_cliente DESC
-                LIMIT 1";
-
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindValue(':cliente_id', $clienteId, PDO::PARAM_INT);
-        $stmt->execute();
-        $fila = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$fila) {
-            return null;
-        }
-
-        return [
-            'tipo' => $fila['plan_nombre'] ?? 'Convenio institucional',
-            'fecha_inicio' => $fila['fecha_inicio'] ?? null,
-            'fecha_fin' => $fila['fecha_fin'] ?? null,
-            'beneficios' => $fila['plan_descripcion'] ?? 'Plan institucional activo',
-            'estado' => strtolower((string) ($fila['estado_plan'] ?? 'activo')),
-            'plan_nombre' => $fila['plan_nombre'] ?? null,
-            'institucion' => $fila['institucion_nombre'] ?? null,
-        ];
     }
 
     public function cambiarEstado($id, $estado)

@@ -284,9 +284,9 @@ class ProgresoModel
 
     public function reporteGeneral()
     {
-        $tabla = $this->tabla();
+        $tabla = $this->tablaExiste('registros_progreso') ? 'registros_progreso' : 'registro_progreso';
 
-        if ($this->usaEsquemaNuevo()) {
+        if ($tabla === 'registros_progreso') {
             $sql = "SELECT 'registrado' AS estado, COUNT(*) AS total FROM {$tabla}";
         } else {
             $sql = "SELECT estado, COUNT(*) AS total FROM {$tabla} GROUP BY estado";
@@ -296,6 +296,17 @@ class ProgresoModel
         $stmt->execute();
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    private function tablaExiste(string $nombre): bool
+    {
+        try {
+            $stmt = $this->db->query('SHOW TABLES LIKE ' . $this->db->quote($nombre));
+
+            return (bool) $stmt->fetch(PDO::FETCH_NUM);
+        } catch (PDOException $e) {
+            return false;
+        }
     }
 
     public function reportePorCoach($coachId)

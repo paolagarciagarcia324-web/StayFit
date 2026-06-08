@@ -60,22 +60,89 @@ $diasRestantes = $plan ? planDiasRestantes($plan['fecha_fin'] ?? null) : null;
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi plan | FigueFit</title>
-    <link rel="stylesheet" href="../../public/panel.css?v=14">
+    <meta charset="UTF-8"> <!-- Codificación -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
+    <title>Mi plan | StayFit</title>
+    <link rel="stylesheet" href="../../public/panel.css?v=1"> <!-- Título -->
+
+    <style>
+.plan-title {
+            font-size: 32px;
+            font-weight: 800;
+            color: #D63384;
+            margin: 0 0 10px;
+        }
+
+        
+
+        .badge-pink {
+            background: #D63384;
+        }
+
+        .access-item {
+            border-left: 5px solid #3EB489;
+            background: #f6fffb;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+
+        .empty {
+            background: #f4f4f4;
+            color: #777;
+            border-radius: 16px;
+            padding: 18px;
+        }
+    </style>
 </head>
 <body class="fp-panel">
 
-<div class="fp-layout cliente-wrapper">
+<body class="fp-panel">
+<div class="cliente-wrapper">
 
     <?php require __DIR__ . '/../partials/panel/sidebarCliente.php'; ?>
 
-    <div class="fp-main-area">
-        <header class="fp-topbar topbar">
-            <div>
-                <strong class="fp-topbar-role">Cliente individual</strong>
-                <p class="fp-topbar-name">Hola, <?= e($nombreTopbar) ?></p>
+    <main class="content">
+
+        <section class="page-header">
+            <h1>Mi plan</h1>
+            <p>Consulta tu plan activo, modalidad, beneficios y módulos habilitados.</p>
+        </section>
+
+        <section class="grid">
+
+            <div class="card">
+                <h3>Plan activo</h3>
+
+                <?php if (!$plan): ?>
+                    <div class="empty">No tienes un plan activo actualmente.</div>
+                    <a class="btn" href="../../public/planPublico.php">Ver planes disponibles</a>
+                <?php else: ?>
+                    <p class="plan-title"><?= e($plan['nombre'] ?? 'Plan StayFit') ?></p>
+
+                    <p><?= e($plan['descripcion'] ?? 'Plan diseñado para acompañar tu proceso fitness.') ?></p>
+
+                    <span class="badge"><?= e($plan['modalidad'] ?? 'modalidad') ?></span>
+                    <span class="badge badge-pink"><?= e($plan['estado'] ?? 'activo') ?></span>
+
+                    <p><strong>Precio:</strong> $<?= e($plan['precio'] ?? '0') ?></p>
+                    <p><strong>Duración:</strong> <?= e($plan['duracion'] ?? '0') ?> días</p>
+                    <p><strong>Inicio:</strong> <?= e($plan['fecha_inicio'] ?? 'No registrada') ?></p>
+                    <p><strong>Vencimiento:</strong> <?= e($plan['fecha_fin'] ?? 'No registrada') ?></p>
+
+                    <h3 style="margin-top: 24px;">Coach asignado</h3>
+                    <?php if ($coach || !empty($plan['coach_nombre'])): ?>
+                        <p><strong><?= e($coach['nombre_completo'] ?? $plan['coach_nombre'] ?? '') ?></strong></p>
+                        <p><?= e($coach['especialidad'] ?? $plan['coach_especialidad'] ?? '') ?></p>
+                        <p><?= e($coach['correo'] ?? $plan['coach_correo'] ?? '') ?></p>
+                    <?php else: ?>
+                        <?php
+                        $modalidadPlan = strtoupper($plan['modalidad'] ?? '');
+                        $requiereCoach = !empty($plan['requiere_coach']) || in_array($modalidadPlan, ['PRESENCIAL', 'MIXTA', 'MIXTO'], true);
+                        ?>
+                        <p><?= $requiereCoach ? 'Pendiente de asignación por el administrador.' : 'No aplica para tu modalidad.' ?></p>
+                    <?php endif; ?>
+                <?php endif; ?>
             </div>
             <a class="logout" href="../../controllers/auth/logouthController.php">Cerrar sesión</a>
         </header>
@@ -112,18 +179,8 @@ $diasRestantes = $plan ? planDiasRestantes($plan['fecha_fin'] ?? null) : null;
                 </article>
             <?php else: ?>
 
-                <section class="fp-stats-premium">
-                    <article class="fp-stat-premium fp-stat-premium--fuchsia">
-                        <div class="fp-stat-premium-head">
-                            <div class="fp-stat-premium-icon" aria-hidden="true">
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                                    <path d="M12 2v20M7 7h10M6 11h12M5 15h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                                </svg>
-                            </div>
-                        </div>
-                        <p class="fp-stat-premium-value"><?= e(planFormatearPrecio($plan['precio'] ?? 0)) ?></p>
-                        <p class="fp-stat-premium-label">Inversión del plan</p>
-                    </article>
+                <a class="btn" href="../../controllers/cliente/pagoController.php">Renovar o enviar pago</a>
+            </div>
 
                     <article class="fp-stat-premium fp-stat-premium--mint">
                         <div class="fp-stat-premium-head">

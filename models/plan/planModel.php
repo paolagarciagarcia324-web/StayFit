@@ -49,17 +49,6 @@ class PlanModel
         return $modalidad === 'MIXTA' ? 'MIXTO' : $modalidad;
     }
 
-    private function normalizarCupoMaximo($cupo)
-    {
-        if ($cupo === null || $cupo === '' || (is_string($cupo) && trim($cupo) === '')) {
-            return null;
-        }
-
-        $valor = (int) $cupo;
-
-        return $valor > 0 ? $valor : null;
-    }
-
     private function normalizarLista($lista)
     {
         foreach ($lista as &$fila) {
@@ -106,27 +95,6 @@ class PlanModel
         return $this->normalizarLista($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
-    public function obtenerPlanesInstitucionales()
-    {
-        $tabla = $this->tablaPlanes();
-
-        if ($this->usaEsquemaNuevo()) {
-            $sql = "SELECT * FROM {$tabla}
-                    WHERE estado_plan = 'ACTIVO'
-                      AND tipo_cliente IN ('INSTITUCIONAL', 'AMBOS')
-                    ORDER BY nombre ASC";
-        } else {
-            $sql = "SELECT * FROM {$tabla}
-                    WHERE estado = 'ACTIVO'
-                    ORDER BY nombre ASC";
-        }
-
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute();
-
-        return $this->normalizarLista($stmt->fetchAll(PDO::FETCH_ASSOC));
-    }
-
     public function obtenerPorId($id)
     {
         $tabla = $this->tablaPlanes();
@@ -137,133 +105,6 @@ class PlanModel
         $stmt->execute();
 
         return $this->normalizarFila($stmt->fetch(PDO::FETCH_ASSOC));
-    }
-
-    public function contarInscripciones($planId, $excluirSolicitudId = null)
-    {
-        if (!$this->usaEsquemaNuevo()) {
-            return 0;
-        }
-
-        $planId = (int) $planId;
-
-        $sqlActivos = "SELECT COUNT(*) FROM planes_cliente
-                       WHERE id_plan = :id_plan AND estado_plan_cliente = 'ACTIVO'";
-        $stmt = $this->db->prepare($sqlActivos);
-        $stmt->bindValue(':id_plan', $planId, PDO::PARAM_INT);
-        $stmt->execute();
-        $activos = (int) $stmt->fetchColumn();
-
-        $sqlPendientes = "SELECT COUNT(*) FROM solicitudes_compra
-                          WHERE id_plan = :id_plan AND estado_solicitud = 'PENDIENTE'";
-        if ($excluirSolicitudId) {
-            $sqlPendientes .= ' AND id_solicitud != :excluir_solicitud';
-        }
-
-        $stmt = $this->db->prepare($sqlPendientes);
-        $stmt->bindValue(':id_plan', $planId, PDO::PARAM_INT);
-        if ($excluirSolicitudId) {
-            $stmt->bindValue(':excluir_solicitud', (int) $excluirSolicitudId, PDO::PARAM_INT);
-        }
-        $stmt->execute();
-        $pendientes = (int) $stmt->fetchColumn();
-
-        return $activos + $pendientes;
-    }
-
-    public function obtenerInfoCupo($planId, $excluirSolicitudId = null)
-    {
-        $plan = $this->obtenerPorId($planId);
-        if (!$plan) {
-            return null;
-        }
-
-        $cupoMaximo = isset($plan['cupo_maximo']) && $plan['cupo_maximo'] !== null && $plan['cupo_maximo'] !== ''
-            ? (int) $plan['cupo_maximo']
-            : null;
-        $ocupados = $this->contarInscripciones($planId, $excluirSolicitudId);
-        $disponibles = $cupoMaximo === null ? null : max(0, $cupoMaximo - $ocupados);
-
-        $estadoPlan = strtoupper((string) ($plan['estado_plan'] ?? $plan['estado'] ?? 'ACTIVO'));
-        $estadoCupo = 'SIN_LIMITE';
-
-        if ($estadoPlan === 'INACTIVO') {
-            $estadoCupo = 'INACTIVO';
-        } elseif ($cupoMaximo !== null) {
-            if ($disponibles <= 0) {
-                $estadoCupo = 'CUPO_LLENO';
-            } elseif ($disponibles <= 5) {
-                $estadoCupo = 'ULTIMOS_CUPOS';
-            } else {
-                $estadoCupo = 'DISPONIBLE';
-            }
-        }
-
-        return [
-            'cupo_maximo' => $cupoMaximo,
-            'ocupados' => $ocupados,
-            'cupos_disponibles' => $disponibles,
-            'estado_cupo' => $estadoCupo,
-            'plan_activo' => $estadoPlan === 'ACTIVO',
-        ];
-    }
-
-    public function puedeInscribirse($planId, $excluirSolicitudId = null)
-    {
-        $plan = $this->obtenerPorId($planId);
-        if (!$plan) {
-            return [
-                'ok' => false,
-                'mensaje' => 'El plan seleccionado no existe o no está disponible.',
-            ];
-        }
-
-        $estadoPlan = strtoupper((string) ($plan['estado_plan'] ?? $plan['estado'] ?? 'ACTIVO'));
-        if ($estadoPlan !== 'ACTIVO') {
-            return [
-                'ok' => false,
-                'mensaje' => 'Este plan ya no acepta nuevas inscripciones.',
-            ];
-        }
-
-        $info = $this->obtenerInfoCupo($planId, $excluirSolicitudId);
-        if ($info['cupo_maximo'] === null) {
-            return ['ok' => true, 'mensaje' => '', 'info' => $info];
-        }
-
-        if ($info['cupos_disponibles'] <= 0) {
-            return [
-                'ok' => false,
-                'mensaje' => 'Este plan alcanzó el cupo máximo de inscripciones y ya no está disponible.',
-                'info' => $info,
-            ];
-        }
-
-        return ['ok' => true, 'mensaje' => '', 'info' => $info];
-    }
-
-    public function cerrarSiCupoLleno($planId)
-    {
-        if (!$this->usaEsquemaNuevo()) {
-            return false;
-        }
-
-        $info = $this->obtenerInfoCupo($planId);
-        if (!$info || $info['cupo_maximo'] === null || $info['estado_cupo'] !== 'CUPO_LLENO') {
-            return false;
-        }
-
-        return $this->cambiarEstado($planId, 'INACTIVO');
-    }
-
-    public function adjuntarInfoCupo(array $planes)
-    {
-        foreach ($planes as &$plan) {
-            $id = (int) ($plan['id'] ?? $plan['id_plan'] ?? 0);
-            $plan['cupo_info'] = $id > 0 ? $this->obtenerInfoCupo($id) : null;
-        }
-
-        return $planes;
     }
 
     public function obtenerPlanActivoCliente($clienteId)
@@ -322,11 +163,11 @@ class PlanModel
             $sql = "INSERT INTO planes
                     (nombre, slug, descripcion, precio, duracion_dias, modalidad,
                      requiere_coach, incluye_entrenamiento, incluye_nutricion,
-                     incluye_videos, incluye_sesiones, incluye_eventos, cupo_maximo, estado_plan)
+                     incluye_videos, incluye_sesiones, incluye_eventos, estado_plan)
                     VALUES
                     (:nombre, :slug, :descripcion, :precio, :duracion_dias, :modalidad,
                      :requiere_coach, :incluye_entrenamiento, :incluye_nutricion,
-                     :incluye_videos, :incluye_sesiones, :incluye_eventos, :cupo_maximo, :estado_plan)";
+                     :incluye_videos, :incluye_sesiones, :incluye_eventos, :estado_plan)";
 
             $stmt = $this->db->prepare($sql);
             $stmt->execute([
@@ -342,7 +183,6 @@ class PlanModel
                 ':incluye_videos' => !empty($datos['incluye_videos']) ? 1 : 0,
                 ':incluye_sesiones' => !empty($datos['incluye_sesiones']) ? 1 : 0,
                 ':incluye_eventos' => !empty($datos['incluye_eventos']) ? 1 : 0,
-                ':cupo_maximo' => $this->normalizarCupoMaximo($datos['cupo_maximo'] ?? null),
                 ':estado_plan' => strtoupper($datos['estado_plan'] ?? 'ACTIVO'),
             ]);
 
@@ -379,7 +219,6 @@ class PlanModel
                         incluye_nutricion = :incluye_nutricion,
                         incluye_videos = :incluye_videos,
                         incluye_sesiones = :incluye_sesiones,
-                        cupo_maximo = :cupo_maximo,
                         estado_plan = :estado_plan
                     WHERE id_plan = :id_plan";
 
@@ -395,7 +234,6 @@ class PlanModel
                 ':incluye_nutricion' => !empty($datos['incluye_nutricion']) ? 1 : 0,
                 ':incluye_videos' => !empty($datos['incluye_videos']) ? 1 : 0,
                 ':incluye_sesiones' => !empty($datos['incluye_sesiones']) ? 1 : 0,
-                ':cupo_maximo' => $this->normalizarCupoMaximo($datos['cupo_maximo'] ?? null),
                 ':estado_plan' => strtoupper($datos['estado_plan'] ?? 'ACTIVO'),
                 ':id_plan' => $datos['id_plan'] ?? $datos['id'],
             ]);

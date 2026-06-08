@@ -17,41 +17,62 @@ $totalSesiones = count($sesiones);
 $totalRutinas = count($rutinasPendientes);
 $totalMensajes = count($mensajes);
 
-$tituloPagina = 'Dashboard Coach | FigueFit';
 $vistaActiva = 'dashboard';
-
-require __DIR__ . '/../partials/panel/coachShellOpen.php';
+$nombreCoach = $_SESSION['nombre'] ?? 'coach';
 
 ?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Coach | FigueFit</title>
+    <link rel="stylesheet" href="../../public/panel.css?v=1">
+</head>
+<body class="fp-panel">
+
+<div class="fp-layout coach-wrapper">
+
+    <?php require __DIR__ . '/../partials/panel/sidebarCoach.php'; ?>
+
+    <div class="fp-main-area">
+        <header class="fp-topbar topbar">
+            <div>
+                <strong class="fp-topbar-role">Coach</strong>
+                <p class="fp-topbar-name">Hola, <?= e($nombreCoach) ?></p>
+            </div>
+        </header>
+
+        <main class="fp-content content">
 
             <section class="fp-hero hero">
                 <span class="fp-hero-tag">Panel profesional</span>
-                <h1>Hola, <span><?= e($_SESSION['nombre'] ?? 'Coach') ?></span></h1>
+                <h1>Hola, <span><?= e($nombreCoach) ?></span></h1>
                 <p>Gestiona tus clientes, sesiones, rutinas, nutrición, progreso y seguimiento virtual.</p>
             </section>
 
             <section class="fp-stats stats">
                 <div class="fp-card card">
                     <h3>Clientes asignados</h3>
-                    <p class="fp-number number"><?= e((string) $totalClientes) ?></p>
+                    <p class="fp-number number"><?= e($totalClientes) ?></p>
                     <a class="fp-btn btn" href="../../controllers/coach/clientesController.php">Ver clientes</a>
                 </div>
 
                 <div class="fp-card card">
                     <h3>Sesiones próximas</h3>
-                    <p class="fp-number number"><?= e((string) $totalSesiones) ?></p>
+                    <p class="fp-number number"><?= e($totalSesiones) ?></p>
                     <a class="fp-btn btn" href="../../controllers/coach/agendaController.php">Ver agenda</a>
                 </div>
 
                 <div class="fp-card card">
                     <h3>Rutinas pendientes</h3>
-                    <p class="fp-number number"><?= e((string) $totalRutinas) ?></p>
+                    <p class="fp-number number"><?= e($totalRutinas) ?></p>
                     <a class="fp-btn btn" href="../../controllers/coach/entrenamientoController.php">Gestionar</a>
                 </div>
 
                 <div class="fp-card card">
                     <h3>Mensajes nuevos</h3>
-                    <p class="fp-number number"><?= e((string) $totalMensajes) ?></p>
+                    <p class="fp-number number"><?= e($totalMensajes) ?></p>
                     <a class="fp-btn btn" href="../../controllers/coach/comunicacionController.php">Responder</a>
                 </div>
             </section>
@@ -101,4 +122,9 @@ require __DIR__ . '/../partials/panel/coachShellOpen.php';
                 </div>
             </section>
 
-<?php require __DIR__ . '/../partials/panel/coachShellClose.php'; ?>
+        </main>
+    </div>
+</div>
+
+</body>
+</html>

@@ -60,14 +60,57 @@ $institucionNombre = trim((string) ($institucion['nombre'] ?? $cliente['instituc
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi perfil institucional | FigueFit</title>
-    <link rel="stylesheet" href="../../public/panel.css?v=13">
+    <meta charset="UTF-8"> <!-- Codificación -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
+    <title>Perfil Institucional | StayFit</title>
+    <link rel="stylesheet" href="../../public/panel.css?v=1"> <!-- Título -->
+
+    <style>
+input,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0 15px;
+            border: 1px solid #ddd;
+            border-radius: 14px;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        button {
+            background: #D63384;
+            color: #FFFFFF;
+            border: none;
+            padding: 13px 18px;
+            border-radius: 14px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        
+
+        .info-box {
+            background: #fff7fb;
+            border-left: 5px solid #D63384;
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 14px;
+        }
+
+        .info-box strong {
+            color: #D63384;
+        }
+    </style>
 </head>
 <body class="fp-panel">
 
-<div class="fp-layout cliente-wrapper">
+<body class="fp-panel">
+<div class="cliente-wrapper">
 
     <?php require __DIR__ . '/../partials/panel/sidebarClienteIns.php'; ?>
 
@@ -97,17 +140,9 @@ $institucionNombre = trim((string) ($institucion['nombre'] ?? $cliente['instituc
                     <p class="fp-stat-premium-label">Nombre registrado</p>
                 </article>
 
-                <article class="fp-stat-premium fp-stat-premium--mint">
-                    <div class="fp-stat-premium-head">
-                        <div class="fp-stat-premium-icon" aria-hidden="true">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                                <path d="M12 3v18M8 7h8M7 11h10M6 15h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                            </svg>
-                        </div>
-                    </div>
-                    <p class="fp-stat-premium-value"><?= e($pesoVal !== '' ? $pesoVal . ' kg' : '—') ?></p>
-                    <p class="fp-stat-premium-label">Peso actual</p>
-                </article>
+                <form action="../../controllers/clienteIns/perfilController.php?accion=actualizar" method="POST">
+                    <label>Nombre completo</label>
+                    <input type="text" name="nombre" value="<?= e($usuario['nombre'] ?? $cliente['nombre'] ?? '') ?>" required>
 
                 <article class="fp-stat-premium">
                     <div class="fp-stat-premium-head">
@@ -238,63 +273,21 @@ $institucionNombre = trim((string) ($institucion['nombre'] ?? $cliente['instituc
                     </div>
                 </article>
 
-                <article class="fp-card card fp-perfil-card">
-                    <div class="fp-perfil-card-head fp-perfil-card-head--fuchsia">
-                        <h3>Resumen institucional</h3>
-                        <p>Vista rápida de tu información principal en FigueFit.</p>
-                    </div>
-                    <div class="fp-perfil-card-body">
-                        <div class="fp-perfil-resumen">
-                            <div class="fp-perfil-resumen-item">
-                                <span class="fp-perfil-resumen-icon" aria-hidden="true">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                                        <path d="M4 6h16v12H4z" stroke="currentColor" stroke-width="1.8"/>
-                                        <path d="M4 8l8 5 8-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                                    </svg>
-                                </span>
-                                <div>
-                                    <strong>Correo</strong>
-                                    <span><?= e($usuario['correo'] ?? '—') ?></span>
-                                </div>
-                            </div>
-                            <div class="fp-perfil-resumen-item">
-                                <span class="fp-perfil-resumen-icon fp-perfil-resumen-icon--mint" aria-hidden="true">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                                        <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
-                                    </svg>
-                                </span>
-                                <div>
-                                    <strong>Estado</strong>
-                                    <span><span class="<?= e($estadoBadgeClass) ?>"><?= e($estadoLabel) ?></span></span>
-                                </div>
-                            </div>
-                            <div class="fp-perfil-resumen-item">
-                                <span class="fp-perfil-resumen-icon" aria-hidden="true">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                                        <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/>
-                                        <path d="M7 8h10M7 12h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                                    </svg>
-                                </span>
-                                <div>
-                                    <strong>Tipo de cliente</strong>
-                                    <span><?= e($tipoCliente) ?></span>
-                                </div>
-                            </div>
-                            <div class="fp-perfil-resumen-item">
-                                <span class="fp-perfil-resumen-icon" aria-hidden="true">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                                        <path d="M12 2l3 6 6 .9-4.5 4.2 1 6-5.5-3.2-5.5 3.2 1-6L3 8.9 9 8z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-                                    </svg>
-                                </span>
-                                <div>
-                                    <strong>Objetivo actual</strong>
-                                    <span><?= e($objetivoResumen) ?></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </article>
+                <form action="../../controllers/clienteIns/progresoController.php?accion=registrar" method="POST" enctype="multipart/form-data">
+                    <label>Peso actual</label>
+                    <input type="number" step="0.1" name="peso" value="<?= e($datosFisicos['peso'] ?? '') ?>" required>
+
+                    <label>Medidas corporales</label>
+                    <textarea name="medidas" placeholder="Ej: cintura, cadera, pierna, brazo"></textarea>
+
+                    <label>Observación</label>
+                    <textarea name="observacion" placeholder="Registra cómo te has sentido en el proceso"></textarea>
+
+                    <label>Foto de progreso</label>
+                    <input type="file" name="foto" accept="image/*">
+
+                    <button class="btn-green" type="submit">Guardar progreso</button>
+                </form>
             </div>
 
         </main>

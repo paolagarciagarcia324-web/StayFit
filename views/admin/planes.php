@@ -160,12 +160,6 @@ $totalVirtuales = count(array_filter($planes, fn($p) => planTieneMaterialVirtual
                             <input type="number" id="plan_duracion" name="duracion_dias" min="1" placeholder="30" required>
                         </div>
 
-                        <div class="fp-field">
-                            <label for="plan_cupo">Cupo máximo</label>
-                            <input type="number" id="plan_cupo" name="cupo_maximo" min="1" placeholder="Sin límite">
-                            <span class="fp-field-hint">Opcional. Al llenarse el plan se cierra automáticamente.</span>
-                        </div>
-
                         <div class="fp-field fp-field--full">
                             <label for="plan_descripcion">Descripción</label>
                             <textarea id="plan_descripcion" name="descripcion" placeholder="Beneficios, alcance y enfoque del plan" required></textarea>
@@ -224,7 +218,6 @@ $totalVirtuales = count(array_filter($planes, fn($p) => planTieneMaterialVirtual
                             <tr>
                                 <th class="col-cliente">Plan</th>
                                 <th style="width:14%;">Modalidad</th>
-                                <th style="width:12%;">Cupo</th>
                                 <th style="width:14%;">Precio</th>
                                 <th class="col-estado">Estado</th>
                                 <th class="col-acciones">Acciones</th>
@@ -233,7 +226,7 @@ $totalVirtuales = count(array_filter($planes, fn($p) => planTieneMaterialVirtual
                         <tbody>
                             <?php if (empty($planes)): ?>
                                 <tr class="fp-empty-row">
-                                    <td colspan="6">No hay planes registrados todavía.</td>
+                                    <td colspan="5">No hay planes registrados todavía.</td>
                                 </tr>
                             <?php endif; ?>
 
@@ -242,9 +235,6 @@ $totalVirtuales = count(array_filter($planes, fn($p) => planTieneMaterialVirtual
                                 $estadoBadge = planEstadoBadge($item['estado'] ?? '');
                                 $planId = (int) ($item['id'] ?? $item['id_plan'] ?? 0);
                                 $activo = planEsActivo($item['estado'] ?? '');
-                                $cupoInfo = $item['cupo_info'] ?? null;
-                                $cupoMaximo = $cupoInfo['cupo_maximo'] ?? ($item['cupo_maximo'] ?? null);
-                                $ocupados = (int) ($cupoInfo['ocupados'] ?? 0);
                                 ?>
                                 <tr>
                                     <td>
@@ -261,21 +251,6 @@ $totalVirtuales = count(array_filter($planes, fn($p) => planTieneMaterialVirtual
 
                                     <td>
                                         <span class="fp-tag-inline"><?= e(planModalidadLabel($item['modalidad'] ?? '')) ?></span>
-                                    </td>
-
-                                    <td>
-                                        <?php if ($cupoMaximo === null || $cupoMaximo === ''): ?>
-                                            <span class="fp-cell-highlight">Sin límite</span>
-                                        <?php else: ?>
-                                            <span class="fp-cell-stack">
-                                                <strong><?= e((string) $ocupados) ?> / <?= e((string) $cupoMaximo) ?></strong>
-                                                <?php if (($cupoInfo['estado_cupo'] ?? '') === 'CUPO_LLENO'): ?>
-                                                    <span class="fp-badge fp-badge-alert">Cupo lleno</span>
-                                                <?php elseif (($cupoInfo['estado_cupo'] ?? '') === 'ULTIMOS_CUPOS'): ?>
-                                                    <span class="fp-badge fp-badge-pending">Últimos cupos</span>
-                                                <?php endif; ?>
-                                            </span>
-                                        <?php endif; ?>
                                     </td>
 
                                     <td>

@@ -48,7 +48,6 @@ class PlanController
                 'incluye_nutricion' => isset($_POST['incluye_nutricion']),
                 'incluye_videos' => !empty($_POST['programa_virtual_id'])
                     || in_array(strtoupper($modalidad), ['VIRTUAL', 'MIXTA', 'MIXTO'], true),
-                'cupo_maximo' => $_POST['cupo_maximo'] ?? null,
                 'estado_plan' => 'ACTIVO',
             ];
 

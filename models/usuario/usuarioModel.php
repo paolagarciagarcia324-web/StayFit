@@ -62,7 +62,7 @@ class UsuarioModel
         if ($this->usaEsquemaNuevo()) {
             $sql = "SELECT u.id_user AS id_usuario, u.nombres AS nombre, u.apellidos AS apellido,
                            u.documento_identidad, u.correo, u.telefono, u.password_hash AS hash_contrasena,
-                           u.estado, r.codigo AS rol_codigo, r.nombre AS rol
+                           u.estado, r.nombre AS rol
                     FROM user u
                     LEFT JOIN user_roles ur ON ur.id_user = u.id_user
                     LEFT JOIN roles r ON r.id_rol = ur.id_rol
@@ -92,7 +92,7 @@ class UsuarioModel
         if ($this->usaEsquemaNuevo()) {
             $sql = "SELECT u.id_user AS id_usuario, u.nombres AS nombre, u.apellidos AS apellido,
                            u.documento_identidad, u.correo, u.telefono, u.password_hash AS hash_contrasena,
-                           u.estado, r.codigo AS rol_codigo, r.nombre AS rol
+                           u.estado, r.nombre AS rol
                     FROM user u
                     LEFT JOIN user_roles ur ON ur.id_user = u.id_user
                     LEFT JOIN roles r ON r.id_rol = ur.id_rol
@@ -125,7 +125,7 @@ class UsuarioModel
         if ($this->usaEsquemaNuevo()) {
             $sql = "SELECT u.id_user AS id_usuario, u.nombres AS nombre, u.apellidos AS apellido,
                            u.documento_identidad, u.correo, u.telefono, u.password_hash AS hash_contrasena,
-                           u.estado, r.codigo AS rol_codigo, r.nombre AS rol
+                           u.estado, r.nombre AS rol
                     FROM user u
                     LEFT JOIN user_roles ur ON ur.id_user = u.id_user
                     LEFT JOIN roles r ON r.id_rol = ur.id_rol
@@ -162,7 +162,7 @@ class UsuarioModel
         if ($this->usaEsquemaNuevo()) {
             $sql = "SELECT u.id_user AS id_usuario, u.nombres AS nombre, u.apellidos AS apellido,
                            u.documento_identidad, u.correo, u.telefono, u.password_hash AS hash_contrasena,
-                           u.estado, r.codigo AS rol_codigo, r.nombre AS rol
+                           u.estado, r.nombre AS rol
                     FROM user u
                     LEFT JOIN user_roles ur ON ur.id_user = u.id_user
                     LEFT JOIN roles r ON r.id_rol = ur.id_rol

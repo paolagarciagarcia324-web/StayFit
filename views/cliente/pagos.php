@@ -90,14 +90,51 @@ foreach ($pagos as $p) {
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pagos | FigueFit</title>
-    <link rel="stylesheet" href="../../public/panel.css?v=17">
+    <meta charset="UTF-8"> <!-- Codificación -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
+    <title>Pagos | StayFit</title>
+    <link rel="stylesheet" href="../../public/panel.css?v=1"> <!-- Título -->
+
+    <style>
+button {
+            width: 100%;
+            background: #D63384;
+            color: #FFFFFF;
+            border: none;
+            padding: 13px;
+            border-radius: 14px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #b92b70;
+        }
+
+        
+
+        
+
+        
+
+        
+
+        .badge.pendiente {
+            background: #D63384;
+        }
+
+        .empty {
+            color: #777;
+            background: #f4f4f4;
+            padding: 18px;
+            border-radius: 16px;
+        }
+    </style>
 </head>
 <body class="fp-panel">
 
-<div class="fp-layout cliente-wrapper">
+<body class="fp-panel">
+<div class="cliente-wrapper">
 
     <?php require __DIR__ . '/../partials/panel/sidebarCliente.php'; ?>
 
@@ -132,18 +169,8 @@ foreach ($pagos as $p) {
                     <p class="fp-stat-premium-label">Pagos registrados</p>
                 </article>
 
-                <article class="fp-stat-premium fp-stat-premium--warn">
-                    <div class="fp-stat-premium-head">
-                        <div class="fp-stat-premium-icon" aria-hidden="true">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
-                                <path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                            </svg>
-                        </div>
-                    </div>
-                    <p class="fp-stat-premium-value"><?= e((string) $totalPendientes) ?></p>
-                    <p class="fp-stat-premium-label">En revisión</p>
-                </article>
+                <form action="../../controllers/cliente/pagoController.php?accion=registrar" method="POST" enctype="multipart/form-data">
+                    <label>Plan</label>
 
                 <article class="fp-stat-premium fp-stat-premium--mint">
                     <div class="fp-stat-premium-head">

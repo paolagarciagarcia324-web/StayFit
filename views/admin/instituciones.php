@@ -37,11 +37,6 @@ if (!function_exists('institucionEsActiva')) {
 
 $instituciones = $instituciones ?? [];
 $clientesInstitucionales = $clientesInstitucionales ?? [];
-$planes = $planes ?? [];
-$enlacesPorInstitucion = $enlacesPorInstitucion ?? [];
-
-$flash = $_SESSION['flash'] ?? null;
-unset($_SESSION['flash']);
 
 $totalInstituciones = count($instituciones);
 $totalActivas = count(array_filter($instituciones, fn($i) => institucionEsActiva($i['estado'] ?? '')));
@@ -59,24 +54,15 @@ $totalClientesIns = count($clientesInstitucionales);
 <body class="fp-panel">
 <div class="admin-wrapper">
 
-    <?php
-    $vistaActiva = 'instituciones';
-    require __DIR__ . '/../partials/panel/sidebarAdmin.php';
-    ?>
+    <?php require __DIR__ . '/../partials/panel/sidebarAdmin.php'; ?>
 
     <main class="content">
 
         <section class="page-header">
             <span class="fp-hero-tag">Convenios corporativos</span>
             <h1>Instituciones</h1>
-            <p>Crea convenios con plan y enlace de registro. Al editar el plan, el enlace usa el nuevo convenio; puedes regenerarlo si necesitas invalidar el anterior.</p>
+            <p>Administra convenios, instituciones y clientes institucionales vinculados a FigueFit.</p>
         </section>
-
-        <?php if ($flash): ?>
-            <div class="fp-alert fp-alert-<?= e($flash['tipo'] === 'success' ? 'ok' : ($flash['tipo'] === 'warning' ? 'pending' : 'error')) ?>" style="margin-bottom:20px;">
-                <?= e($flash['mensaje'] ?? '') ?>
-            </div>
-        <?php endif; ?>
 
         <section class="fp-stats-premium">
             <article class="fp-stat-premium fp-stat-premium--fuchsia">
@@ -127,10 +113,6 @@ $totalClientesIns = count($clientesInstitucionales);
             </div>
 
             <div class="fp-panel-form-block">
-                <h4 style="margin-bottom:14px;color:var(--fp-text-soft);font-size:14px;">Nueva institución</h4>
-                <?php if (empty($planes)): ?>
-                    <p style="color:var(--fp-text-soft);margin-bottom:12px;">No hay planes institucionales activos. Crea uno en el módulo Planes (tipo INSTITUCIONAL o AMBOS).</p>
-                <?php endif; ?>
                 <form class="fp-form-premium" action="../../controllers/admin/institucionController.php?accion=guardar" method="POST" autocomplete="off">
                     <div class="fp-form-grid">
                         <div class="fp-field fp-field--full" style="grid-column: span 2;">
@@ -157,23 +139,9 @@ $totalClientesIns = count($clientesInstitucionales);
                             <label for="inst_direccion">Dirección</label>
                             <input type="text" id="inst_direccion" name="direccion" placeholder="Ciudad, sede principal" required>
                         </div>
-
-                        <div class="fp-field">
-                            <label for="inst_plan">Plan de convenio</label>
-                            <select id="inst_plan" name="plan_id" required <?= empty($planes) ? 'disabled' : '' ?>>
-                                <option value="">Seleccione plan</option>
-                                <?php foreach ($planes as $plan): ?>
-                                    <option value="<?= e((string) ($plan['id'] ?? '')) ?>">
-                                        <?= e($plan['nombre'] ?? 'Plan') ?> · <?= e((string) ($plan['duracion'] ?? $plan['duracion_dias'] ?? 30)) ?> días
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
                     </div>
 
-                    <p style="font-size:12px;color:var(--fp-text-muted);margin:12px 0 16px;">Al registrar se generará automáticamente el enlace público de inscripción ligado a esta institución y al plan elegido.</p>
-
-                    <button type="submit" class="fp-form-submit" style="max-width:280px;" <?= empty($planes) ? 'disabled' : '' ?>>Registrar institución y enlace</button>
+                    <button type="submit" class="fp-form-submit" style="max-width:240px;">Registrar institución</button>
                 </form>
             </div>
 
@@ -185,7 +153,6 @@ $totalClientesIns = count($clientesInstitucionales);
                         <thead>
                             <tr>
                                 <th class="col-cliente">Institución</th>
-                                <th>Plan / enlace</th>
                                 <th class="col-contacto">Contacto</th>
                                 <th class="col-estado">Estado</th>
                                 <th class="col-acciones">Acciones</th>
@@ -194,7 +161,7 @@ $totalClientesIns = count($clientesInstitucionales);
                         <tbody>
                             <?php if (empty($instituciones)): ?>
                                 <tr class="fp-empty-row">
-                                    <td colspan="5">No hay instituciones registradas todavía.</td>
+                                    <td colspan="4">No hay instituciones registradas todavía.</td>
                                 </tr>
                             <?php endif; ?>
 
@@ -203,9 +170,6 @@ $totalClientesIns = count($clientesInstitucionales);
                                 $estadoBadge = institucionEstadoBadge($item['estado'] ?? '');
                                 $instId = (int) ($item['id'] ?? $item['id_institucion'] ?? 0);
                                 $activa = institucionEsActiva($item['estado'] ?? '');
-                                $enlace = $enlacesPorInstitucion[$instId] ?? null;
-                                $planActualId = (int) ($enlace['id_plan'] ?? 0);
-                                $inputLinkId = 'enlace-inst-' . $instId;
                                 ?>
                                 <tr>
                                     <td>
@@ -214,21 +178,6 @@ $totalClientesIns = count($clientesInstitucionales);
                                             <span>NIT <?= e($item['nit'] ?? '—') ?></span>
                                             <?php if (!empty($item['direccion'])): ?>
                                                 <span class="fp-cell-highlight"><?= e($item['direccion']) ?></span>
-                                            <?php endif; ?>
-                                        </div>
-                                    </td>
-
-                                    <td>
-                                        <div class="fp-cell-stack">
-                                            <span class="fp-tag-inline"><?= e($enlace['plan_nombre'] ?? 'Sin plan') ?></span>
-                                            <?php if (!empty($enlace['url_registro'])): ?>
-                                                <span style="font-size:11px;color:var(--fp-text-soft);">Registros: <?= e((string) (int) ($enlace['registros_realizados'] ?? 0)) ?></span>
-                                                <div style="display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap;">
-                                                    <input type="text" id="<?= e($inputLinkId) ?>" readonly value="<?= e($enlace['url_registro']) ?>" style="flex:1;min-width:140px;max-width:220px;padding:6px 8px;border-radius:8px;border:1px solid var(--fp-border);background:var(--fp-input-bg);color:var(--fp-text);font-size:11px;">
-                                                    <button type="button" class="fp-btn-sm fp-btn-outline-mint" data-copy="<?= e($inputLinkId) ?>">Copiar</button>
-                                                </div>
-                                            <?php else: ?>
-                                                <span style="font-size:12px;color:var(--fp-text-muted);">Sin enlace — edita y guarda con un plan</span>
                                             <?php endif; ?>
                                         </div>
                                     </td>
@@ -245,50 +194,7 @@ $totalClientesIns = count($clientesInstitucionales);
                                     </td>
 
                                     <td>
-                                        <div class="fp-row-actions" style="flex-direction:column;align-items:flex-start;gap:8px;">
-                                            <details style="width:100%;">
-                                                <summary class="fp-btn-sm fp-btn-outline-mint" style="cursor:pointer;list-style:none;">Editar</summary>
-                                                <form class="fp-form-premium" style="margin-top:12px;padding:12px;border:1px solid var(--fp-border);border-radius:12px;" action="../../controllers/admin/institucionController.php?accion=actualizar" method="POST">
-                                                    <input type="hidden" name="id" value="<?= e((string) $instId) ?>">
-                                                    <input type="hidden" name="estado" value="<?= e($item['estado'] ?? 'activo') ?>">
-                                                    <div class="fp-field" style="margin-bottom:10px;">
-                                                        <label>Nombre</label>
-                                                        <input type="text" name="nombre" value="<?= e($item['nombre'] ?? '') ?>" required>
-                                                    </div>
-                                                    <div class="fp-field" style="margin-bottom:10px;">
-                                                        <label>NIT</label>
-                                                        <input type="text" name="nit" value="<?= e($item['nit'] ?? '') ?>" required>
-                                                    </div>
-                                                    <div class="fp-field" style="margin-bottom:10px;">
-                                                        <label>Teléfono</label>
-                                                        <input type="text" name="telefono" value="<?= e($item['telefono'] ?? '') ?>" required>
-                                                    </div>
-                                                    <div class="fp-field" style="margin-bottom:10px;">
-                                                        <label>Correo</label>
-                                                        <input type="email" name="correo" value="<?= e($item['correo'] ?? '') ?>" required>
-                                                    </div>
-                                                    <div class="fp-field" style="margin-bottom:10px;">
-                                                        <label>Dirección</label>
-                                                        <input type="text" name="direccion" value="<?= e($item['direccion'] ?? '') ?>" required>
-                                                    </div>
-                                                    <div class="fp-field" style="margin-bottom:10px;">
-                                                        <label>Plan de convenio</label>
-                                                        <select name="plan_id" required>
-                                                            <?php foreach ($planes as $plan): ?>
-                                                                <?php $pid = (int) ($plan['id'] ?? 0); ?>
-                                                                <option value="<?= e((string) $pid) ?>" <?= $pid === $planActualId ? 'selected' : '' ?>>
-                                                                    <?= e($plan['nombre'] ?? 'Plan') ?>
-                                                                </option>
-                                                            <?php endforeach; ?>
-                                                        </select>
-                                                    </div>
-                                                    <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--fp-text-soft);margin-bottom:12px;">
-                                                        <input type="checkbox" name="regenerar_enlace" value="1">
-                                                        Regenerar enlace (invalida el URL anterior y aplica el plan seleccionado)
-                                                    </label>
-                                                    <button type="submit" class="fp-btn-sm btn-green">Guardar cambios</button>
-                                                </form>
-                                            </details>
+                                        <div class="fp-row-actions">
                                             <?php if ($activa): ?>
                                                 <a class="btn fp-btn-sm fp-btn-outline"
                                                    href="../../controllers/admin/institucionController.php?accion=cambiarEstado&id=<?= e($instId) ?>&estado=inactivo"
@@ -335,10 +241,7 @@ $totalClientesIns = count($clientesInstitucionales);
                                 <tr>
                                     <td>
                                         <div class="fp-cell-stack">
-                                            <strong><?= e($cliente['cliente'] ?? $cliente['nombre_completo'] ?? trim(($cliente['nombre'] ?? '') . ' ' . ($cliente['apellido'] ?? '')) ?: 'Sin cliente') ?></strong>
-                                            <?php if (!empty($cliente['correo'])): ?>
-                                                <span style="color:var(--fp-text-soft);font-size:12px;"><?= e($cliente['correo']) ?></span>
-                                            <?php endif; ?>
+                                            <strong><?= e($cliente['cliente'] ?? 'Sin cliente') ?></strong>
                                         </div>
                                     </td>
                                     <td>

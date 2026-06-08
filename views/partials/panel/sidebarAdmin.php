@@ -12,7 +12,6 @@ $links = [
     'planes'          => ['Planes',              '../../controllers/admin/planController.php'],
     'contenidoVirtual'=> ['Contenido virtual',   '../../controllers/admin/contenidoVirtualController.php'],
     'instituciones'   => ['Instituciones',       '../../controllers/admin/institucionController.php'],
-    'clienteInstitucional' => ['Cliente institucional', '../../controllers/admin/clienteInstitucionalController.php'],
     'notificaciones'  => ['Notificaciones',      '../../controllers/admin/notificacionController.php'],
     'usuarios'        => ['Usuarios',            '../../controllers/admin/usuarioController.php'],
     'reportes'        => ['Reportes',            '../../controllers/admin/reporteController.php'],

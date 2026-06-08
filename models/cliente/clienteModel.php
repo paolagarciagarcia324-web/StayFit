@@ -257,25 +257,15 @@ class ClienteModel
     public function crear($datos)
     {
         if ($this->usaEsquemaNuevo()) {
-            $campos = ['id_user', 'fecha_nacimiento', 'objetivo_principal', 'estado_cliente', 'fecha_alta'];
-            $valores = [':id_user', ':fecha_nacimiento', ':objetivo_principal', "'ACTIVA'", 'CURDATE()'];
-
-            if (!empty($datos['id_institucion'])) {
-                $campos[] = 'id_institucion';
-                $valores[] = ':id_institucion';
-            }
-
-            $sql = 'INSERT INTO clientes (' . implode(', ', $campos) . ')
-                    VALUES (' . implode(', ', $valores) . ')';
+            $sql = "INSERT INTO clientes
+                    (id_user, fecha_nacimiento, objetivo_principal, estado_cliente, fecha_alta)
+                    VALUES
+                    (:id_user, :fecha_nacimiento, :objetivo_principal, 'ACTIVA', CURDATE())";
 
             $stmt = $this->db->prepare($sql);
             $stmt->bindParam(':id_user', $datos['id_cliente']);
             $stmt->bindValue(':fecha_nacimiento', $datos['fecha_nacimiento'] ?? null);
             $stmt->bindValue(':objetivo_principal', $datos['objetivos'] ?? null);
-
-            if (!empty($datos['id_institucion'])) {
-                $stmt->bindValue(':id_institucion', (int) $datos['id_institucion'], PDO::PARAM_INT);
-            }
 
             return $stmt->execute();
         }
@@ -813,8 +803,6 @@ class ClienteModel
             if ($coachId) {
                 $this->asignarCoach($clienteId, $coachId);
             }
-
-            $planModel->cerrarSiCupoLleno($planId);
 
             return (int) $this->db->lastInsertId();
         }

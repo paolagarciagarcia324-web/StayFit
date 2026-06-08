@@ -18,8 +18,78 @@ require __DIR__ . '/../partials/panel/coachShellOpen.php';
 
 ?>
 
-        <section class="fp-hero hero page-header">
-            <h1>Progreso y <span>seguimiento</span></h1>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8"> <!-- Codificación -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
+    <title>Progreso Coach | StayFit</title>
+    <link rel="stylesheet" href="../../public/panel.css?v=1"> <!-- Título -->
+
+    <style>
+select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0 15px;
+            border: 1px solid #ddd;
+            border-radius: 14px;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        textarea {
+            min-height: 110px;
+            resize: vertical;
+        }
+
+        button {
+            width: 100%;
+            background: #D63384;
+            color: #FFFFFF;
+            border: none;
+            padding: 13px;
+            border-radius: 14px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .progress-item {
+            background: #fff7fb;
+            border-left: 5px solid #D63384;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 15px;
+        }
+
+        .virtual-item {
+            background: #f6fffb;
+            border-left: 5px solid #3EB489;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 15px;
+        }
+
+        
+
+        .empty {
+            background: #f4f4f4;
+            color: #777;
+            padding: 18px;
+            border-radius: 16px;
+        }
+    </style>
+</head>
+
+<body class="fp-panel">
+<div class="coach-wrapper">
+
+    <?php require __DIR__ . '/../partials/panel/sidebarCoach.php'; ?>
+
+    <main class="content">
+
+        <section class="page-header">
+            <h1>Progreso y seguimiento</h1>
             <p>Revisa avances físicos, seguimiento virtual y registra observaciones profesionales.</p>
         </section>
 

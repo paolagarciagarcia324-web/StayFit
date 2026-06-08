@@ -125,21 +125,11 @@ unset($_SESSION['alert'], $_SESSION['alert_tipo']);
                             <select id="plan_id" name="plan_id" required>
                                 <option value="">Seleccione un plan</option>
                                 <?php foreach ($planes as $plan): ?>
-                                    <?php
-                                    $planId = $plan['id_plan'] ?? $plan['id'] ?? '';
-                                    $cupoInfo = $plan['cupo_info'] ?? null;
-                                    $cupoEtiqueta = '';
-                                    if (!empty($cupoInfo['cupo_maximo'])) {
-                                        $disponibles = (int) ($cupoInfo['cupos_disponibles'] ?? 0);
-                                        $cupoEtiqueta = $disponibles === 1
-                                            ? ' · 1 cupo disponible'
-                                            : ' · ' . $disponibles . ' cupos disponibles';
-                                    }
-                                    ?>
+                                    <?php $planId = $plan['id_plan'] ?? $plan['id'] ?? ''; ?>
                                     <option value="<?= e($planId) ?>"
                                             data-modalidad="<?= e(strtolower($plan['modalidad'] ?? 'virtual')) ?>"
                                             <?= ($planSeleccionado !== '' && $planSeleccionado === (string) $planId) ? 'selected' : '' ?>>
-                                        <?= e($plan['nombre'] ?? 'Plan') ?> — $<?= e(number_format((float) ($plan['precio'] ?? 0), 0, ',', '.')) ?><?= e($cupoEtiqueta) ?>
+                                        <?= e($plan['nombre'] ?? 'Plan') ?> — $<?= e(number_format((float) ($plan['precio'] ?? 0), 0, ',', '.')) ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>

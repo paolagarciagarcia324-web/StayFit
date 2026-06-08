@@ -88,14 +88,140 @@ foreach ($mensajes as $msg) {
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comunicación | FigueFit</title>
-    <link rel="stylesheet" href="../../public/panel.css?v=18">
+    <meta charset="UTF-8"> <!-- Codificación -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
+    <title>Comunicación | StayFit</title>
+    <link rel="stylesheet" href="../../public/panel.css?v=1"> <!-- Título -->
+
+    <style>
+.chat-card {
+            background: #FFFFFF;
+            border-radius: 24px;
+            box-shadow: 0 10px 28px rgba(45, 45, 45, 0.08);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: #2D2D2D;
+            color: #FFFFFF;
+            padding: 20px 24px;
+        }
+
+        .chat-header h3 {
+            margin: 0 0 6px;
+            color: #D63384;
+        }
+
+        .messages {
+            padding: 24px;
+            min-height: 360px;
+            max-height: 460px;
+            overflow-y: auto;
+            background: #fbfbfb;
+        }
+
+        .message {
+            max-width: 75%;
+            padding: 14px 16px;
+            border-radius: 18px;
+            margin-bottom: 14px;
+            line-height: 1.5;
+        }
+
+        .message.cliente {
+            background: #D63384;
+            color: #FFFFFF;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.coach {
+            background: #FFFFFF;
+            color: #2D2D2D;
+            border: 1px solid #eee;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message small {
+            display: block;
+            margin-top: 6px;
+            opacity: 0.8;
+            font-size: 12px;
+        }
+
+        .alert-success {
+            background: #e8f8f1;
+            color: #1d6b4f;
+            border-left: 5px solid #3EB489;
+            padding: 14px;
+            border-radius: 14px;
+            margin-bottom: 18px;
+        }
+
+        .alert-error {
+            background: #fff1f7;
+            color: #8b2252;
+            border-left: 5px solid #D63384;
+            padding: 14px;
+            border-radius: 14px;
+            margin-bottom: 18px;
+        }
+
+        .alert-warning {
+            background: #fff8e6;
+            color: #7a5a00;
+            border-left: 5px solid #e6b800;
+            padding: 14px;
+            border-radius: 14px;
+            margin-bottom: 18px;
+        }
+
+        .chat-form {
+            padding: 20px 24px;
+            display: flex;
+            gap: 12px;
+            border-top: 1px solid #eee;
+            background: #FFFFFF;
+        }
+
+        textarea {
+            flex: 1;
+            resize: none;
+            min-height: 54px;
+            padding: 13px;
+            border: 1px solid #ddd;
+            border-radius: 16px;
+            font-family: inherit;
+        }
+
+        button {
+            background: #3EB489;
+            color: #FFFFFF;
+            border: none;
+            padding: 0 22px;
+            border-radius: 16px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .empty {
+            text-align: center;
+            color: #777;
+            padding: 60px 20px;
+        }
+
+        
+
+            button {
+                padding: 14px;
+            }
+        }
+    </style>
 </head>
 <body class="fp-panel">
 
-<div class="fp-layout cliente-wrapper">
+<body class="fp-panel">
+<div class="cliente-wrapper">
 
     <?php require __DIR__ . '/../partials/panel/sidebarCliente.php'; ?>
 
@@ -135,13 +261,10 @@ foreach ($mensajes as $msg) {
                     <p class="fp-stat-premium-label">Mensajes en el chat</p>
                 </article>
 
-                <article class="fp-stat-premium fp-stat-premium--mint">
-                    <div class="fp-stat-premium-head">
-                        <div class="fp-stat-premium-icon fp-coach-avatar" aria-hidden="true"><?= e($coachIniciales) ?></div>
-                    </div>
-                    <p class="fp-stat-premium-value" style="font-size:15px;line-height:1.35;"><?= e($sinCoach ? 'Sin asignar' : $coachNombre) ?></p>
-                    <p class="fp-stat-premium-label"><?= e($sinCoach ? 'Coach pendiente' : ($coachEspecialidad !== '' ? $coachEspecialidad : 'Coach asignado')) ?></p>
-                </article>
+            <form class="chat-form" action="../../controllers/cliente/comunicacionController.php?accion=enviar" method="POST">
+                <textarea name="mensaje" placeholder="Escribe tu mensaje..." <?= $sinCoach ? 'disabled' : '' ?> required></textarea>
+                <button type="submit" <?= $sinCoach ? 'disabled' : '' ?>>Enviar</button>
+            </form>
 
                 <article class="fp-stat-premium">
                     <div class="fp-stat-premium-head">
